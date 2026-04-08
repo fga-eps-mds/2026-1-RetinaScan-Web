@@ -12,8 +12,8 @@ Local: http://localhost:5173
 
 Antes de rodar o projeto, é necessário ter instalado:
 
-Docker
-Docker Compose
+- Docker
+- Docker Compose
 
 Verifique a instalação com:
 
