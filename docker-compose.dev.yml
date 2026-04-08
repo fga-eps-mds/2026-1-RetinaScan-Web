@@ -1,0 +1,12 @@
+services:
+  web:
+    container_name: 2026-1-RetinaScan-Web
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    
