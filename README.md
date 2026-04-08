@@ -1,73 +1,50 @@
-# React + TypeScript + Vite
+# 2026.1 RetinaScan Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web da plataforma RetinaScan, um sistema de triagem de retinografias utilizando Inteligência Artificial para auxiliar na identificação de possíveis alterações na retina.
 
-Currently, two official plugins are available:
+A aplicação permite que profissionais de saúde façam upload de imagens de retina, que são enviadas para um backend responsável por processar as imagens e gerar um pré-relatório automatizado com auxílio de IA.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Links
 
-## React Compiler
+Local: http://localhost:5173
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requisitos
 
-## Expanding the ESLint configuration
+Antes de rodar o projeto, é necessário ter instalado:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Docker
+Docker Compose
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Verifique a instalação com:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```bash
+docker --version
+docker compose version
+``` 
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Executando o Projeto
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Para iniciar o ambiente de desenvolvimento com Docker:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+sudo docker compose -f docker-compose.dev.yml up -d --build
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Este comando irá:
+
+- construir a imagem do frontend
+- iniciar os containers necessários
+- subir o ambiente de desenvolvimento
+
+## Acessando a aplicação
+
+Após iniciar os containers, a aplicação estará disponível em:
+
+http://localhost:5173
+
+## Tecnologias Utilizadas
+
+- React
+- TypeScript
+- Vite
+- Docker
+- Docker Compose
+
