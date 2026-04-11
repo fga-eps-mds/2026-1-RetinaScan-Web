@@ -10,11 +10,11 @@ Descreva brevemente as alterações feitas neste Pull Request.
 
 Marque o tipo de mudança:
 
-* [ ] Bug fix
-* [ ] Nova funcionalidade
-* [ ] Melhoria de código (refactor)
-* [ ] Atualização de documentação
-* [ ] Outro
+- [ ] Bug fix
+- [ ] Nova funcionalidade
+- [ ] Melhoria de código (refactor)
+- [ ] Atualização de documentação
+- [ ] Outro
 
 ---
 
@@ -22,11 +22,9 @@ Marque o tipo de mudança:
 
 Liste as principais mudanças realizadas:
 
-*
-*
-*
-
----
+-
+-
+- ***
 
 ## Como testar
 
@@ -42,10 +40,10 @@ Passos para testar esta alteração:
 
 Antes de enviar este PR, confirme:
 
-* [ ] O código compila corretamente
-* [ ] Não existem erros de lint
-* [ ] A funcionalidade foi testada
-* [ ] A documentação foi atualizada (se necessário)
+- [ ] O código compila corretamente
+- [ ] Não existem erros de lint
+- [ ] A funcionalidade foi testada
+- [ ] A documentação foi atualizada (se necessário)
 
 ---
 

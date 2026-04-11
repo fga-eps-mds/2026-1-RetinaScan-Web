@@ -1,15 +1,14 @@
 # Guia de Contribuição – RetinaScan
 
-
 ## Como Contribuir
 
 Você pode contribuir de várias formas:
 
-* Reportando bugs
-* Sugerindo novas funcionalidades
-* Melhorando a documentação
-* Corrigindo problemas existentes
-* Enviando melhorias no código
+- Reportando bugs
+- Sugerindo novas funcionalidades
+- Melhorando a documentação
+- Corrigindo problemas existentes
+- Enviando melhorias no código
 
 ---
 
@@ -23,11 +22,11 @@ Se você encontrar um bug ou quiser sugerir uma funcionalidade:
 
 Para **bugs**, inclua:
 
-* Passos para reproduzir
-* Comportamento esperado
-* Comportamento atual
-* Screenshots (se aplicável)
-* Informações do ambiente (sistema operacional, navegador, etc.)
+- Passos para reproduzir
+- Comportamento esperado
+- Comportamento atual
+- Screenshots (se aplicável)
+- Informações do ambiente (sistema operacional, navegador, etc.)
 
 ---
 
@@ -101,12 +100,12 @@ refactor: simplifica componente de upload
 
 Tipos comuns de commit:
 
-* **feat** – nova funcionalidade
-* **fix** – correção de bug
-* **docs** – alterações na documentação
-* **refactor** – melhorias no código sem alterar comportamento
-* **style** – alterações de formatação
-* **test** – adição ou modificação de testes
+- **feat** – nova funcionalidade
+- **fix** – correção de bug
+- **docs** – alterações na documentação
+- **refactor** – melhorias no código sem alterar comportamento
+- **style** – alterações de formatação
+- **test** – adição ou modificação de testes
 
 ---
 
@@ -121,9 +120,9 @@ Tipos comuns de commit:
 
 Antes de abrir um PR, verifique se:
 
-* O projeto compila corretamente
-* Não há erros de lint
-* A mudança está bem descrita
+- O projeto compila corretamente
+- Não há erros de lint
+- A mudança está bem descrita
 
 ---
 
@@ -131,9 +130,9 @@ Antes de abrir um PR, verifique se:
 
 O projeto segue:
 
-* Regras de **ESLint** definidas no repositório
-* Estrutura consistente de componentes
-* Código limpo e legível
+- Regras de **ESLint** definidas no repositório
+- Estrutura consistente de componentes
+- Código limpo e legível
 
 Antes de enviar um PR, execute:
 

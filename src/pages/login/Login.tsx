@@ -1,12 +1,48 @@
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { motion } from 'framer-motion'
-import { Eye, Mail, Lock, ArrowRight } from 'lucide-react'
-import { useState } from 'react'
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { signIn } from '@/lib/auth-client';
+import { motion } from 'framer-motion';
+import { Eye, Mail, Lock, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const Login = () => {
-  const [email, setEmail] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
+
+  const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await signIn.email({
+        email,
+        password,
+        rememberMe,
+        callbackURL: '/',
+      });
+
+      if (error) {
+        setError(error.message || 'Falha ao entrar');
+        toast.error(error.message || 'Falha ao entrar', {
+          description: 'Verifique suas credenciais e tente novamente.',
+        });
+        return;
+      }
+    } catch {
+      setError('Erro inesperado ao fazer login');
+      toast(error, {
+        description: 'Verifique suas credenciais e tente novamente.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -55,7 +91,7 @@ const Login = () => {
             </p>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleLogin}>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 E-mail
@@ -96,13 +132,30 @@ const Login = () => {
                   className="pl-9"
                 />
               </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) =>
+                    setRememberMe(checked as boolean)
+                  }
+                />
+                <label
+                  htmlFor="remember"
+                  className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground cursor-pointer"
+                >
+                  Lembrar de mim
+                </label>
+              </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full gradient-clinical border-0 text-primary-foreground hover:opacity-90 gap-2"
+              disabled={loading}
+              className="w-full gradient-clinical border-0 text-primary-foreground hover:opacity-90 gap-2 cursor-pointer"
             >
-              Entrar <ArrowRight />
+              {loading ? 'Entrando...' : 'Entrar'} <ArrowRight />
             </Button>
           </form>
 
@@ -112,7 +165,7 @@ const Login = () => {
         </motion.div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

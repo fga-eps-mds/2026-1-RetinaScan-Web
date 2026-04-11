@@ -20,7 +20,7 @@ Verifique a instalação com:
 ```bash
 docker --version
 docker compose version
-``` 
+```
 
 ## Executando o Projeto
 
@@ -47,4 +47,3 @@ http://localhost:5173
 - Vite
 - Docker
 - Docker Compose
-

@@ -4,7 +4,6 @@ about: Novas funcionalidades para o sistema
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
 ## Descrição da funcionalidade

@@ -1,10 +1,9 @@
 ---
 name: Bug report
 about: Reportar um bug no sistema
-title: "[BUG]"
+title: '[BUG]'
 labels: ''
 assignees: cwtshh
-
 ---
 
 ## Descrição do problema
@@ -44,10 +43,10 @@ Se aplicável, adicione screenshots para ajudar a explicar o problema.
 
 Preencha as informações abaixo:
 
-* Sistema operacional:
-* Navegador:
-* Versão do projeto:
-* Docker versão (se aplicável):
+- Sistema operacional:
+- Navegador:
+- Versão do projeto:
+- Docker versão (se aplicável):
 
 ---
 
