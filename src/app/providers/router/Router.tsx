@@ -5,11 +5,11 @@ import { lazy, Suspense } from 'react';
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
 
-const Home = lazy(() => import('@/pages/home/Home'));
-const Exames = lazy(() => import('@/pages/home/exames/Exames'));
-const NovoExame = lazy(() => import('@/pages/home/novo-exame/NovoExame'));
-const Fila = lazy(() => import('@/pages/home/fila/Fila'));
-const Login = lazy(() => import('@/pages/login/Login'));
+const Home = lazy(() => import('@/features/home/routes/Home'));
+const Exames = lazy(() => import('@/features/exames/routes/Exames'));
+const NovoExame = lazy(() => import('@/features/exames/routes/NovoExame'));
+const Fila = lazy(() => import('@/features/fila/routes/Fila'));
+const Login = lazy(() => import('@/features/auth/routes/Login'));
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<div>Carregando...</div>}>
