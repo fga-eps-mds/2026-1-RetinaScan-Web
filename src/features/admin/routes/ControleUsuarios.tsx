@@ -3,12 +3,16 @@ import TabelaUsers from '../components/TabelaUsers';
 import ModalNovoUser from '../components/ModalNovoUser';
 import { useState } from 'react';
 import InfoCards from '../components/InfoCards';
+import { useGetAllUsers } from '../hooks/useGetAllUsers';
+import type { User } from '../types/user';
 
 const ControleUsuarios = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: usersData } = useGetAllUsers();
 
-  const totalUsers = 3;
-  const totalActiveUsers = 2;
+  const totalUsers = usersData?.length || 0;
+  const totalActiveUsers =
+    usersData?.filter((user: User) => user.status === 'ATIVO').length || 0;
 
   return (
     <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">

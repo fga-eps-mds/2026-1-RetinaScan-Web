@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { buildApiUrl } from '@/lib/api';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
+import { useCreateUser } from '../hooks/useCreateUser';
+import { parseApiError } from '../api/parseApiError';
 
 type ModalNovoUserProps = {
   isOpen: boolean;
@@ -28,32 +29,11 @@ const formatCrm = (value: string): string => {
   return crmUf ? `${crmNumber}/${crmUf}` : crmNumber;
 };
 
-const getErrorMessage = (errorBody: unknown): string => {
-  if (!errorBody || typeof errorBody !== 'object') {
-    return 'Não foi possível cadastrar o usuário.';
-  }
-
-  const body = errorBody as {
-    message?: string;
-    errors?: Record<string, string[] | undefined>;
-  };
-
-  if (body.message) {
-    return body.message;
-  }
-
-  if (body.errors) {
-    const firstFieldErrors = Object.values(body.errors).find((messages) => messages?.length);
-
-    if (firstFieldErrors?.[0]) {
-      return firstFieldErrors[0];
-    }
-  }
-
-  return 'Não foi possível cadastrar o usuário.';
-};
-
-const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) => {
+const ModalNovoUser = ({
+  isOpen,
+  onClose,
+  onUserCreated,
+}: ModalNovoUserProps) => {
   const [name, setName] = useState<string>('');
   const [cpf, setCpf] = useState<string>('');
   const [crm, setCrm] = useState<string>('');
@@ -61,53 +41,43 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
   const [birthDate, setBirthDate] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const handleNovoUser = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const createUserMutation = useCreateUser();
+
+  const handleNovoUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      const passwordError = 'As senhas não coincidem.';
-      setError(passwordError);
-      toast.error(passwordError);
+    setError(null);
+    setFieldErrors({});
 
+    if (password !== confirmPassword) {
+      const message = 'As senhas não coincidem.';
+
+      setError(message);
+      setFieldErrors({
+        password: message,
+        confirmPassword: message,
+      });
+
+      toast.error(message);
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(buildApiUrl('/usuarios'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nomeCompleto: name,
-          email,
-          cpf: cpf.replace(/\D/g, ''),
-          crm: crm.toUpperCase(),
-          dtNascimento: birthDate,
-          senha: password,
-          tipoPerfil: 'MEDICO',
-        }),
+      await createUserMutation.mutateAsync({
+        nomeCompleto: name,
+        email,
+        cpf: cpf.replace(/\D/g, ''),
+        crm: crm.toUpperCase(),
+        dtNascimento: birthDate,
+        senha: password,
+        tipoPerfil: 'MEDICO',
       });
 
-      if (!response.ok) {
-        const errorBody = (await response.json().catch(() => null)) as unknown;
-        const message = getErrorMessage(errorBody);
-
-        setError(message);
-        toast.error(message, {
-          description: 'Confira os dados e tente novamente.',
-        });
-        return;
-      }
-
       toast.success('Usuário cadastrado com sucesso.');
+
       setName('');
       setCpf('');
       setCrm('');
@@ -115,15 +85,19 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
       setBirthDate('');
       setPassword('');
       setConfirmPassword('');
+      setError(null);
+      setFieldErrors({});
+
       onUserCreated?.();
       onClose();
-    } catch {
-      setError('Erro inesperado ao cadastrar usuário.');
-      toast.error('Erro inesperado ao cadastrar usuário.', {
-        description: 'Tente novamente em instantes.',
-      });
-    } finally {
-      setLoading(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const { message, fieldErrors } = parseApiError(err?.response?.data);
+
+      setError(message);
+      setFieldErrors(fieldErrors);
+
+      toast.error(message);
     }
   };
 
@@ -132,10 +106,10 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"> 
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-2xl rounded-xl border border-border bg-card p-6 shadow-lg">
         <div className="mb-6 flex items-start justify-between gap-4">
-          <header className= "space-y-2 text-center">
+          <header className="space-y-2 text-center">
             <h2 className="text-xl font-heading font-bold text-foreground">
               Cadastro de Usuário
             </h2>
@@ -171,9 +145,19 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
                   type="text"
                   placeholder="000.000.000-00"
                   value={cpf}
-                  onChange={(e) => setCpf(formatCpf(e.target.value))}
+                  onChange={(e) => {
+                    setCpf(formatCpf(e.target.value));
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.cpf;
+                      return next;
+                    });
+                  }}
                   required
                 />
+                {fieldErrors.cpf && (
+                  <p className="text-xs text-destructive">{fieldErrors.cpf}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -185,9 +169,19 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
                   type="text"
                   placeholder="000000/UF"
                   value={crm}
-                  onChange={(e) => setCrm(formatCrm(e.target.value))}
+                  onChange={(e) => {
+                    setCrm(formatCrm(e.target.value));
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.crm;
+                      return next;
+                    });
+                  }}
                   required
                 />
+                {fieldErrors.crm && (
+                  <p className="text-xs text-destructive">{fieldErrors.crm}</p>
+                )}
               </div>
             </div>
           </div>
@@ -202,9 +196,21 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.email;
+                      return next;
+                    });
+                  }}
                   required
                 />
+                {fieldErrors.email && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -263,10 +269,10 @@ const ModalNovoUser = ({ isOpen, onClose, onUserCreated }: ModalNovoUserProps) =
             </Button>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={createUserMutation.isPending}
               className="border-0 text-primary-foreground hover:opacity-90 cursor-pointer"
             >
-              {loading ? 'Cadastrando...' : 'Cadastrar'}
+              {createUserMutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
             </Button>
           </div>
 

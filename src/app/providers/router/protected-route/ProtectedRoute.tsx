@@ -1,8 +1,15 @@
+import NotAuthorized from '@/components/layout/not-authorized/NotAuthorized';
 import { useSession } from '@/lib/auth-client';
 import type { JSX } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
-export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+export const ProtectedRoute = ({
+  children,
+  allowed_roles,
+}: {
+  children: JSX.Element;
+  allowed_roles: string[];
+}) => {
   const { data: session, isPending } = useSession();
   const location = useLocation();
 
@@ -16,6 +23,12 @@ export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 
   if (!session) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  const userRole = session.user.tipoPerfil;
+
+  if (typeof userRole !== 'string' || !allowed_roles.includes(userRole)) {
+    return <NotAuthorized />;
   }
 
   return children;
