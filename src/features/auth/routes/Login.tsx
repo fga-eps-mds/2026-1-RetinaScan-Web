@@ -34,7 +34,7 @@ const Login = () => {
         });
         return;
       }
-    } catch {
+    }  catch {
       setError('Erro inesperado ao fazer login');
       toast(error, {
         description: 'Verifique suas credenciais e tente novamente.',
@@ -114,12 +114,6 @@ const Login = () => {
                 <label className="text-sm font-medium text-foreground">
                   Senha
                 </label>
-                <button
-                  type="button"
-                  className="text-xs text-primary hover:underline"
-                >
-                  Esqueceu a senha?
-                </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -157,11 +151,17 @@ const Login = () => {
             >
               {loading ? 'Entrando...' : 'Entrar'} <ArrowRight />
             </Button>
+
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+            >
+              Esqueceu a senha?
+            </button>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
           </form>
 
-          <p className="text-center text-xs text-muted-foreground">
-            Sistema protegido conforme LGPD. Dados anonimizados.
-          </p>
         </motion.div>
       </div>
     </div>

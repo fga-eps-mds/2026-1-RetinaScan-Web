@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Eye,
   Plus,
-  ListOrdered,
   Users,
   LogOut,
 } from 'lucide-react';
@@ -13,10 +12,9 @@ import { NavLink, useLocation, useNavigate } from 'react-router';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/exames/novo', icon: Plus, label: 'Novo exame' },
   { to: '/exames', icon: Eye, label: 'Exames' },
-  { to: '/exames/novo', icon: Plus, label: 'Novo Exame' },
-  { to: '/fila', icon: ListOrdered, label: 'Fila de Prioridade' },
-  { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
+  { to: '/admin/controle-usuarios', icon: Users, label: 'Controle de usuários' },
 ];
 
 const SideBar = () => {
