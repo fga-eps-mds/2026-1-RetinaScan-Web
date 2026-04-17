@@ -9,6 +9,9 @@ const Home = lazy(() => import('@/features/home/routes/Home'));
 const Exames = lazy(() => import('@/features/exames/routes/Exames'));
 const NovoExame = lazy(() => import('@/features/exames/routes/NovoExame'));
 const Fila = lazy(() => import('@/features/fila/routes/Fila'));
+const ControleUsuarios = lazy(
+  () => import('@/features/admin/routes/ControleUsuarios'),
+);
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 
 const withSuspense = (Component: React.ComponentType) => (
@@ -51,12 +54,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/usuarios',
+    path: '/admin/controle-usuarios',
     element: (
       <ProtectedRoute>
-        <AppLayout>
-          <div>Usuários</div>
-        </AppLayout>
+        <AppLayout>{withSuspense(ControleUsuarios)}</AppLayout>
       </ProtectedRoute>
     ),
   },
