@@ -1,4 +1,4 @@
-import { Trash2, Search} from 'lucide-react';
+import { Ban, Search } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -11,74 +11,125 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { useMemo, useState } from 'react';
+import { buildApiUrl } from '@/lib/api';
+import { useMemo, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
-type UserStatus = 'Ativo' | 'Inativo';
+type UserStatus = 'ATIVO' | 'INATIVO' | 'BLOQUEADO';
 
-type MockUser = {
+type ApiUser = {
   id: string;
-  nome: string;
+  nomeCompleto: string;
   email: string;
-  crm: string;
-  cadastro: string;
+  crm: string | null;
+  tipoPerfil: 'ADMIN' | 'MEDICO';
   status: UserStatus;
+  createdAt: string;
 };
 
-const mockUsers: MockUser[] = [
-  {
-    id: '1',
-    nome: 'Ana Costa',
-    email: 'ana.costa@retina.ia',
-    crm: '123456-SP',
-    cadastro: '01/01/2023',
-    status: 'Inativo',
-  },
-  {
-    id: '2',
-    nome: 'Bruno Oliveira',
-    email: 'bruno.oliveira@retina.ia',
-    crm: '654321-GO',
-    cadastro: '10/03/2023',
-    status: 'Ativo',
-  },
-  {
-    id: '3',
-    nome: 'Carla Souza',
-    email: 'carla.souza@retina.ia',
-    crm: '777888-DF',
-    cadastro: '22/05/2023',
-    status: 'Ativo',
-  },
-];
+type TabelaUsersProps = {
+  refreshKey?: number;
+};
 
-const TabelaUsers = () => {
+const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
   const [search, setSearch] = useState('');
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(buildApiUrl('/usuarios'), {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao carregar usuários.');
+        }
+
+        const data = (await response.json()) as ApiUser[];
+
+        if (isMounted) {
+          setUsers(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          const message = err instanceof Error ? err.message : 'Erro ao carregar usuários.';
+          setError(message);
+          toast.error(message, {
+            description: 'Tente novamente em instantes.',
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshKey]);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     if (!query) {
-      return mockUsers;
+      return users;
     }
 
-    return mockUsers.filter(
-      (user) => user.nome.toLowerCase().includes(query) || user.crm.toLowerCase().includes(query),
+    return users.filter(
+      (user) =>
+        user.nomeCompleto.toLowerCase().includes(query) ||
+        (user.crm?.toLowerCase().includes(query) ?? false),
     );
-  }, [search]);
+  }, [search, users]);
+
+  const formatDate = (isoDate: string): string => {
+    const parsed = new Date(isoDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return '-';
+    }
+    return new Intl.DateTimeFormat('pt-BR').format(parsed);
+  };
+
+  const getStatusBadge = (status: UserStatus) => {
+    const statusMap: Record<UserStatus, 'affirmative' | 'secondary' | 'destructive'> = {
+      ATIVO: 'affirmative',
+      INATIVO: 'secondary',
+      BLOQUEADO: 'destructive',
+    };
+    const displayStatus: Record<UserStatus, string> = {
+      ATIVO: 'Ativo',
+      INATIVO: 'Inativo',
+      BLOQUEADO: 'Bloqueado',
+    };
+    return { variant: statusMap[status], label: displayStatus[status] };
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 p-6">
         <h1 className="text-xl font-heading font-bold text-gray-900">Usuários Cadastrados</h1>
         <div className="relative">
-        <Search className = "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/> 
-        <Input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nome ou CRM"
-          className="w-full md:w-80 pl-9"
-        />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nome ou CRM"
+            className="w-full md:w-80 pl-9"
+          />
         </div>
       </div>
 
@@ -95,39 +146,57 @@ const TabelaUsers = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredUsers.length === 0 ? (
+          {loading && (
+            <TableRow>
+              <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
+                Carregando...
+              </TableCell>
+            </TableRow>
+          )}
+
+          {!loading && error && (
+            <TableRow>
+              <TableCell colSpan={7} className="py-6 text-center text-sm text-destructive">
+                {error}
+              </TableCell>
+            </TableRow>
+          )}
+
+          {!loading && !error && filteredUsers.length === 0 && (
             <TableRow>
               <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
                 Nenhum usuário encontrado.
               </TableCell>
             </TableRow>
-          ) : (
-            filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell className="font-medium">{user.nome}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.crm}</TableCell>
-                <TableCell>{user.cadastro}</TableCell>
-                <TableCell>
-                  <Badge variant={user.status === 'Ativo' ? 'affirmative' : 'secondary'}>
-                    {user.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button variant="outline" size="sm">
-                    <Trash2 />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
           )}
+
+          {!loading &&
+            !error &&
+            filteredUsers.map((user) => {
+              const { variant, label } = getStatusBadge(user.status);
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <Checkbox />
+                  </TableCell>
+                  <TableCell className="font-medium">{user.nomeCompleto}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.crm ?? '-'}</TableCell>
+                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>
+                    <Badge variant={variant}>{label}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">
+                      <Ban />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
         </TableBody>
       </Table>
     </div>
-
   );
 };
 
