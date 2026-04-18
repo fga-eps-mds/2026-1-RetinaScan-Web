@@ -1,14 +1,61 @@
 import { Button } from '@/components/ui/button';
 import TabelaUsers from '../components/TabelaUsers';
 import ModalNovoUser from '../components/ModalNovoUser';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InfoCards from '../components/InfoCards';
+import { buildApiUrl } from '@/lib/api';
+
+type ApiUser = {
+  id: string;
+  nomeCompleto: string;
+  email: string;
+  crm: string | null;
+  tipoPerfil: 'ADMIN' | 'MEDICO';
+  status: 'ATIVO' | 'INATIVO' | 'BLOQUEADO';
+  createdAt: string;
+};
 
 const ControleUsuarios = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [users, setUsers] = useState<ApiUser[]>([]);
 
-  const totalUsers = 3;
-  const totalActiveUsers = 2;
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUsers = async () => {
+
+      try {
+        const response = await fetch(buildApiUrl('/usuarios'), {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as ApiUser[];
+
+        if (isMounted) {
+          setUsers(Array.isArray(data) ? data : []);
+        }
+      } catch {
+        if (isMounted) {
+          setUsers([]);
+        }
+      }
+    };
+
+    void fetchUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshKey]);
+
+  const totalUsers = users.length;
+  const totalActiveUsers = users.filter((u) => u.status === 'ATIVO').length;
 
   return (
     <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
@@ -37,10 +84,11 @@ const ControleUsuarios = () => {
           </Button>
         </div>
 
-        <TabelaUsers />
+        <TabelaUsers refreshKey={refreshKey} />
         <ModalNovoUser
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+          onUserCreated={() => setRefreshKey((current) => current + 1)}
         />
       </div>
     </div>
