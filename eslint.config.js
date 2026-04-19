@@ -24,6 +24,7 @@ export default defineConfig([
       '**/dist/**',
       '**/components/ui/**',
       '**/test/**',
+      '**/coverage/**',
     ],
   },
 ]);
