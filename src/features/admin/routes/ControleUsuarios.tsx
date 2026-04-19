@@ -16,7 +16,7 @@ type ApiUser = {
 };
 
 const ControleUsuarios = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openModalNovoUser, setOpenModalNovoUser] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [users, setUsers] = useState<ApiUser[]>([]);
 
@@ -24,16 +24,13 @@ const ControleUsuarios = () => {
     let isMounted = true;
 
     const fetchUsers = async () => {
-
       try {
         const response = await fetch(buildApiUrl('/usuarios'), {
           method: 'GET',
           credentials: 'include',
         });
 
-        if (!response.ok) {
-          return;
-        }
+        if (!response.ok) return;
 
         const data = (await response.json()) as ApiUser[];
 
@@ -64,6 +61,7 @@ const ControleUsuarios = () => {
           <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
             Gerenciamento e Controle de Acesso
           </h2>
+
           <p className="text-md text-muted-foreground">
             Cadastre e gerencie os profissionais da plataforma
           </p>
@@ -77,7 +75,7 @@ const ControleUsuarios = () => {
 
           <Button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setOpenModalNovoUser(true)}
             className="w-50 cursor-pointer border-0 font-semibold text-primary-foreground hover:opacity-90"
           >
             Novo Usuário
@@ -85,10 +83,14 @@ const ControleUsuarios = () => {
         </div>
 
         <TabelaUsers refreshKey={refreshKey} />
+
         <ModalNovoUser
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onUserCreated={() => setRefreshKey((current) => current + 1)}
+          isOpen={openModalNovoUser}
+          onClose={() => setOpenModalNovoUser(false)}
+          onUserCreated={() => {
+            setRefreshKey((current) => current + 1);
+            setOpenModalNovoUser(false);
+          }}
         />
       </div>
     </div>

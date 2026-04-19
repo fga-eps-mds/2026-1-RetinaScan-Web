@@ -61,8 +61,11 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
         }
       } catch (err) {
         if (isMounted) {
-          const message = err instanceof Error ? err.message : 'Erro ao carregar usuários.';
+          const message =
+            err instanceof Error ? err.message : 'Erro ao carregar usuários.';
+
           setError(message);
+
           toast.error(message, {
             description: 'Tente novamente em instantes.',
           });
@@ -81,50 +84,50 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
     };
   }, [refreshKey]);
 
-  const filteredUsers = useMemo<TableUser[]>(() => {
-    const query = search.trim().toLowerCase();
-
-    const normalizedUsers: TableUser[] = users.map((user: User) => ({
-      id: user.id,
-      nomeCompleto: user.nomeCompleto,
-      email: user.email,
-      crm: user.crm ?? '-',
-      createdAt: formatDate(user.createdAt),
-      status: user.status === 'ATIVO' ? 'Ativo' : 'Inativo',
-    }));
-
-    if (!query) {
-      return users;
-    }
-
-    return users.filter(
-      (user) =>
-        user.nomeCompleto.toLowerCase().includes(query) ||
-        (user.crm?.toLowerCase().includes(query) ?? false),
-    );
-  }, [search, users]);
-
-  const formatDate = (isoDate: string): string => {
+  const formatDate = (isoDate: string) => {
     const parsed = new Date(isoDate);
+
     if (Number.isNaN(parsed.getTime())) {
       return '-';
     }
+
     return new Intl.DateTimeFormat('pt-BR').format(parsed);
   };
 
   const getStatusBadge = (status: UserStatus) => {
-    const statusMap: Record<UserStatus, 'affirmative' | 'secondary' | 'destructive'> = {
+    const statusMap: Record<
+      UserStatus,
+      'affirmative' | 'secondary' | 'destructive'
+    > = {
       ATIVO: 'affirmative',
       INATIVO: 'secondary',
       BLOQUEADO: 'destructive',
     };
-    const displayStatus: Record<UserStatus, string> = {
+
+    const labelMap: Record<UserStatus, string> = {
       ATIVO: 'Ativo',
       INATIVO: 'Inativo',
       BLOQUEADO: 'Bloqueado',
     };
-    return { variant: statusMap[status], label: displayStatus[status] };
+
+    return {
+      variant: statusMap[status],
+      label: labelMap[status],
+    };
   };
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) return users;
+
+    return users.filter(
+      (user) =>
+        user.nomeCompleto.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        (user.crm?.toLowerCase().includes(query) ?? false)
+    );
+  }, [search, users]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -134,13 +137,14 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
         </h1>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
           <Input
             type="text"
+            placeholder="Buscar por nome, e-mail ou CRM"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome ou CRM"
-            className="w-full md:w-80 pl-9"
+            className="w-full pl-9 md:w-80"
           />
         </div>
       </div>
@@ -148,7 +152,7 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead> </TableHead>
+            <TableHead />
             <TableHead className="font-semibold">Nome</TableHead>
             <TableHead className="font-semibold">E-mail</TableHead>
             <TableHead className="font-semibold">CRM</TableHead>
@@ -161,7 +165,10 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
         <TableBody>
           {loading && (
             <TableRow>
-              <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
+              <TableCell
+                colSpan={7}
+                className="py-6 text-center text-sm text-muted-foreground"
+              >
                 Carregando...
               </TableCell>
             </TableRow>
@@ -169,7 +176,10 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
 
           {!loading && error && (
             <TableRow>
-              <TableCell colSpan={7} className="py-6 text-center text-sm text-destructive">
+              <TableCell
+                colSpan={7}
+                className="py-6 text-center text-sm text-destructive"
+              >
                 {error}
               </TableCell>
             </TableRow>
@@ -192,21 +202,30 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
             !error &&
             filteredUsers.map((user) => {
               const { variant, label } = getStatusBadge(user.status);
+
               return (
                 <TableRow key={user.id}>
                   <TableCell>
                     <Checkbox />
                   </TableCell>
-                  <TableCell className="font-medium">{user.nomeCompleto}</TableCell>
+
+                  <TableCell className="font-medium">
+                    {user.nomeCompleto}
+                  </TableCell>
+
                   <TableCell>{user.email}</TableCell>
+
                   <TableCell>{user.crm ?? '-'}</TableCell>
+
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
+
                   <TableCell>
                     <Badge variant={variant}>{label}</Badge>
                   </TableCell>
+
                   <TableCell>
                     <Button variant="outline" size="sm">
-                      <Ban />
+                      <Ban className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

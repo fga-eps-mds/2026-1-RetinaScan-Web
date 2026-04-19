@@ -1,8 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
 import { useCreateUser } from '../hooks/useCreateUser';
 import { parseApiError } from '../api/parseApiError';
 
@@ -34,17 +40,29 @@ const ModalNovoUser = ({
   onClose,
   onUserCreated,
 }: ModalNovoUserProps) => {
-  const [name, setName] = useState<string>('');
-  const [cpf, setCpf] = useState<string>('');
-  const [crm, setCrm] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [birthDate, setBirthDate] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [name, setName] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [crm, setCrm] = useState('');
+  const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const createUserMutation = useCreateUser();
+
+  const resetForm = () => {
+    setName('');
+    setCpf('');
+    setCrm('');
+    setEmail('');
+    setBirthDate('');
+    setPassword('');
+    setConfirmPassword('');
+    setError(null);
+    setFieldErrors({});
+  };
 
   const handleNovoUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -78,16 +96,7 @@ const ModalNovoUser = ({
 
       toast.success('Usuário cadastrado com sucesso.');
 
-      setName('');
-      setCpf('');
-      setCrm('');
-      setEmail('');
-      setBirthDate('');
-      setPassword('');
-      setConfirmPassword('');
-      setError(null);
-      setFieldErrors({});
-
+      resetForm();
       onUserCreated?.();
       onClose();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,35 +110,99 @@ const ModalNovoUser = ({
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-2xl rounded-xl border border-border bg-card p-6 shadow-lg">
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <header className="space-y-2 text-center">
-            <h2 className="text-xl font-heading font-bold text-foreground">
-              Cadastro de Usuário
-            </h2>
-          </header>
-          <Button type="button" variant="ghost" onClick={onClose}>
-            <X />
-          </Button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="w-full max-w-2xl border border-border bg-card p-6 shadow-lg sm:rounded-xl">
+        <DialogHeader>
+          <DialogTitle>Cadastro de Usuário</DialogTitle>
+        </DialogHeader>
 
         <form className="space-y-4" onSubmit={handleNovoUser}>
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground">
-              Nome Completo
-            </label>
-            <div className="relative">
+            <label className="text-sm font-semibold">Nome Completo</label>
+            <Input
+              type="text"
+              placeholder="Digite o nome do usuário"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">CPF</label>
               <Input
                 type="text"
-                placeholder="Digite o nome do usuário"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => {
+                  setCpf(formatCpf(e.target.value));
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.cpf;
+                    return next;
+                  });
+                }}
+                required
+              />
+              {fieldErrors.cpf && (
+                <p className="text-xs text-destructive">{fieldErrors.cpf}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">CRM</label>
+              <Input
+                type="text"
+                placeholder="000000/UF"
+                value={crm}
+                onChange={(e) => {
+                  setCrm(formatCrm(e.target.value));
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.crm;
+                    return next;
+                  });
+                }}
+                required
+              />
+              {fieldErrors.crm && (
+                <p className="text-xs text-destructive">{fieldErrors.crm}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">E-mail</label>
+              <Input
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.email;
+                    return next;
+                  });
+                }}
+                required
+              />
+              {fieldErrors.email && (
+                <p className="text-xs text-destructive">{fieldErrors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">
+                Data de nascimento
+              </label>
+              <Input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
                 required
               />
             </div>
@@ -137,149 +210,58 @@ const ModalNovoUser = ({
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">
-                CPF
-              </label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="000.000.000-00"
-                  value={cpf}
-                  onChange={(e) => {
-                    setCpf(formatCpf(e.target.value));
-                    setFieldErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.cpf;
-                      return next;
-                    });
-                  }}
-                  required
-                />
-                {fieldErrors.cpf && (
-                  <p className="text-xs text-destructive">{fieldErrors.cpf}</p>
-                )}
-              </div>
+              <label className="text-sm font-semibold">Senha</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                required
+              />
+              {fieldErrors.password && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">
-                CRM
-              </label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="000000/UF"
-                  value={crm}
-                  onChange={(e) => {
-                    setCrm(formatCrm(e.target.value));
-                    setFieldErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.crm;
-                      return next;
-                    });
-                  }}
-                  required
-                />
-                {fieldErrors.crm && (
-                  <p className="text-xs text-destructive">{fieldErrors.crm}</p>
-                )}
-              </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">
-                E-mail
+              <label className="text-sm font-semibold">
+                Confirmação de senha
               </label>
-              <div className="relative">
-                <Input
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setFieldErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.email;
-                      return next;
-                    });
-                  }}
-                  required
-                />
-                {fieldErrors.email && (
-                  <p className="text-xs text-destructive">
-                    {fieldErrors.email}
-                  </p>
-                )}
-              </div>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme sua senha"
+                required
+              />
+              {fieldErrors.confirmPassword && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.confirmPassword}
+                </p>
+              )}
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">
-                Data de nascimento
-              </label>
-              <div className="relative">
-                <Input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-foreground">
-                  Senha
-                </label>
-              </div>
-              <div className="relative">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Digite sua senha"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-foreground">
-                  Confirmação de senha
-                </label>
-              </div>
-              <div className="relative">
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  placeholder="Confirme sua senha"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={createUserMutation.isPending}
-              className="border-0 text-primary-foreground hover:opacity-90 cursor-pointer"
-            >
-              {createUserMutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
-            </Button>
           </div>
 
           {error && <p className="text-xs text-destructive">{error}</p>}
+
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancelar
+            </Button>
+
+            <Button
+              type="submit"
+              disabled={createUserMutation.isPending}
+              className="border-0 text-primary-foreground hover:opacity-90"
+            >
+              {createUserMutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
