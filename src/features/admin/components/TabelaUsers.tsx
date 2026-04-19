@@ -1,4 +1,4 @@
-import { Trash2, Search } from 'lucide-react';
+import { Ban, Search } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -11,35 +11,75 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { useMemo, useState } from 'react';
-import { useGetAllUsers } from '../hooks/useGetAllUsers';
-import { Spinner } from '@/components/ui/spinner';
-import type { User } from '../types/user';
+import { buildApiUrl } from '@/lib/api';
+import { useMemo, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
-type UserStatus = 'Ativo' | 'Inativo';
+type UserStatus = 'ATIVO' | 'INATIVO' | 'BLOQUEADO';
 
-type TableUser = {
+type ApiUser = {
   id: string;
   nomeCompleto: string;
   email: string;
-  crm: string;
-  createdAt: string;
+  crm: string | null;
+  tipoPerfil: 'ADMIN' | 'MEDICO';
   status: UserStatus;
+  createdAt: string;
 };
 
-const formatDate = (dateString?: string) => {
-  if (!dateString) return '-';
-
-  const date = new Date(dateString);
-
-  if (Number.isNaN(date.getTime())) return '-';
-
-  return new Intl.DateTimeFormat('pt-BR').format(date);
+type TabelaUsersProps = {
+  refreshKey?: number;
 };
 
-const TabelaUsers = () => {
+const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
   const [search, setSearch] = useState('');
-  const { data: users = [], isLoading, isError, error } = useGetAllUsers();
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(buildApiUrl('/usuarios'), {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao carregar usuários.');
+        }
+
+        const data = (await response.json()) as ApiUser[];
+
+        if (isMounted) {
+          setUsers(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          const message = err instanceof Error ? err.message : 'Erro ao carregar usuários.';
+          setError(message);
+          toast.error(message, {
+            description: 'Tente novamente em instantes.',
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshKey]);
 
   const filteredUsers = useMemo<TableUser[]>(() => {
     const query = search.trim().toLowerCase();
@@ -54,36 +94,37 @@ const TabelaUsers = () => {
     }));
 
     if (!query) {
-      return normalizedUsers;
+      return users;
     }
 
-    return normalizedUsers.filter(
+    return users.filter(
       (user) =>
         user.nomeCompleto.toLowerCase().includes(query) ||
-        user.crm.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query)
+        (user.crm?.toLowerCase().includes(query) ?? false),
     );
   }, [search, users]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-40 items-center justify-center rounded-xl border border-border bg-card">
-        <Spinner />
-      </div>
-    );
-  }
+  const formatDate = (isoDate: string): string => {
+    const parsed = new Date(isoDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return '-';
+    }
+    return new Intl.DateTimeFormat('pt-BR').format(parsed);
+  };
 
-  if (isError) {
-    const message =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any)?.response?.data?.message || 'Erro ao carregar usuários.';
-
-    return (
-      <div className="rounded-xl border border-border bg-card p-6">
-        <p className="text-sm text-destructive">{message}</p>
-      </div>
-    );
-  }
+  const getStatusBadge = (status: UserStatus) => {
+    const statusMap: Record<UserStatus, 'affirmative' | 'secondary' | 'destructive'> = {
+      ATIVO: 'affirmative',
+      INATIVO: 'secondary',
+      BLOQUEADO: 'destructive',
+    };
+    const displayStatus: Record<UserStatus, string> = {
+      ATIVO: 'Ativo',
+      INATIVO: 'Inativo',
+      BLOQUEADO: 'Bloqueado',
+    };
+    return { variant: statusMap[status], label: displayStatus[status] };
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -93,13 +134,13 @@ const TabelaUsers = () => {
         </h1>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome, e-mail ou CRM"
-            className="w-full pl-9 md:w-80"
+            placeholder="Buscar por nome ou CRM"
+            className="w-full md:w-80 pl-9"
           />
         </div>
       </div>
@@ -118,7 +159,23 @@ const TabelaUsers = () => {
         </TableHeader>
 
         <TableBody>
-          {filteredUsers.length === 0 ? (
+          {loading && (
+            <TableRow>
+              <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
+                Carregando...
+              </TableCell>
+            </TableRow>
+          )}
+
+          {!loading && error && (
+            <TableRow>
+              <TableCell colSpan={7} className="py-6 text-center text-sm text-destructive">
+                {error}
+              </TableCell>
+            </TableRow>
+          )}
+
+          {!loading && !error && filteredUsers.length === 0 && (
             <TableRow>
               <TableCell
                 colSpan={7}
@@ -129,38 +186,32 @@ const TabelaUsers = () => {
                   : 'Nenhum usuário cadastrado.'}
               </TableCell>
             </TableRow>
-          ) : (
-            filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-
-                <TableCell className="font-medium">
-                  {user.nomeCompleto}
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.crm}</TableCell>
-                <TableCell>{user.createdAt}</TableCell>
-
-                <TableCell>
-                  <Badge
-                    variant={
-                      user.status === 'Ativo' ? 'affirmative' : 'secondary'
-                    }
-                  >
-                    {user.status}
-                  </Badge>
-                </TableCell>
-
-                <TableCell>
-                  <Button variant="outline" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
           )}
+
+          {!loading &&
+            !error &&
+            filteredUsers.map((user) => {
+              const { variant, label } = getStatusBadge(user.status);
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <Checkbox />
+                  </TableCell>
+                  <TableCell className="font-medium">{user.nomeCompleto}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.crm ?? '-'}</TableCell>
+                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>
+                    <Badge variant={variant}>{label}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">
+                      <Ban />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
         </TableBody>
       </Table>
     </div>
