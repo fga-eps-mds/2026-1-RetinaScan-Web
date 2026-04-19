@@ -81,8 +81,17 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
     };
   }, [refreshKey]);
 
-  const filteredUsers = useMemo(() => {
+  const filteredUsers = useMemo<TableUser[]>(() => {
     const query = search.trim().toLowerCase();
+
+    const normalizedUsers: TableUser[] = users.map((user: User) => ({
+      id: user.id,
+      nomeCompleto: user.nomeCompleto,
+      email: user.email,
+      crm: user.crm ?? '-',
+      createdAt: formatDate(user.createdAt),
+      status: user.status === 'ATIVO' ? 'Ativo' : 'Inativo',
+    }));
 
     if (!query) {
       return users;
@@ -120,7 +129,10 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 p-6">
-        <h1 className="text-xl font-heading font-bold text-gray-900">Usuários Cadastrados</h1>
+        <h1 className="text-xl font-heading font-bold text-gray-900">
+          Usuários Cadastrados
+        </h1>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -145,6 +157,7 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
             <TableHead className="font-semibold">Ações</TableHead>
           </TableRow>
         </TableHeader>
+
         <TableBody>
           {loading && (
             <TableRow>
@@ -164,8 +177,13 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
 
           {!loading && !error && filteredUsers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                Nenhum usuário encontrado.
+              <TableCell
+                colSpan={7}
+                className="py-6 text-center text-sm text-muted-foreground"
+              >
+                {search
+                  ? 'Nenhum usuário encontrado para a busca.'
+                  : 'Nenhum usuário cadastrado.'}
               </TableCell>
             </TableRow>
           )}
