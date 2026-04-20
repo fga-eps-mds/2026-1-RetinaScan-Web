@@ -5,7 +5,6 @@ import { lazy, Suspense } from 'react';
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
 import Loading from '@/components/layout/loading/Loading';
-import EditProfile from '@/features/usuario/routes/EditProfile';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
 const Exames = lazy(() => import('@/features/exames/routes/Exames'));
@@ -60,14 +59,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowed_roles={['ADMIN']}>
         <AppLayout>{withSuspense(ControleUsuarios)}</AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/perfil/editar',
-    element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
-        <AppLayout>{withSuspense(EditProfile)}</AppLayout>
       </ProtectedRoute>
     ),
   },
