@@ -60,10 +60,12 @@ const SideBar = () => {
     });
   };
 
-  const imageUrl = session?.user.image?.replace(
-    'http://retina-scan-minio:9000',
-    'http://localhost:9000'
-  );
+  const imageUrl = session?.user?.image
+    ? `${session.user.image.replace(
+        'http://retina-scan-minio:9000',
+        'http://localhost:9000'
+      )}?t=${new Date().getTime()}`
+    : '';
 
   return (
     <aside className="gradient-sidebar flex min-h-screen w-64 flex-col text-sidebar-foreground">
@@ -106,7 +108,12 @@ const SideBar = () => {
       <div className="flex flex-col gap-4 space-y-1 border-t border-sidebar-border px-3 py-4">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={imageUrl || ''} />
+            {/* crossOrigin="anonymous" adicionado para não enviar os cookies gigantes do localhost */}
+            <AvatarImage
+              src={imageUrl}
+              crossOrigin="anonymous"
+              className="object-cover"
+            />
             <AvatarFallback>
               {session?.user.name
                 ? session.user.name.substring(0, 2).toUpperCase()
@@ -114,23 +121,32 @@ const SideBar = () => {
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-bold text-sidebar-foreground">
+          <div className="flex flex-col overflow-hidden">
+            <p className="truncate text-sm font-bold text-sidebar-foreground">
               {session?.user.name || 'Usuário'}
             </p>
-            <p className="text-xs">{session?.user.email}</p>
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              {session?.user.email}
+            </p>
           </div>
-
-          <div className="flex items-center justify-end w-full">
-            <Button onClick={() => navigate('/perfil/editar')}>
-              <Pencil size={20} />
-            </Button>
-          </div>
+          {session?.user.tipoPerfil === 'MEDICO' && (
+            <div className="flex items-center justify-end ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => navigate('/perfil/editar')}
+              >
+                <Pencil size={16} />
+              </Button>
+            </div>
+          )}
         </div>
 
         <Button
           onClick={handleSignOut}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-white transition-colors hover:text-destructive"
+          variant="destructive"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors"
         >
           <LogOut className="h-4.5 w-4.5" />
           Sair
