@@ -123,7 +123,7 @@ describe('EditProfile', () => {
   it('deve enviar payload correto ao salvar nome e email', async () => {
     const user = userEvent.setup();
 
-    mockMutate.mockImplementation((payload, options) => {
+    mockMutate.mockImplementation((_payload, options) => {
       options?.onSuccess?.({});
     });
 
@@ -157,7 +157,7 @@ describe('EditProfile', () => {
   it('deve enviar dtNascimento quando a data for alterada', async () => {
     const user = userEvent.setup();
 
-    mockMutate.mockImplementation((payload, options) => {
+    mockMutate.mockImplementation((_payload, options) => {
       options?.onSuccess?.({});
     });
 
