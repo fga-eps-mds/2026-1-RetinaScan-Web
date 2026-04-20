@@ -1,22 +1,34 @@
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
-import {
-  LayoutDashboard,
-  Eye,
-  Plus,
-  ListOrdered,
-  Users,
-  LogOut,
-} from 'lucide-react';
+import { LayoutDashboard, Eye, Plus, Users, LogOut } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/exames', icon: Eye, label: 'Exames' },
-  { to: '/exames/novo', icon: Plus, label: 'Novo Exame' },
-  { to: '/fila', icon: ListOrdered, label: 'Fila de Prioridade' },
-  { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
+  {
+    to: '/',
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+    allowed_roles: ['ADMIN', 'MEDICO'],
+  },
+  {
+    to: '/exames/novo',
+    icon: Plus,
+    label: 'Novo exame',
+    allowed_roles: ['ADMIN', 'MEDICO'],
+  },
+  {
+    to: '/exames',
+    icon: Eye,
+    label: 'Exames',
+    allowed_roles: ['ADMIN', 'MEDICO'],
+  },
+  {
+    to: '/admin/controle-usuarios',
+    icon: Users,
+    label: 'Controle de usuários',
+    allowed_roles: ['ADMIN'],
+  },
 ];
 
 const SideBar = () => {
@@ -24,7 +36,12 @@ const SideBar = () => {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
 
-  console.log('Session data:', session);
+  const userRole = session?.user?.tipoPerfil;
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (!userRole) return false;
+    return item.allowed_roles.includes(userRole);
+  });
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -37,14 +54,14 @@ const SideBar = () => {
   };
 
   return (
-    <aside className="gradient-sidebar w-64 min-h-screen flex flex-col text-sidebar-foreground">
-      {/* Logo */}
-      <div className="px-6 py-6 flex items-center gap-3 border-b border-sidebar-border">
-        <div className="w-9 h-9 rounded-lg gradient-clinical flex items-center justify-center">
-          <Eye className="w-5 h-5 text-sidebar-primary-foreground" />
+    <aside className="gradient-sidebar flex min-h-screen w-64 flex-col text-sidebar-foreground">
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-6 py-6">
+        <div className="gradient-clinical flex h-9 w-9 items-center justify-center rounded-lg">
+          <Eye className="h-5 w-5 text-sidebar-primary-foreground" />
         </div>
+
         <div>
-          <h1 className="font-heading font-bold text-sm text-sidebar-accent-foreground">
+          <h1 className="font-heading text-sm font-bold text-sidebar-accent-foreground">
             RetinaScan
           </h1>
           <p className="text-[11px] text-sidebar-foreground/60">
@@ -53,27 +70,28 @@ const SideBar = () => {
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 space-y-1 px-3 py-4">
+        {visibleNavItems.map((item) => {
           const active = location.pathname === item.to;
+
           return (
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
               }`}
             >
-              <item.icon className="w-4.5 h-4.5" />
+              <item.icon className="h-4.5 w-4.5" />
               {item.label}
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="flex flex-col gap-4 px-3 py-4 border-t border-sidebar-border space-y-1">
+      <div className="flex flex-col gap-4 space-y-1 border-t border-sidebar-border px-3 py-4">
         <div className="flex items-center gap-2">
           <Avatar>
             <AvatarImage src="" />
@@ -94,9 +112,9 @@ const SideBar = () => {
 
         <Button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-bold text-white hover:text-destructive w-full transition-colors cursor-pointer"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-white transition-colors hover:text-destructive"
         >
-          <LogOut className="w-4.5 h-4.5" />
+          <LogOut className="h-4.5 w-4.5" />
           Sair
         </Button>
       </div>

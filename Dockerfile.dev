@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+ENTRYPOINT [ "sh", "scripts/entrypoint.sh" ]
+
 EXPOSE 5173
 
 CMD ["npm", "run", "dev"]

@@ -4,15 +4,19 @@ import { lazy, Suspense } from 'react';
 
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
+import Loading from '@/components/layout/loading/Loading';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
 const Exames = lazy(() => import('@/features/exames/routes/Exames'));
 const NovoExame = lazy(() => import('@/features/exames/routes/NovoExame'));
 const Fila = lazy(() => import('@/features/fila/routes/Fila'));
+const ControleUsuarios = lazy(
+  () => import('@/features/admin/routes/ControleUsuarios')
+);
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 
 const withSuspense = (Component: React.ComponentType) => (
-  <Suspense fallback={<div>Carregando...</div>}>
+  <Suspense fallback={<Loading />}>
     <Component />
   </Suspense>
 );
@@ -21,7 +25,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Home)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -29,7 +33,7 @@ export const router = createBrowserRouter([
   {
     path: '/exames',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Exames)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -37,7 +41,7 @@ export const router = createBrowserRouter([
   {
     path: '/exames/novo',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(NovoExame)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -45,18 +49,16 @@ export const router = createBrowserRouter([
   {
     path: '/fila',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Fila)}</AppLayout>
       </ProtectedRoute>
     ),
   },
   {
-    path: '/admin/usuarios',
+    path: '/admin/controle-usuarios',
     element: (
-      <ProtectedRoute>
-        <AppLayout>
-          <div>Usuários</div>
-        </AppLayout>
+      <ProtectedRoute allowed_roles={['ADMIN']}>
+        <AppLayout>{withSuspense(ControleUsuarios)}</AppLayout>
       </ProtectedRoute>
     ),
   },
