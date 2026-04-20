@@ -11,78 +11,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { buildApiUrl } from '@/lib/api';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useGetAllUsers } from '../hooks/useGetAllUsers';
+import type { User } from '../types/user';
 
 type UserStatus = 'ATIVO' | 'INATIVO' | 'BLOQUEADO';
 
-type ApiUser = {
-  id: string;
-  nomeCompleto: string;
-  email: string;
-  crm: string | null;
-  tipoPerfil: 'ADMIN' | 'MEDICO';
-  status: UserStatus;
-  createdAt: string;
-};
-
-type TabelaUsersProps = {
-  refreshKey?: number;
-};
-
-const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
+const TabelaUsers = () => {
   const [search, setSearch] = useState('');
-  const [users, setUsers] = useState<ApiUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(buildApiUrl('/usuarios'), {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          throw new Error('Falha ao carregar usuários.');
-        }
-
-        const data = (await response.json()) as ApiUser[];
-
-        if (isMounted) {
-          setUsers(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        if (isMounted) {
-          const message =
-            err instanceof Error ? err.message : 'Erro ao carregar usuários.';
-
-          setError(message);
-
-          toast.error(message, {
-            description: 'Tente novamente em instantes.',
-          });
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [refreshKey]);
+  const { data: users = [], isLoading, isError, error } = useGetAllUsers();
 
   const formatDate = (isoDate: string) => {
     const parsed = new Date(isoDate);
@@ -122,12 +61,18 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
     if (!query) return users;
 
     return users.filter(
-      (user) =>
+      (user: User) =>
         user.nomeCompleto.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
         (user.crm?.toLowerCase().includes(query) ?? false)
     );
   }, [search, users]);
+
+  if (isError) {
+    toast.error('Erro ao carregar usuários.', {
+      description: error instanceof Error ? error.message : undefined,
+    });
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -163,7 +108,7 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
         </TableHeader>
 
         <TableBody>
-          {loading && (
+          {isLoading && (
             <TableRow>
               <TableCell
                 colSpan={7}
@@ -174,18 +119,18 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
             </TableRow>
           )}
 
-          {!loading && error && (
+          {!isLoading && isError && (
             <TableRow>
               <TableCell
                 colSpan={7}
                 className="py-6 text-center text-sm text-destructive"
               >
-                {error}
+                Erro ao carregar usuários.
               </TableCell>
             </TableRow>
           )}
 
-          {!loading && !error && filteredUsers.length === 0 && (
+          {!isLoading && !isError && filteredUsers.length === 0 && (
             <TableRow>
               <TableCell
                 colSpan={7}
@@ -198,10 +143,12 @@ const TabelaUsers = ({ refreshKey = 0 }: TabelaUsersProps) => {
             </TableRow>
           )}
 
-          {!loading &&
-            !error &&
-            filteredUsers.map((user) => {
-              const { variant, label } = getStatusBadge(user.status);
+          {!isLoading &&
+            !isError &&
+            filteredUsers.map((user: User) => {
+              const { variant, label } = getStatusBadge(
+                user.status as UserStatus
+              );
 
               return (
                 <TableRow key={user.id}>
