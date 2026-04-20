@@ -1,7 +1,14 @@
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
-import { LayoutDashboard, Eye, Plus, Users, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Eye,
+  Plus,
+  Users,
+  LogOut,
+  Pencil,
+} from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
 
 const navItems = [
@@ -53,6 +60,11 @@ const SideBar = () => {
     });
   };
 
+  const imageUrl = session?.user.image?.replace(
+    'http://retina-scan-minio:9000',
+    'http://localhost:9000'
+  );
+
   return (
     <aside className="gradient-sidebar flex min-h-screen w-64 flex-col text-sidebar-foreground">
       <div className="flex items-center gap-3 border-b border-sidebar-border px-6 py-6">
@@ -94,7 +106,7 @@ const SideBar = () => {
       <div className="flex flex-col gap-4 space-y-1 border-t border-sidebar-border px-3 py-4">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src="" />
+            <AvatarImage src={imageUrl || ''} />
             <AvatarFallback>
               {session?.user.name
                 ? session.user.name.substring(0, 2).toUpperCase()
@@ -107,6 +119,12 @@ const SideBar = () => {
               {session?.user.name || 'Usuário'}
             </p>
             <p className="text-xs">{session?.user.email}</p>
+          </div>
+
+          <div className="flex items-center justify-end w-full">
+            <Button onClick={() => navigate('/perfil/editar')}>
+              <Pencil size={20} />
+            </Button>
           </div>
         </div>
 
