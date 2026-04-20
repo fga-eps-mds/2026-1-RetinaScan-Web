@@ -191,11 +191,6 @@ const EditProfile = () => {
           </Card>
 
           <Card className="p-4 ">
-            <label className="text-sm font-bold text-foreground">CPF</label>
-            <Input type="text" placeholder={session?.user.cpf} disabled />
-          </Card>
-
-          <Card className="p-4 ">
             <label className="text-sm font-bold text-foreground">
               Senha Atual
             </label>
