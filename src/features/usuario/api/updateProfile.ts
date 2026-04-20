@@ -12,6 +12,9 @@ export type UpdateProfileData = {
 export async function updateProfile(data: UpdateProfileData) {
   try {
     const response = await api.put('/api/usuarios', data);
+
+    console.log('Resposta da API:', response.data);
+
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {

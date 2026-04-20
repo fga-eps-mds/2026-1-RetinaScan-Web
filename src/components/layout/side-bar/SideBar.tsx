@@ -136,22 +136,18 @@ const SideBar = () => {
             <p className="truncate text-sm font-bold text-sidebar-foreground">
               {session?.user.name || 'Usuário'}
             </p>
-            <p className="truncate text-xs text-sidebar-foreground/60">{session?.user.email}</p>
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              {session?.user.email}
+            </p>
           </div>
 
-
-          <div className="flex items-center justify-end w-full">
-            <Button onClick={handleOpenEditProfile}>
-              <Pencil size={20} />
-            </Button>
-          </div>
-          {sessionUser?.tipoPerfil === 'MEDICO'&& (
+          {sessionUser?.tipoPerfil === 'MEDICO' && (
             <div className="flex items-center justify-end ml-auto">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => navigate('/perfil/editar')}
+                onClick={handleOpenEditProfile}
               >
                 <Pencil size={16} />
               </Button>

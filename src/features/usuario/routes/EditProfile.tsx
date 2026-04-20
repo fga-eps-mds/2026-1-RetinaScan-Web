@@ -2,31 +2,44 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSession } from '@/lib/auth-client';
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
 import { Camera } from 'lucide-react';
 import { useUpdateProfileImage } from '../hooks/useUpdateProfileImage';
 
-// Funções auxiliares mantidas fora para não re-renderizar
+type EditProfileProps = {
+  onClose?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+};
+
 const formatDateLabel = (dateValue?: Date | string | null) => {
   if (!dateValue) return 'Não informada';
+
   const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+
   return Number.isNaN(date.getTime())
     ? 'Não informada'
     : new Intl.DateTimeFormat('pt-BR').format(date);
 };
 
-type EditProfileProps = {
-  onClose?: () => void;
-  onDirtyChange?: (isDirty: boolean) => void;
-}
+const formatDateInput = (dateValue?: Date | string | null) => {
+  if (!dateValue) return '';
+
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().split('T')[0];
+};
 
 const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const { data: session, refetch } = useSession();
   const { mutate, isPending } = useUpdateProfile();
   const { mutateAsync: uploadImage } = useUpdateProfileImage();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [email, setEmail] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
@@ -35,18 +48,30 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const [preview, setPreview] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const originalDate = useMemo(
+  const currentEmail = session?.user.email ?? '';
+  const currentBirthDate = useMemo(
+    () => formatDateInput(session?.user.dtNascimento),
+    [session?.user.dtNascimento]
+  );
+
+  const birthDateLabel = useMemo(
     () => formatDateLabel(session?.user.dtNascimento),
     [session?.user.dtNascimento]
   );
 
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   const isDirty =
-    Boolean(nomeCompleto) ||
-    Boolean(email) ||
-    Boolean(senhaAtual) ||
-    Boolean(novaSenha) ||
-    Boolean(selectedFile) ||
-    Boolean(dataNascimento && dataNascimento !== originalDate);
+    Boolean(nomeCompleto.trim()) ||
+    Boolean(email.trim()) ||
+    Boolean(dataNascimento) ||
+    Boolean(senhaAtual.trim()) ||
+    Boolean(novaSenha.trim()) ||
+    Boolean(selectedFile);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -65,12 +90,30 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const handleSubmit = async () => {
     const payload: Record<string, string> = {};
 
-    if (nomeCompleto.trim()) payload.nomeCompleto = nomeCompleto.trim();
-    if (email.trim()) payload.email = email.trim();
-    if (dataNascimento && dataNascimento !== originalDate)
-      payload.dataNascimento = dataNascimento;
-    if (senhaAtual.trim()) payload.senhaAtual = senhaAtual.trim();
-    if (novaSenha.trim()) payload.novaSenha = novaSenha.trim();
+    if (nomeCompleto.trim()) {
+      payload.nomeCompleto = nomeCompleto.trim();
+    }
+
+    if (email.trim() && email.trim() !== currentEmail) {
+      payload.email = email.trim();
+    }
+
+    if (dataNascimento && dataNascimento !== currentBirthDate) {
+      payload.dtNascimento = dataNascimento;
+    }
+
+    if (senhaAtual.trim()) {
+      payload.senhaAtual = senhaAtual.trim();
+    }
+
+    if (novaSenha.trim()) {
+      payload.novaSenha = novaSenha.trim();
+    }
+
+    if (Object.keys(payload).length === 0 && !selectedFile) {
+      toast.error('Nenhuma alteração para salvar.');
+      return;
+    }
 
     try {
       if (Object.keys(payload).length > 0) {
@@ -86,20 +129,35 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
         await uploadImage(selectedFile);
       }
 
+      try {
+        await refetch();
+      } catch (refetchError) {
+        console.error('Erro ao refetch da sessão:', refetchError);
+      }
+
       toast.success('Perfil atualizado!');
 
-      // Limpar campos de senha
+      setNomeCompleto('');
+      setEmail('');
+      setDataNascimento('');
       setSenhaAtual('');
       setNovaSenha('');
       setSelectedFile(null);
-      setPreview('');
 
-      await refetch();
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+
+      setPreview('');
+      onClose?.();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const messages = error.message?.split('\n').filter(Boolean) || [
         'Erro desconhecido',
       ];
+
+      console.log(error.response?.data || error);
+
       toast.error('Erro ao atualizar perfil', {
         description: (
           <ul className="mt-2 list-disc pl-4 text-sm">
@@ -117,23 +175,21 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const imageUrl = useMemo(() => {
     if (!userImage) return '';
 
-    // Ajuste de rota Docker vs Localhost
     const base = userImage.replace(
       'http://retina-scan-minio:9000',
       'http://localhost:9000'
     );
 
-    // O timestamp evita cache de erro do navegador
-    return `${base}?t=${new Date().getTime()}`;
+    // eslint-disable-next-line react-hooks/purity
+    return `${base}?t=${Date.now()}`;
   }, [userImage]);
-
 
   return (
     <div className="px-1 py-1 sm:px-2">
       <div className="flex flex-col gap-4">
-          <div className="flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-center mb-5">
-            <div className="group relative">
-              <Avatar className="h-36 w-36 border-4 border-background shadow-lg">
+        <div className="mb-5 flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-center">
+          <div className="group relative">
+            <Avatar className="h-36 w-36 border-4 border-background shadow-lg">
               <AvatarImage
                 src={preview || imageUrl}
                 className="object-cover"
@@ -144,45 +200,46 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
               </AvatarFallback>
             </Avatar>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/55 opacity-0 transition-all duration-200 group-hover:opacity-100"
-              >
-                <Camera className="h-5 w-5 text-white" />
-              </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/55 opacity-0 transition-all duration-200 group-hover:opacity-100"
+            >
+              <Camera className="h-5 w-5 text-white" />
+            </button>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleSelectImage}
-              />
-            </div>
-
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleSelectImage}
+            />
           </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-foreground">CRM</label>
-                <p className="font-semibold rounded-md py-2 text-sm text-foreground">
-                  {session?.user.crm ?? '-'}
-                </p>
-              </div>
+        </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-foreground">CPF</label>
-                <p className="font-semibold rounded-md py-2 text-sm text-foreground">
-                  {session?.user.cpf ?? '-'}
-                </p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-foreground">CRM</label>
+            <p className="rounded-md py-2 text-sm font-semibold text-foreground">
+              {session?.user.crm ?? '-'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-foreground">CPF</label>
+            <p className="rounded-md py-2 text-sm font-semibold text-foreground">
+              {session?.user.cpf ?? '-'}
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <label className="text-sm font-semibold">Nome Completo</label>
           <Input
             type="text"
-            placeholder={session?.user.name}
+            placeholder={session?.user.name || 'Digite seu nome completo'}
+            value={nomeCompleto}
             onChange={(e) => setNomeCompleto(e.target.value)}
           />
         </div>
@@ -191,7 +248,7 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
           <label className="text-sm font-semibold">E-mail</label>
           <Input
             type="email"
-            placeholder={session?.user.email}
+            placeholder={currentEmail || 'Digite seu e-mail'}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -203,14 +260,10 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
             type="date"
             value={dataNascimento}
             onChange={(e) => setDataNascimento(e.target.value)}
-            defaultValue={
-              session?.user.dtNascimento
-                ? new Date(session.user.dtNascimento)
-                    .toISOString()
-                    .split('T')[0]
-                : ''
-            }
           />
+          <p className="text-xs text-muted-foreground">
+            Data atual: {birthDateLabel}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -218,17 +271,17 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
             <label className="text-sm font-semibold">Senha atual</label>
             <Input
               type="password"
+              value={senhaAtual}
               onChange={(e) => setSenhaAtual(e.target.value)}
               placeholder="••••••••"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold">
-              Nova senha
-            </label>
+            <label className="text-sm font-semibold">Nova senha</label>
             <Input
               type="password"
+              value={novaSenha}
               onChange={(e) => setNovaSenha(e.target.value)}
               placeholder="Crie uma nova senha"
             />
@@ -240,18 +293,7 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
             Cancelar
           </Button>
 
-          <Button
-            disabled={
-              isPending ||
-              (!nomeCompleto &&
-                !email &&
-                !dataNascimento &&
-                !senhaAtual &&
-                !novaSenha &&
-                !selectedFile)
-            }
-            onClick={handleSubmit}
-          >
+          <Button disabled={isPending || !isDirty} onClick={handleSubmit}>
             Salvar Alterações
           </Button>
         </div>
@@ -259,6 +301,5 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
     </div>
   );
 };
-
 
 export default EditProfile;

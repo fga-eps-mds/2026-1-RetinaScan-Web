@@ -1,6 +1,11 @@
 import SideBar from './side-bar/SideBar';
 import EditProfile from '@/features/usuario/routes/EditProfile';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useSearchParams } from 'react-router';
 import { useState } from 'react';
 
@@ -9,8 +14,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isEditProfileDirty, setIsEditProfileDirty] = useState(false);
   const isEditProfileOpen = searchParams.get('editProfile') === 'true';
 
-  const closeEditProfile = () => {
-    if (isEditProfileDirty) {
+  const closeEditProfile = (options?: { skipDirtyCheck?: boolean }) => {
+    const skipDirtyCheck = options?.skipDirtyCheck ?? false;
+
+    if (!skipDirtyCheck && isEditProfileDirty) {
       const confirmed = window.confirm(
         'Você tem alterações não salvas. Deseja descartar e fechar?'
       );
@@ -19,6 +26,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return;
       }
     }
+
+    setIsEditProfileDirty(false);
 
     const next = new URLSearchParams(searchParams);
     next.delete('editProfile');
@@ -39,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }}
       >
         <DialogContent className="w-[80vw] max-w-[80vw] sm:max-w-[80vw] xl:max-w-3xl max-h-[92vh] overflow-y-auto border-0 bg-linear-to-b from-card via-card to-muted/30 p-0 shadow-2xl sm:rounded-3xl">
-          <DialogHeader className=" border-border/60 px-8 py-5">
+          <DialogHeader className="border-border/60 px-8 py-5">
             <DialogTitle className="font-heading text-xl font-bold text-foreground">
               Editar Perfil
             </DialogTitle>
@@ -47,7 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           <div className="px-6 py-5 sm:px-8 sm:py-6">
             <EditProfile
-              onClose={closeEditProfile}
+              onClose={() => closeEditProfile({ skipDirtyCheck: true })}
               onDirtyChange={setIsEditProfileDirty}
             />
           </div>
