@@ -42,8 +42,9 @@ const SideBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
+  const sessionUser = session?.user;
 
-  const userRole = session?.user?.tipoPerfil;
+  const userRole = sessionUser?.tipoPerfil;
 
   const visibleNavItems = navItems.filter((item) => {
     if (!userRole) return false;
@@ -66,6 +67,16 @@ const SideBar = () => {
         'http://localhost:9000'
       )}?t=${new Date().getTime()}`
     : '';
+
+  const handleOpenEditProfile = () => {
+    const params = new URLSearchParams(location.search);
+    params.set('editProfile', 'true');
+
+    navigate({
+      pathname: location.pathname,
+      search: `?${params.toString()}`,
+    });
+  };
 
   return (
     <aside className="gradient-sidebar flex min-h-screen w-64 flex-col text-sidebar-foreground">
@@ -125,11 +136,16 @@ const SideBar = () => {
             <p className="truncate text-sm font-bold text-sidebar-foreground">
               {session?.user.name || 'Usuário'}
             </p>
-            <p className="truncate text-xs text-sidebar-foreground/60">
-              {session?.user.email}
-            </p>
+            <p className="truncate text-xs text-sidebar-foreground/60">{session?.user.email}</p>
           </div>
-          {session?.user.tipoPerfil === 'MEDICO' && (
+
+
+          <div className="flex items-center justify-end w-full">
+            <Button onClick={handleOpenEditProfile}>
+              <Pencil size={20} />
+            </Button>
+          </div>
+          {sessionUser?.tipoPerfil === 'MEDICO'&& (
             <div className="flex items-center justify-end ml-auto">
               <Button
                 variant="ghost"

@@ -112,9 +112,11 @@ const ModalNovoUser = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-border bg-card p-6 shadow-lg sm:rounded-2xl">
+      <DialogContent className="w-[90vw] max-w-[90vw] sm:max-w-[90vw] xl:max-w-3xl max-h-[90vh] overflow-y-auto border border-border bg-card p-6 shadow-2lg sm:rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="font-semibold mb-4">Cadastro de Usuário</DialogTitle>
+          <DialogTitle className="text-xl font-semibold mb-4">
+            Cadastro de Usuário
+          </DialogTitle>
         </DialogHeader>
 
         <form className="space-y-4" onSubmit={handleNovoUser}>
@@ -129,37 +131,35 @@ const ModalNovoUser = ({
             />
           </div>
           <div className="space-y-2">
-              <label className="text-sm font-semibold">E-mail</label>
-              <Input
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.email;
-                    return next;
-                  });
-                }}
-                required
-              />
-              {fieldErrors.email && (
-                <p className="text-xs text-destructive">{fieldErrors.email}</p>
-              )}
-            </div>
+            <label className="text-sm font-semibold">E-mail</label>
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setFieldErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.email;
+                  return next;
+                });
+              }}
+              required
+            />
+            {fieldErrors.email && (
+              <p className="text-xs text-destructive">{fieldErrors.email}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold">
-                Data de nascimento
-              </label>
-              <Input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Data de nascimento</label>
+            <Input
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              required
+            />
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-semibold">CPF</label>
@@ -203,10 +203,6 @@ const ModalNovoUser = ({
               )}
             </div>
           </div>
-
-            
-
-          
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">

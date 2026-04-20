@@ -1,9 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useSession } from '@/lib/auth-client';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
 import { Camera } from 'lucide-react';
@@ -18,18 +17,15 @@ const formatDateLabel = (dateValue?: Date | string | null) => {
     : new Intl.DateTimeFormat('pt-BR').format(date);
 };
 
-const formatDateInput = (dateValue?: Date | string | null) => {
-  if (!dateValue) return '';
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toISOString().split('T')[0];
-};
+type EditProfileProps = {
+  onClose?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+}
 
-const EditProfile = () => {
+const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const { data: session, refetch } = useSession();
   const { mutate, isPending } = useUpdateProfile();
   const { mutateAsync: uploadImage } = useUpdateProfileImage();
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [email, setEmail] = useState('');
@@ -39,15 +35,22 @@ const EditProfile = () => {
   const [preview, setPreview] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const currentBirthDateLabel = useMemo(
+  const originalDate = useMemo(
     () => formatDateLabel(session?.user.dtNascimento),
     [session?.user.dtNascimento]
   );
 
-  const originalDate = useMemo(
-    () => formatDateInput(session?.user.dtNascimento),
-    [session?.user.dtNascimento]
-  );
+  const isDirty =
+    Boolean(nomeCompleto) ||
+    Boolean(email) ||
+    Boolean(senhaAtual) ||
+    Boolean(novaSenha) ||
+    Boolean(selectedFile) ||
+    Boolean(dataNascimento && dataNascimento !== originalDate);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -124,27 +127,13 @@ const EditProfile = () => {
     return `${base}?t=${new Date().getTime()}`;
   }, [userImage]);
 
-  const hasChanges =
-    !!nomeCompleto.trim() ||
-    !!email.trim() ||
-    !!dataNascimento ||
-    !!senhaAtual.trim() ||
-    !!novaSenha.trim() ||
-    !!selectedFile;
 
   return (
-    <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
-      <header className="text-center mb-5">
-        <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
-          Dados da Conta
-        </h2>
-      </header>
-
-      <div className="flex flex-col gap-5">
-        <Card className="flex flex-col items-center gap-6 p-6 md:flex-row md:justify-center">
-          <div className="group relative">
-            <Avatar className="h-40 w-40 border-2 border-border">
-              {/* O segredo está aqui: crossOrigin="anonymous" impede o envio dos cookies gigantes */}
+    <div className="px-1 py-1 sm:px-2">
+      <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-center mb-5">
+            <div className="group relative">
+              <Avatar className="h-36 w-36 border-4 border-background shadow-lg">
               <AvatarImage
                 src={preview || imageUrl}
                 className="object-cover"
@@ -155,91 +144,121 @@ const EditProfile = () => {
               </AvatarFallback>
             </Avatar>
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <Camera className="h-5 w-5 text-white" />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleSelectImage}
-            />
-          </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/55 opacity-0 transition-all duration-200 group-hover:opacity-100"
+              >
+                <Camera className="h-5 w-5 text-white" />
+              </button>
 
-          <div className="grid w-full max-w-sm gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-bold">CRM</label>
-              <Input value={session?.user.crm ?? ''} disabled />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleSelectImage}
+              />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold">CPF</label>
-              <Input value={session?.user.cpf ?? ''} disabled />
-            </div>
+
           </div>
-        </Card>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-foreground">CRM</label>
+                <p className="font-semibold rounded-md py-2 text-sm text-foreground">
+                  {session?.user.crm ?? '-'}
+                </p>
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4">
-            <label className="text-sm font-bold">Nome Completo</label>
-            <Input
-              onChange={(e) => setNomeCompleto(e.target.value)}
-              placeholder={session?.user.name ?? ''}
-              value={nomeCompleto}
-            />
-          </Card>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-foreground">CPF</label>
+                <p className="font-semibold rounded-md py-2 text-sm text-foreground">
+                  {session?.user.cpf ?? '-'}
+                </p>
+              </div>
+            </div>
 
-          <Card className="p-4">
-            <label className="text-sm font-bold">Email</label>
-            <Input
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={session?.user.email ?? ''}
-              value={email}
-            />
-          </Card>
-
-          <Card className="p-4">
-            <label className="text-sm font-bold">Data de Nascimento</label>
-            <Input
-              type="date"
-              value={dataNascimento}
-              onChange={(e) => setDataNascimento(e.target.value)}
-            />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Atual: {currentBirthDateLabel}
-            </p>
-          </Card>
-
-          <Card className="p-4">
-            <label className="text-sm font-bold">Alterar Senha</label>
-            <Input
-              className="mb-2"
-              onChange={(e) => setSenhaAtual(e.target.value)}
-              type="password"
-              placeholder="Senha Atual"
-              value={senhaAtual}
-            />
-            <Input
-              onChange={(e) => setNovaSenha(e.target.value)}
-              type="password"
-              placeholder="Nova Senha"
-              value={novaSenha}
-            />
-          </Card>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold">Nome Completo</label>
+          <Input
+            type="text"
+            placeholder={session?.user.name}
+            onChange={(e) => setNomeCompleto(e.target.value)}
+          />
         </div>
 
-        <div className="flex justify-center mt-6">
-          <Button disabled={isPending || !hasChanges} onClick={handleSubmit}>
-            {isPending ? 'Salvando...' : 'Salvar Alterações'}
+        <div className="space-y-2">
+          <label className="text-sm font-semibold">E-mail</label>
+          <Input
+            type="email"
+            placeholder={session?.user.email}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold">Data de nascimento</label>
+          <Input
+            type="date"
+            value={dataNascimento}
+            onChange={(e) => setDataNascimento(e.target.value)}
+            defaultValue={
+              session?.user.dtNascimento
+                ? new Date(session.user.dtNascimento)
+                    .toISOString()
+                    .split('T')[0]
+                : ''
+            }
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Senha atual</label>
+            <Input
+              type="password"
+              onChange={(e) => setSenhaAtual(e.target.value)}
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">
+              Nova senha
+            </label>
+            <Input
+              type="password"
+              onChange={(e) => setNovaSenha(e.target.value)}
+              placeholder="Crie uma nova senha"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2 pt-4">
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+
+          <Button
+            disabled={
+              isPending ||
+              (!nomeCompleto &&
+                !email &&
+                !dataNascimento &&
+                !senhaAtual &&
+                !novaSenha &&
+                !selectedFile)
+            }
+            onClick={handleSubmit}
+          >
+            Salvar Alterações
           </Button>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default EditProfile;
