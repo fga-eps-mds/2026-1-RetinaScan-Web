@@ -175,13 +175,11 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const imageUrl = useMemo(() => {
     if (!userImage) return '';
 
-    const base = userImage.replace(
-      'http://retina-scan-minio:9000',
-      'http://localhost:9000'
-    );
+    if (import.meta.env.DEV) {
+      return userImage.replace(/https?:\/\/[^/]+/, 'http://localhost:9000');
+    }
 
-    // eslint-disable-next-line react-hooks/purity
-    return `${base}?t=${Date.now()}`;
+    return userImage;
   }, [userImage]);
 
   return (

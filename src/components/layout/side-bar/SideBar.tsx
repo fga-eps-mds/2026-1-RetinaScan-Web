@@ -9,6 +9,7 @@ import {
   LogOut,
   Pencil,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
 
 const navItems = [
@@ -61,12 +62,17 @@ const SideBar = () => {
     });
   };
 
-  const imageUrl = session?.user?.image
-    ? `${session.user.image.replace(
-        'http://retina-scan-minio:9000',
-        'http://localhost:9000'
-      )}?t=${new Date().getTime()}`
-    : '';
+  const userImage = session?.user.image ?? '';
+
+  const imageUrl = useMemo(() => {
+    if (!userImage) return '';
+
+    if (import.meta.env.DEV) {
+      return userImage.replace(/https?:\/\/[^/]+/, 'http://localhost:9000');
+    }
+
+    return userImage;
+  }, [userImage]);
 
   const handleOpenEditProfile = () => {
     const params = new URLSearchParams(location.search);
