@@ -1,7 +1,15 @@
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
-import { LayoutDashboard, Eye, Plus, Users, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Eye,
+  Plus,
+  Users,
+  LogOut,
+  Pencil,
+} from 'lucide-react';
+import { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
 
 const navItems = [
@@ -35,8 +43,9 @@ const SideBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
+  const sessionUser = session?.user;
 
-  const userRole = session?.user?.tipoPerfil;
+  const userRole = sessionUser?.tipoPerfil;
 
   const visibleNavItems = navItems.filter((item) => {
     if (!userRole) return false;
@@ -50,6 +59,28 @@ const SideBar = () => {
           navigate('/login');
         },
       },
+    });
+  };
+
+  const userImage = session?.user.image ?? '';
+
+  const imageUrl = useMemo(() => {
+    if (!userImage) return '';
+
+    if (import.meta.env.DEV) {
+      return userImage.replace(/https?:\/\/[^/]+/, 'http://localhost:9000');
+    }
+
+    return userImage;
+  }, [userImage]);
+
+  const handleOpenEditProfile = () => {
+    const params = new URLSearchParams(location.search);
+    params.set('editProfile', 'true');
+
+    navigate({
+      pathname: location.pathname,
+      search: `?${params.toString()}`,
     });
   };
 
@@ -94,7 +125,12 @@ const SideBar = () => {
       <div className="flex flex-col gap-4 space-y-1 border-t border-sidebar-border px-3 py-4">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src="" />
+            {/* crossOrigin="anonymous" adicionado para não enviar os cookies gigantes do localhost */}
+            <AvatarImage
+              src={imageUrl}
+              crossOrigin="anonymous"
+              className="object-cover"
+            />
             <AvatarFallback>
               {session?.user.name
                 ? session.user.name.substring(0, 2).toUpperCase()
@@ -102,17 +138,33 @@ const SideBar = () => {
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-bold text-sidebar-foreground">
+          <div className="flex flex-col overflow-hidden">
+            <p className="truncate text-sm font-bold text-sidebar-foreground">
               {session?.user.name || 'Usuário'}
             </p>
-            <p className="text-xs">{session?.user.email}</p>
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              {session?.user.email}
+            </p>
           </div>
+
+          {sessionUser?.tipoPerfil === 'MEDICO' && (
+            <div className="flex items-center justify-end ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleOpenEditProfile}
+              >
+                <Pencil size={16} />
+              </Button>
+            </div>
+          )}
         </div>
 
         <Button
           onClick={handleSignOut}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-white transition-colors hover:text-destructive"
+          variant="destructive"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors"
         >
           <LogOut className="h-4.5 w-4.5" />
           Sair
