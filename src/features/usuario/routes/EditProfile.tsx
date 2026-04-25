@@ -7,7 +7,7 @@ import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
 import { useUpdateProfileImage } from '../hooks/useUpdateProfileImage';
 import { formatCpf, formatCrm } from '@/utils/formatters';
-import { formatDateInput, formatDateLabel } from '@/utils/date';  
+import { formatDateInput, formatDateLabel } from '@/utils/date';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Camera, Eye, EyeOff } from 'lucide-react';
+import { validateCPF } from '@/utils/validators';
 
 type EditProfileProps = {
   onClose?: () => void;
@@ -187,14 +188,14 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
     return userImage;
   }, [userImage]);
 
-  const isSolicitacaoValida = Boolean(novoCrm.trim()) || Boolean(novoCpf.trim());
+  const isSolicitacaoValida =
+    Boolean(novoCrm.trim()) || Boolean(novoCpf.trim());
 
   return (
     <div className="px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-5">
         <div className="space-y-2 text-center">
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-
             <DialogTrigger asChild>
               <label className="text-blue-500 text-sm font-semibold underline cursor-pointer">
                 Para a alteração de CRM ou CPF, solicite ao administrador
@@ -237,16 +238,31 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
                       delete next.novoCpf;
                       return next;
                     });
-                  }} 
+                  }}
                 />
                 {fieldErrors.novoCpf && (
-                  <span className="text-xs text-red-500">{fieldErrors.novoCpf}</span>
+                  <span className="text-xs text-red-500">
+                    {fieldErrors.novoCpf}
+                  </span>
                 )}
               </div>
               <DialogFooter>
                 <Button
                   disabled={isPending || !isSolicitacaoValida}
                   onClick={() => {
+                    setFieldErrors({});
+
+                    if (novoCpf.trim() !== '') {
+                      const isValid = validateCPF(novoCpf);
+
+                      if (!isValid) {
+                        setFieldErrors({
+                          novoCpf: 'CPF inválido. Verifique e tente novamente.',
+                        });
+                        return;
+                      }
+                    }
+
                     toast.success('Solicitação enviada!');
                     setIsModalOpen(false);
                   }}
