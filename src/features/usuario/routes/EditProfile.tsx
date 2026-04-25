@@ -6,6 +6,19 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
 import { useUpdateProfileImage } from '../hooks/useUpdateProfileImage';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+import { Textarea } from "@/components/ui/textarea";
+
+
 import { Camera, Eye, EyeOff } from 'lucide-react';
 
 type EditProfileProps = {
@@ -187,13 +200,43 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   return (
     <div className="px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-5">
-
-        <div className="text-center space-y-1.5">
-          <p className="text-sm text-blue-500 hover:underline cursor-pointer">
-            Para alteração de CRM ou CPF, contate o administrador
-          </p>
+        <div className="space-y-2 text-center">
+          <Dialog>
+            <DialogTrigger asChild>
+              <label className="text-blue-500 text-sm font-semibold underline cursor-pointer">
+                Para a alteração de CRM ou CPF, solicite ao administrador
+              </label>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-sm font-semibold text-center">Solicitar alteração</DialogTitle>
+                <div className="border-t my-4" />
+                <DialogDescription className=" text-sm text-foreground">
+                  Informe quais dados deseja alterar. Sua solicitação será enviada ao administrador para análise.              
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 mt-4">
+                <label className="text-sm font-bold text-foreground">Novo CRM: </label>
+                <Input placeholder="Ex: 123456/UF" />
+              </div>
+              <div className="space-y-2 mt-4">
+                <label className="text-sm font-bold text-foreground">Novo CPF: </label>
+                <Input placeholder="Ex: 123.456.789-00" />
+              </div>
+              <DialogFooter>
+                <Button 
+                  disabled={isPending || !isDirty}
+                  onClick={() => {
+                    toast.success('Solicitação enviada!');
+                    onClose?.();
+                  }}  
+                >
+                  Enviar Solicitação
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-
         <div className="mt-2 mb-2 flex flex-col items-center justify-center">
           <div className="group relative">
             <Avatar className="h-28 w-28 border bg-muted shadow-sm">
@@ -224,7 +267,6 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
             />
           </div>
         </div>
-
         <div className="flex flex-col gap-4">
           <div className="space-y-1.5">
             <label className="text-sm font-semibold">Nome Completo</label>
