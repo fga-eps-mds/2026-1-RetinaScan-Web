@@ -14,11 +14,7 @@ import {
   DialogDescription,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog";
-
-import { Textarea } from "@/components/ui/textarea";
-
-
+} from '@/components/ui/dialog';
 import { Camera, Eye, EyeOff } from 'lucide-react';
 
 type EditProfileProps = {
@@ -34,6 +30,23 @@ const formatDateLabel = (dateValue?: Date | string | null) => {
   return Number.isNaN(date.getTime())
     ? 'Não informada'
     : new Intl.DateTimeFormat('pt-BR').format(date);
+};
+
+const formatCrm = (value: string): string => {
+  const normalized = value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const crmNumber = normalized.replace(/[A-Z]/g, '').slice(0, 6);
+  const crmUf = normalized.replace(/[0-9]/g, '').slice(0, 2);
+
+  return crmUf ? `${crmNumber}/${crmUf}` : crmNumber;
+};
+
+const formatCpf = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+
+  return digits
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 };
 
 const formatDateInput = (dateValue?: Date | string | null) => {
@@ -62,6 +75,10 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [novoCrm, setNovoCrm] = useState('');
+  const [novoCpf, setNovoCpf] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const currentEmail = session?.user.email ?? '';
   const currentBirthDate = useMemo(
@@ -123,6 +140,14 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
 
     if (novaSenha.trim()) {
       payload.novaSenha = novaSenha.trim();
+    }
+
+    if (novoCrm.trim()) {
+      payload.crm = novoCrm.trim();
+    }
+
+    if (novoCpf.trim()) {
+      payload.cpf = novoCpf.trim();
     }
 
     if (Object.keys(payload).length === 0 && !selectedFile) {
@@ -197,11 +222,14 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
     return userImage;
   }, [userImage]);
 
+  const isSolicitacaoValida = Boolean(novoCrm.trim()) || Boolean(novoCpf.trim());
+
   return (
     <div className="px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-5">
         <div className="space-y-2 text-center">
-          <Dialog>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+
             <DialogTrigger asChild>
               <label className="text-blue-500 text-sm font-semibold underline cursor-pointer">
                 Para a alteração de CRM ou CPF, solicite ao administrador
@@ -209,27 +237,54 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-sm font-semibold text-center">Solicitar alteração</DialogTitle>
+                <DialogTitle className="text-sm font-semibold text-center">
+                  Solicitar alteração
+                </DialogTitle>
                 <div className="border-t my-4" />
                 <DialogDescription className=" text-sm text-foreground">
-                  Informe quais dados deseja alterar. Sua solicitação será enviada ao administrador para análise.              
+                  Informe quais dados deseja alterar. Sua solicitação será
+                  enviada ao administrador para análise.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-2 mt-4">
-                <label className="text-sm font-bold text-foreground">Novo CRM: </label>
-                <Input placeholder="Ex: 123456/UF" />
+                <label className="text-sm font-bold text-foreground">
+                  Novo CRM:{' '}
+                </label>
+                <Input
+                  type="text"
+                  value={novoCrm}
+                  onChange={(e) => setNovoCrm(formatCrm(e.target.value))}
+                  placeholder="Ex: 123456/UF"
+                />
               </div>
               <div className="space-y-2 mt-4">
-                <label className="text-sm font-bold text-foreground">Novo CPF: </label>
-                <Input placeholder="Ex: 123.456.789-00" />
+                <label className="text-sm font-bold text-foreground">
+                  Novo CPF:{' '}
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Ex: 123.456.789-00"
+                  value={novoCpf}
+                  onChange={(e) => {
+                    setNovoCpf(formatCpf(e.target.value));
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.novoCpf;
+                      return next;
+                    });
+                  }} 
+                />
+                {fieldErrors.novoCpf && (
+                  <span className="text-xs text-red-500">{fieldErrors.novoCpf}</span>
+                )}
               </div>
               <DialogFooter>
-                <Button 
-                  disabled={isPending || !isDirty}
+                <Button
+                  disabled={isPending || !isSolicitacaoValida}
                   onClick={() => {
                     toast.success('Solicitação enviada!');
-                    onClose?.();
-                  }}  
+                    setIsModalOpen(false);
+                  }}
                 >
                   Enviar Solicitação
                 </Button>
@@ -289,32 +344,24 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
           </div>
 
           <div className="space-y-2">
-
             <label className="text-sm font-semibold">Data de nascimento</label>
 
             <Input
-
               type="date"
-
               value={dataNascimento}
-
               onChange={(e) => setDataNascimento(e.target.value)}
-
             />
 
             <p className="text-xs text-muted-foreground">
-
               Data atual: {birthDateLabel}
-
             </p>
-
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold">Senha</label>
             <div className="relative">
               <Input
-                type={mostrarSenha ? "text" : "password"}
+                type={mostrarSenha ? 'text' : 'password'}
                 value={senhaAtual}
                 onChange={(e) => setSenhaAtual(e.target.value)}
                 placeholder="••••••••••"
@@ -325,16 +372,22 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
                 onClick={() => setMostrarSenha(!mostrarSenha)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {mostrarSenha ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold">Confirmação de Senha</label>
+            <label className="text-sm font-semibold">
+              Confirmação de Senha
+            </label>
             <div className="relative">
               <Input
-                type={mostrarConfirmacao ? "text" : "password"}
+                type={mostrarConfirmacao ? 'text' : 'password'}
                 value={novaSenha}
                 onChange={(e) => setNovaSenha(e.target.value)}
                 placeholder="••••••••••"
@@ -345,19 +398,30 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
                 onClick={() => setMostrarConfirmacao(!mostrarConfirmacao)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {mostrarConfirmacao ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {mostrarConfirmacao ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
         </div>
 
-        {/* BOTÕES */}
         <div className="mt-4 flex justify-end gap-3 pt-2 border-t border-transparent">
-          <Button variant="secondary" onClick={onClose} className="bg-gray-200/80 hover:bg-gray-300 text-black">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            className="bg-gray-200/80 hover:bg-gray-300 text-black"
+          >
             Cancelar
           </Button>
 
-          <Button disabled={isPending || !isDirty} onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button
+            disabled={isPending || !isDirty}
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             Atualizar
           </Button>
         </div>
