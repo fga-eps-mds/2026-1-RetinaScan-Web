@@ -49,8 +49,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         <DialogContent className="w-[80vw] max-w-[80vw] sm:max-w-[80vw] xl:max-w-3xl max-h-[92vh] overflow-y-auto border-0 bg-linear-to-b from-card via-card to-muted/30 p-0 shadow-2xl sm:rounded-3xl">
           <DialogHeader className="border-border/60 px-8 py-5">
-            <DialogTitle className="font-heading text-xl font-bold text-foreground">
-              Editar Perfil
+            <DialogTitle className="translate-y-15 font-heading flex justify-center text-xl font-bold text-foreground">
+              Edição de Dados do Usuário
             </DialogTitle>
           </DialogHeader>
 

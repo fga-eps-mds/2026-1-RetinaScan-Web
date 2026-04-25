@@ -5,8 +5,8 @@ import { useSession } from '@/lib/auth-client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
-import { Camera } from 'lucide-react';
 import { useUpdateProfileImage } from '../hooks/useUpdateProfileImage';
+import { Camera, Eye, EyeOff } from 'lucide-react';
 
 type EditProfileProps = {
   onClose?: () => void;
@@ -47,6 +47,8 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const [novaSenha, setNovaSenha] = useState('');
   const [preview, setPreview] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
 
   const currentEmail = session?.user.email ?? '';
   const currentBirthDate = useMemo(
@@ -183,27 +185,34 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   }, [userImage]);
 
   return (
-    <div className="px-1 py-1 sm:px-2">
-      <div className="flex flex-col gap-4">
-        <div className="mb-5 flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-center">
+    <div className="px-4 py-4 sm:px-6">
+      <div className="flex flex-col gap-5">
+
+        <div className="text-center space-y-1.5">
+          <p className="text-sm text-blue-500 hover:underline cursor-pointer">
+            Para alteração de CRM ou CPF, contate o administrador
+          </p>
+        </div>
+
+        <div className="mt-2 mb-2 flex flex-col items-center justify-center">
           <div className="group relative">
-            <Avatar className="h-36 w-36 border-4 border-background shadow-lg">
+            <Avatar className="h-28 w-28 border bg-muted shadow-sm">
               <AvatarImage
                 src={preview || imageUrl}
                 className="object-cover"
                 crossOrigin="anonymous"
               />
-              <AvatarFallback className="text-5xl">
-                {session?.user.name?.substring(0, 2).toUpperCase() || 'US'}
+              <AvatarFallback className="text-4xl text-muted-foreground font-medium">
+                {session?.user.name?.substring(0, 2).toUpperCase() || 'AD'}
               </AvatarFallback>
             </Avatar>
 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/55 opacity-0 transition-all duration-200 group-hover:opacity-100"
+              className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 opacity-0 transition-all duration-200 group-hover:opacity-100"
             >
-              <Camera className="h-5 w-5 text-white" />
+              <Camera className="h-6 w-6 text-white" />
             </button>
 
             <input
@@ -216,83 +225,98 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-foreground">CRM</label>
-            <p className="rounded-md py-2 text-sm font-semibold text-foreground">
-              {session?.user.crm ?? '-'}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-foreground">CPF</label>
-            <p className="rounded-md py-2 text-sm font-semibold text-foreground">
-              {session?.user.cpf ?? '-'}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">Nome Completo</label>
-          <Input
-            type="text"
-            placeholder={session?.user.name || 'Digite seu nome completo'}
-            value={nomeCompleto}
-            onChange={(e) => setNomeCompleto(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">E-mail</label>
-          <Input
-            type="email"
-            placeholder={currentEmail || 'Digite seu e-mail'}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">Data de nascimento</label>
-          <Input
-            type="date"
-            value={dataNascimento}
-            onChange={(e) => setDataNascimento(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Data atual: {birthDateLabel}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Senha atual</label>
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">Nome Completo</label>
             <Input
-              type="password"
-              value={senhaAtual}
-              onChange={(e) => setSenhaAtual(e.target.value)}
-              placeholder="••••••••"
+              type="text"
+              placeholder={session?.user.name || 'Ana Costa Neves'}
+              value={nomeCompleto}
+              onChange={(e) => setNomeCompleto(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">Email</label>
+            <Input
+              type="email"
+              placeholder={currentEmail || 'anacosta@retina'}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Nova senha</label>
+
+            <label className="text-sm font-semibold">Data de nascimento</label>
+
             <Input
-              type="password"
-              value={novaSenha}
-              onChange={(e) => setNovaSenha(e.target.value)}
-              placeholder="Crie uma nova senha"
+
+              type="date"
+
+              value={dataNascimento}
+
+              onChange={(e) => setDataNascimento(e.target.value)}
+
             />
+
+            <p className="text-xs text-muted-foreground">
+
+              Data atual: {birthDateLabel}
+
+            </p>
+
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">Senha</label>
+            <div className="relative">
+              <Input
+                type={mostrarSenha ? "text" : "password"}
+                value={senhaAtual}
+                onChange={(e) => setSenhaAtual(e.target.value)}
+                placeholder="••••••••••"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenha(!mostrarSenha)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">Confirmação de Senha</label>
+            <div className="relative">
+              <Input
+                type={mostrarConfirmacao ? "text" : "password"}
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                placeholder="••••••••••"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmacao(!mostrarConfirmacao)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {mostrarConfirmacao ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-2 pt-4">
-          <Button variant="secondary" onClick={onClose}>
+        {/* BOTÕES */}
+        <div className="mt-4 flex justify-end gap-3 pt-2 border-t border-transparent">
+          <Button variant="secondary" onClick={onClose} className="bg-gray-200/80 hover:bg-gray-300 text-black">
             Cancelar
           </Button>
 
-          <Button disabled={isPending || !isDirty} onClick={handleSubmit}>
-            Salvar Alterações
+          <Button disabled={isPending || !isDirty} onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700 text-white">
+            Atualizar
           </Button>
         </div>
       </div>
