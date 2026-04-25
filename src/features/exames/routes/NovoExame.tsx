@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router';
 import type { SexoExame } from '../types/exam';
 
 const formatCpf = (value: string): string => {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
+  const digits = value.replaceAll(/\D/g, '').slice(0, 11);
 
   return digits
     .replace(/(\d{3})(\d)/, '$1.$2')
@@ -50,7 +50,7 @@ const NovoExame = () => {
     try {
       await createExamMutation.mutateAsync({
         nomeCompleto,
-        cpf: cpf.replace(/\D/g, ''),
+        cpf: cpf.replaceAll(/\D/g, ''),
         sexo: sexo as SexoExame,
         dtNascimento: dataNascimento,
         dtHora: new Date().toISOString(),
@@ -89,8 +89,11 @@ const NovoExame = () => {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card className="p-4">
-            <label className="text-sm font-bold">Nome do Paciente</label>
+            <label htmlFor="nomeCompleto" className="text-sm font-bold">
+              Nome do Paciente
+            </label>
             <Input
+              id="nomeCompleto"
               onChange={(e) => {
                 setNomeCompleto(e.target.value);
                 setFieldErrors((prev) => {
@@ -109,8 +112,11 @@ const NovoExame = () => {
           </Card>
 
           <Card className="p-4">
-            <label className="text-sm font-semibold">Data de nascimento</label>
+            <label htmlFor="dtNascimento" className="text-sm font-semibold">
+              Data de nascimento
+            </label>
             <Input
+              id="dtNascimento"
               type="date"
               value={dataNascimento}
               onChange={(e) => {
@@ -133,8 +139,11 @@ const NovoExame = () => {
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card className="p-4">
-            <label className="text-sm font-semibold">Sexo</label>
+            <label htmlFor="sexo" className="text-sm font-semibold">
+              Sexo
+            </label>
             <select
+              id="sexo"
               value={sexo}
               onChange={(e) => {
                 setSexo(e.target.value as SexoExame);
@@ -160,8 +169,11 @@ const NovoExame = () => {
           </Card>
 
           <Card className="p-4">
-            <label className="text-sm font-semibold">CPF</label>
+            <label htmlFor="cpf" className="text-sm font-semibold">
+              CPF
+            </label>
             <Input
+              id="cpf"
               type="text"
               placeholder="000.000.000-00"
               value={cpf}
@@ -181,8 +193,11 @@ const NovoExame = () => {
           </Card>
         </div>
         <Card className="p-4">
-          <label className="text-sm font-semibold">Comorbidades</label>
+          <label htmlFor="comorbidades" className="text-sm font-semibold">
+            Comorbidades
+          </label>
           <textarea
+            id="comorbidades"
             className="w-full min-h-32 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="Descreva as comorbidades do paciente, se houver"
             rows={4}
@@ -201,8 +216,11 @@ const NovoExame = () => {
           )}
         </Card>
         <Card className="p-4">
-          <label className="text-sm font-semibold">Descrição</label>
+          <label htmlFor="descricao" className="text-sm font-semibold">
+            Descrição
+          </label>
           <textarea
+            id="descricao"
             className="w-full min-h-32 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="Dê uma descrição sobre o motivo do exame"
             rows={4}
