@@ -6,6 +6,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
 import { useUpdateProfileImage } from '../hooks/useUpdateProfileImage';
+import { formatCpf, formatCrm } from '@/utils/formatters';
+import { formatDateInput, formatDateLabel } from '@/utils/date';  
 import {
   Dialog,
   DialogContent,
@@ -20,43 +22,6 @@ import { Camera, Eye, EyeOff } from 'lucide-react';
 type EditProfileProps = {
   onClose?: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
-};
-
-const formatDateLabel = (dateValue?: Date | string | null) => {
-  if (!dateValue) return 'Não informada';
-
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-
-  return Number.isNaN(date.getTime())
-    ? 'Não informada'
-    : new Intl.DateTimeFormat('pt-BR').format(date);
-};
-
-const formatCrm = (value: string): string => {
-  const normalized = value.toUpperCase().replace(/[^0-9A-Z]/g, '');
-  const crmNumber = normalized.replace(/[A-Z]/g, '').slice(0, 6);
-  const crmUf = normalized.replace(/[0-9]/g, '').slice(0, 2);
-
-  return crmUf ? `${crmNumber}/${crmUf}` : crmNumber;
-};
-
-const formatCpf = (value: string): string => {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-
-  return digits
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-};
-
-const formatDateInput = (dateValue?: Date | string | null) => {
-  if (!dateValue) return '';
-
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return '';
-
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().split('T')[0];
 };
 
 const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
