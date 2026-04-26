@@ -19,10 +19,26 @@ import {
 } from '@/components/ui/dialog';
 import { Camera, Eye, EyeOff } from 'lucide-react';
 import { validateCPF } from '@/utils/validators';
+import { useCreateSolicitacaoCpfCrm } from '../hooks/useCreateSolicitacaoCpfCrm';
+import { mapSolicitacaoErrors } from '@/utils/mappers/mapSolicitacaoErrors';
 
 type EditProfileProps = {
   onClose?: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
+};
+
+const showSubmitErrorsToast = (errors: Record<string, string>) => {
+  const messages = Object.values(errors);
+
+  toast.error('Verifique os campos antes de enviar.', {
+    description: (
+      <ul className="mt-2 list-disc pl-4 text-sm">
+        {messages.map((message, index) => (
+          <li key={index}>{message}</li>
+        ))}
+      </ul>
+    ),
+  });
 };
 
 const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
@@ -45,6 +61,10 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const [novoCpf, setNovoCpf] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const {
+    mutateAsync: createSolicitacaoCpfCrm,
+    isPending: isCreatingSolicitacaoCpfCrm,
+  } = useCreateSolicitacaoCpfCrm();
 
   const currentEmail = session?.user.email ?? '';
   const currentBirthDate = useMemo(
@@ -176,6 +196,61 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
     }
   };
 
+  const handleSolicitarCpfCrm = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors({});
+
+    if (!novoCpf.trim() && !novoCrm.trim()) {
+      setFieldErrors({
+        geral: 'Informe ao menos um campo para solicitar a alteração.',
+      });
+      return;
+    }
+
+    if (novoCpf.trim() !== '') {
+      const isValid = validateCPF(novoCpf);
+
+      if (!isValid) {
+        setFieldErrors({
+          novoCpf: 'CPF inválido. Verifique e tente novamente.',
+        });
+        return;
+      }
+    }
+
+    try {
+      const response = await createSolicitacaoCpfCrm({
+        cpfNovo: novoCpf.trim() || undefined,
+        crmNovo: novoCrm.trim() || undefined,
+      });
+
+      toast.success(response.mensagem || 'Solicitação enviada!');
+
+      setNovoCpf('');
+      setNovoCrm('');
+      setFieldErrors({});
+      setIsModalOpen(false);
+    } catch (error) {
+      const mappedErrors = mapSolicitacaoErrors(error);
+
+      if (Object.keys(mappedErrors).length > 0) {
+        setFieldErrors(mappedErrors);
+        showSubmitErrorsToast(mappedErrors);
+        return;
+      }
+
+      const message =
+        (error as any)?.response?.data?.mensagem ||
+        (error as any)?.response?.data?.message ||
+        (error as any)?.mensagem ||
+        'Tente novamente em instantes.';
+
+      toast.error('Erro ao enviar solicitação.', {
+        description: message,
+      });
+    }
+  };
+
   const userImage = session?.user.image ?? '';
 
   const imageUrl = useMemo(() => {
@@ -212,64 +287,70 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
                   enviada ao administrador para análise.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-2 mt-4">
-                <label className="text-sm font-bold text-foreground">
-                  Novo CRM:{' '}
-                </label>
-                <Input
-                  type="text"
-                  value={novoCrm}
-                  onChange={(e) => setNovoCrm(formatCrm(e.target.value))}
-                  placeholder="Ex: 123456/UF"
-                />
-              </div>
-              <div className="space-y-2 mt-4">
-                <label className="text-sm font-bold text-foreground">
-                  Novo CPF:{' '}
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Ex: 123.456.789-00"
-                  value={novoCpf}
-                  onChange={(e) => {
-                    setNovoCpf(formatCpf(e.target.value));
-                    setFieldErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.novoCpf;
-                      return next;
-                    });
-                  }}
-                />
-                {fieldErrors.novoCpf && (
-                  <span className="text-xs text-red-500">
-                    {fieldErrors.novoCpf}
-                  </span>
-                )}
-              </div>
-              <DialogFooter>
-                <Button
-                  disabled={isPending || !isSolicitacaoValida}
-                  onClick={() => {
-                    setFieldErrors({});
 
-                    if (novoCpf.trim() !== '') {
-                      const isValid = validateCPF(novoCpf);
+              <form onSubmit={handleSolicitarCpfCrm}>
+                <div className="space-y-2 mt-4">
+                  <label className="text-sm font-bold text-foreground">
+                    Novo CRM:{' '}
+                  </label>
+                  <Input
+                    type="text"
+                    value={novoCrm}
+                    onChange={(e) => {
+                      setNovoCrm(formatCrm(e.target.value));
+                      setFieldErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.novoCrm;
+                        return next;
+                      });
+                    }}
+                    placeholder="Ex: 123456/UF"
+                  />
+                  {fieldErrors.novoCrm && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.novoCrm}
+                    </span>
+                  )}
+                </div>
 
-                      if (!isValid) {
-                        setFieldErrors({
-                          novoCpf: 'CPF inválido. Verifique e tente novamente.',
-                        });
-                        return;
-                      }
+                <div className="space-y-2 mt-4">
+                  <label className="text-sm font-bold text-foreground">
+                    Novo CPF:{' '}
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: 123.456.789-00"
+                    value={novoCpf}
+                    onChange={(e) => {
+                      setNovoCpf(formatCpf(e.target.value));
+                      setFieldErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.novoCpf;
+                        return next;
+                      });
+                    }}
+                  />
+                  {fieldErrors.novoCpf && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.novoCpf}
+                    </span>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    className="bg-[#185CA1] hover:bg-[#0E4A8B] text-white"
+                    disabled={
+                      isCreatingSolicitacaoCpfCrm || !isSolicitacaoValida
                     }
-
-                    toast.success('Solicitação enviada!');
-                    setIsModalOpen(false);
-                  }}
-                >
-                  Enviar Solicitação
-                </Button>
-              </DialogFooter>
+                  >
+                    {isCreatingSolicitacaoCpfCrm
+                      ? 'Enviando...'
+                      : 'Enviar Solicitação'}
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -393,7 +474,7 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
           <Button
             variant="secondary"
             onClick={onClose}
-            className="bg-gray-200/80 hover:bg-gray-300 text-black"
+            className="bg-[#C8C8C8] hover:bg-gray-400 text-black"
           >
             Cancelar
           </Button>
@@ -401,7 +482,7 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
           <Button
             disabled={isPending || !isDirty}
             onClick={handleSubmit}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-[#185CA1] hover:bg-[#0E4A8B] text-white"
           >
             Atualizar
           </Button>
