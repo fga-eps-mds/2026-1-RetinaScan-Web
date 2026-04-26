@@ -384,6 +384,23 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
             />
           </div>
         </div>
+
+        <div className="flex flex-row gap-20">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-foreground">CRM</label>
+            <p className="rounded-md py-2 text-sm font-semibold text-muted-foreground">
+              {session?.user.crm ? formatCrm(session?.user.crm) : '-'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-foreground">CPF</label>
+            <p className="rounded-md py-2 text-sm font-semibold text-muted-foreground">
+              {session?.user.cpf ? formatCpf(session?.user.cpf) : '-'}
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-4">
           <div className="space-y-1.5">
             <label className="text-sm font-semibold">Nome Completo</label>

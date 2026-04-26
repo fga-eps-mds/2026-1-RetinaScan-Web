@@ -14,7 +14,7 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
 
-  const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -29,23 +29,20 @@ const Login = () => {
 
       if (error) {
         setError(error.message || 'Falha ao entrar');
-        toast.error(error.message || 'Falha ao entrar', {
-          description: 'Verifique suas credenciais e tente novamente.',
-        });
+        toast.error(error.message || 'Falha ao entrar');
         return;
       }
-    }  catch {
+    } catch {
       setError('Erro inesperado ao fazer login');
-      toast(error, {
-        description: 'Verifique suas credenciais e tente novamente.',
-      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex">
+   
+    <div className="min-h-screen flex bg-[#EFF6FF]">
+      
       <div className="hidden lg:flex lg:w-1/2 gradient-clinical relative overflow-hidden items-center justify-center p-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -53,13 +50,13 @@ const Login = () => {
           transition={{ delay: 0.2 }}
           className="relative z-10 text-center space-y-6 max-w-md"
         >
-          <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center mx-auto">
-            <Eye className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto">
+            <Eye className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-heading font-bold text-primary-foreground">
+          <h1 className="text-3xl font-heading font-bold text-white">
             RetinaScan
           </h1>
-          <p className="text-primary-foreground/80 text-sm leading-relaxed">
+          <p className="text-white/80 text-sm leading-relaxed">
             Plataforma inteligente para triagem e gestão de exames de
             retinografia. Automatize a análise, priorize casos críticos e apoie
             a decisão médica.
@@ -67,33 +64,34 @@ const Login = () => {
         </motion.div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <motion.div
           initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
           className="w-full max-w-sm space-y-8"
         >
           <div className="lg:hidden flex items-center gap-3 justify-center">
+
             <div className="w-10 h-10 rounded-xl gradient-clinical flex items-center justify-center">
-              <Eye className="w-5 h-5 text-primary-foreground" />
+              <Eye className="w-5 h-5 text-white" />
             </div>
-            <span className="font-heading font-bold text-xl text-foreground">
+            <span className="font-heading font-bold text-xl text-[#12223A]">
               RetinaScan
             </span>
           </div>
 
           <div>
-            <h2 className="text-xl font-heading font-bold text-foreground">
+            <h2 className="text-2xl font-heading font-bold text-[#12223A]">
               Entrar na plataforma
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-2">
               Insira suas credenciais para acessar o sistema
             </p>
           </div>
 
           <form className="space-y-4" onSubmit={handleLogin}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-sm font-medium text-[#12223A]">
                 E-mail
               </label>
               <div className="relative">
@@ -103,18 +101,16 @@ const Login = () => {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 bg-white"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">
-                  Senha
-                </label>
-              </div>
+              <label className="text-sm font-medium text-[#12223A]">
+                Senha
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -123,45 +119,48 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Digite sua senha"
-                  className="pl-9"
+                  className="pl-9 bg-white"
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) =>
-                    setRememberMe(checked as boolean)
-                  }
-                />
-                <label
-                  htmlFor="remember"
-                  className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground cursor-pointer"
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(c) => setRememberMe(!!c)}
+                  />
+                  <label
+                    htmlFor="remember"
+                    className="text-xs font-medium text-muted-foreground cursor-pointer"
+                  >
+                    Lembrar de mim
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  className="text-xs text-[#1A63AB] font-semibold hover:underline"
                 >
-                  Lembrar de mim
-                </label>
+                  Esqueceu a senha?
+                </button>
               </div>
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full gradient-clinical border-0 text-primary-foreground hover:opacity-90 gap-2 cursor-pointer"
+              className="w-full bg-[#1A63AB] hover:bg-[#1A63AB]/90 text-white font-semibold h-11 gap-2 cursor-pointer transition-all"
             >
-              {loading ? 'Entrando...' : 'Entrar'} <ArrowRight />
+              {loading ? 'Entrando...' : 'Entrar'}{' '}
+              <ArrowRight className="w-4 h-4" />
             </Button>
 
-            <button
-              type="button"
-              className="text-xs text-primary hover:underline"
-            >
-              Esqueceu a senha?
-            </button>
-
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && (
+              <p className="text-xs text-[#E7000B] font-bold text-center">
+                {error}
+              </p>
+            )}
           </form>
-
         </motion.div>
       </div>
     </div>

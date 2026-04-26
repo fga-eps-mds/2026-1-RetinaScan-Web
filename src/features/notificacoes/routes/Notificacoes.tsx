@@ -12,22 +12,22 @@ const SolicitacoesMap = {
 
 export default function NotificationsPage() {
   const { data: session } = useSession();
-
   const userTipoPerfil = session?.user?.tipoPerfil;
 
-  console.log('Tipo de perfil do usuário:', userTipoPerfil);
-
   return (
-    <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
-      <Tabs defaultValue="alertas">
-        <TabsList>
+    <div className="h-full flex flex-col px-6 py-8 sm:px-10 lg:px-12 overflow-hidden">
+      <Tabs defaultValue="alertas" className="flex flex-col flex-1 min-h-0">
+        <TabsList className="shrink-0 w-fit">
           <TabsTrigger value="alertas">Alertas</TabsTrigger>
           <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="alertas">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-            <header className="text-center">
+        <TabsContent
+          value="alertas"
+          className="flex-1 flex flex-col min-h-0 mt-6 overflow-hidden"
+        >
+          <div className="mx-auto flex w-full max-w-6xl flex-col h-full gap-6">
+            <header className="text-center shrink-0">
               <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
                 Notificações
               </h2>
@@ -37,7 +37,7 @@ export default function NotificationsPage() {
               </p>
             </header>
 
-            <div className="flex items-center justify-between border-t border-border/60 px-3 py-4">
+            <div className="flex items-center justify-between border-t border-border/60 px-3 py-4 shrink-0">
               <Tabs defaultValue="todas">
                 <TabsList>
                   <TabsTrigger value="todas">Todas</TabsTrigger>
@@ -45,17 +45,21 @@ export default function NotificationsPage() {
                   <TabsTrigger value="novas">Novas</TabsTrigger>
                 </TabsList>
               </Tabs>
-
               <Button variant="outline">Marcar todas como lidas</Button>
             </div>
 
-            <NotificationsList />
+            <div className="flex-1 overflow-y-auto scrollbar-transparent pr-2">
+              <NotificationsList />
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="solicitacoes">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-            <header className="text-center">
+        <TabsContent
+          value="solicitacoes"
+          className="flex-1 flex flex-col min-h-0 mt-6 overflow-hidden"
+        >
+          <div className="mx-auto flex w-full max-w-6xl flex-col h-full gap-6">
+            <header className="text-center shrink-0">
               <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
                 Solicitações
               </h2>
@@ -63,9 +67,14 @@ export default function NotificationsPage() {
                 Gerencie solicitações de alterações de dados.
               </p>
             </header>
-            {userTipoPerfil && userTipoPerfil in SolicitacoesMap
-              ? SolicitacoesMap[userTipoPerfil as keyof typeof SolicitacoesMap]
-              : null}
+
+            <div className="flex-1 overflow-y-auto scrollbar-transparent pr-2">
+              {userTipoPerfil && userTipoPerfil in SolicitacoesMap
+                ? SolicitacoesMap[
+                    userTipoPerfil as keyof typeof SolicitacoesMap
+                  ]
+                : null}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
