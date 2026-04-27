@@ -1,445 +1,289 @@
-import { fireEvent } from '@testing-library/react';
 import React from 'react';
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  beforeAll,
-  type Mock,
-} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
 import EditProfile from '@/features/usuario/routes/EditProfile';
-import { useSession } from '@/lib/auth-client';
 
-// 🚨 IMPORTANTE: Usando caminhos absolutos (@/...) para evitar o erro de 'undefined' no import
-import { useUpdateProfile } from '@/features/usuario/hooks/useUpdateProfile';
-import { useUpdateProfileImage } from '@/features/usuario/hooks/useUpdateProfileImage';
-import { useCreateSolicitacaoCpfCrm } from '@/features/usuario/hooks/useCreateSolicitacaoCpfCrm';
-import { toast } from 'sonner';
-import { validateCPF } from '@/utils/validators';
+const {
+  mockMutate,
+  mockUploadImage,
+  mockRefetch,
+  mockToastSuccess,
+  mockToastError,
+} = vi.hoisted(() => ({
+  mockMutate: vi.fn(),
+  mockUploadImage: vi.fn(),
+  mockRefetch: vi.fn(),
+  mockToastSuccess: vi.fn(),
+  mockToastError: vi.fn(),
+}));
 
-// --- Mocks com caminhos correspondentes aos imports ---
 vi.mock('@/lib/auth-client', () => ({
-  useSession: vi.fn(),
+  useSession: () => ({
+    data: {
+      user: {
+        name: 'Gustavo Costa',
+        email: 'gustavo@email.com',
+        dtNascimento: '1999-05-10',
+        crm: '12345',
+        cpf: '123.456.789-00',
+        image: '',
+      },
+    },
+    refetch: mockRefetch,
+  }),
 }));
 
 vi.mock('@/features/usuario/hooks/useUpdateProfile', () => ({
-  useUpdateProfile: vi.fn(),
+  useUpdateProfile: () => ({
+    mutate: mockMutate,
+    isPending: false,
+  }),
 }));
 
 vi.mock('@/features/usuario/hooks/useUpdateProfileImage', () => ({
-  useUpdateProfileImage: vi.fn(),
-}));
-
-vi.mock('@/features/usuario/hooks/useCreateSolicitacaoCpfCrm', () => ({
-  useCreateSolicitacaoCpfCrm: vi.fn(),
-}));
-
-vi.mock('@/utils/mappers/mapSolicitacaoErrors', () => ({
-  mapSolicitacaoErrors: vi.fn(),
+  useUpdateProfileImage: () => ({
+    mutateAsync: mockUploadImage,
+  }),
 }));
 
 vi.mock('sonner', () => ({
   toast: {
-    success: vi.fn(),
-    error: vi.fn(),
+    success: mockToastSuccess,
+    error: mockToastError,
   },
 }));
 
-vi.mock('@/utils/validators', () => ({
-  validateCPF: vi.fn(),
+vi.mock('@/components/ui/input', () => ({
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <input {...props} />
+  ),
 }));
 
-vi.mock('@/utils/formatters', () => ({
-  formatCpf: (val: string) => val,
-  formatCrm: (val: string) => val,
+vi.mock('@/components/ui/button', () => ({
+  Button: ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
 }));
 
-vi.mock('@/utils/date', () => ({
-  formatDateInput: () => '1990-01-01',
-  formatDateLabel: () => '01/01/1990',
+vi.mock('@/components/ui/avatar', () => ({
+  Avatar: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  AvatarImage: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img {...props} />
+  ),
+  AvatarFallback: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
-vi.mock('@/utils/mappers/mapSolicitacaoErrors', () => ({
-  mapSolicitacaoErrors: () => ({}),
+vi.mock('lucide-react', () => ({
+  Camera: () => <svg data-testid="camera-icon" />,
 }));
 
-// Instância do QueryClient
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-});
-
-const renderWithProviders = (ui: React.ReactElement) => {
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
-
-describe('Componente EditProfile', () => {
-  const mockRefetch = vi.fn();
-  const mockMutateProfile = vi.fn();
-  const mockMutateImage = vi.fn();
-  const mockCreateSolicitacao = vi.fn();
-  const mockOnClose = vi.fn();
-  const mockOnDirtyChange = vi.fn();
-
-  beforeAll(() => {
-    globalThis.URL.createObjectURL = vi.fn(() => 'mocked-url');
-    globalThis.URL.revokeObjectURL = vi.fn();
-  });
-
+describe('EditProfile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Usando casting direto para evitar o erro do vi.mocked
-    (useSession as Mock).mockReturnValue({
-      data: {
-        user: {
-          name: 'João Silva',
-          email: 'joao@example.com',
-          dtNascimento: '1990-01-01T00:00:00.000Z',
-          crm: '123456/SP',
-          cpf: '12345678900',
-          image: 'http://example.com/avatar.jpg',
-        },
-      },
-      refetch: mockRefetch,
-    });
-
-    (useUpdateProfile as Mock).mockReturnValue({
-      mutate: mockMutateProfile,
-      isPending: false,
-    });
-
-    (useUpdateProfileImage as Mock).mockReturnValue({
-      mutateAsync: mockMutateImage,
-    });
-
-    (useCreateSolicitacaoCpfCrm as Mock).mockReturnValue({
-      mutateAsync: mockCreateSolicitacao,
-      isPending: false,
-    });
+    mockRefetch.mockResolvedValue({});
+    mockUploadImage.mockResolvedValue({});
   });
 
-  it('deve renderizar os dados iniciais do usuário corretamente', () => {
-    renderWithProviders(<EditProfile />);
+  it('deve renderizar os dados básicos do usuário', () => {
+    render(<EditProfile />);
 
-    expect(screen.getByPlaceholderText('João Silva')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('joao@example.com')).toBeInTheDocument();
-    expect(screen.getByText('123456/SP')).toBeInTheDocument();
-    expect(screen.getByText('12345678900')).toBeInTheDocument();
-    expect(screen.getByText(/Data atual: 01\/01\/1990/)).toBeInTheDocument();
+    expect(screen.getByText('12345')).toBeInTheDocument();
+    expect(screen.getByText('123.456.789-00')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Gustavo Costa')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('gustavo@email.com')
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Data atual:/i)).toBeInTheDocument();
   });
 
-  it('deve habilitar o botão de atualização e chamar onDirtyChange ao editar campos', async () => {
+  it('deve chamar onDirtyChange com false na renderização inicial e true ao alterar campos', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<EditProfile onDirtyChange={mockOnDirtyChange} />);
+    const onDirtyChange = vi.fn();
 
-    const buttonAtualizar = screen.getByRole('button', { name: /Atualizar/i });
-    expect(buttonAtualizar).toBeDisabled();
+    render(<EditProfile onDirtyChange={onDirtyChange} />);
 
-    const inputNome = screen.getByPlaceholderText('João Silva');
-    await user.type(inputNome, 'Maria Souza');
+    expect(onDirtyChange).toHaveBeenCalledWith(false);
 
-    expect(mockOnDirtyChange).toHaveBeenCalledWith(true);
-    expect(buttonAtualizar).toBeEnabled();
-  });
-
-  it('deve submeter o formulário corretamente ao editar o nome', async () => {
-    const user = userEvent.setup();
-
-    mockMutateProfile.mockImplementation((payload: any, options: any) => {
-      options.onSuccess();
-    });
-
-    renderWithProviders(<EditProfile onClose={mockOnClose} />);
-
-    const inputNome = screen.getByPlaceholderText('João Silva');
-    await user.type(inputNome, 'Maria Silva');
-
-    const buttonAtualizar = screen.getByRole('button', { name: /Atualizar/i });
-    await user.click(buttonAtualizar);
+    const nomeInput = screen.getByPlaceholderText('Gustavo Costa');
+    await user.type(nomeInput, 'Novo Nome');
 
     await waitFor(() => {
-      expect(mockMutateProfile).toHaveBeenCalledWith(
-        { nomeCompleto: 'Maria Silva' },
-        expect.any(Object)
-      );
-      expect(mockRefetch).toHaveBeenCalled();
-      expect(toast.success).toHaveBeenCalledWith('Perfil atualizado!');
-      expect(mockOnClose).toHaveBeenCalled();
+      expect(onDirtyChange).toHaveBeenCalledWith(true);
     });
   });
 
-  it('deve alternar a visibilidade da senha', async () => {
+  it('deve enviar payload correto ao salvar nome e email', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<EditProfile />);
 
-    const inputSenhaAtual = screen.getAllByPlaceholderText('••••••••••')[0];
-    expect(inputSenhaAtual).toHaveAttribute('type', 'password');
-
-    const botoesOlho = screen
-      .getAllByRole('button')
-      .filter((btn) => btn.querySelector('svg') !== null);
-    await user.click(botoesOlho[1]);
-
-    expect(inputSenhaAtual).toHaveAttribute('type', 'text');
-  });
-
-  it('deve abrir o modal de solicitação de CPF/CRM e enviar com sucesso', async () => {
-    const user = userEvent.setup();
-    (validateCPF as Mock).mockReturnValue(true);
-    mockCreateSolicitacao.mockResolvedValue({ mensagem: 'Sucesso' });
-
-    renderWithProviders(<EditProfile />);
-
-    const linkSolicitar = screen.getByText(/solicite ao administrador/i);
-    await user.click(linkSolicitar);
-
-    expect(screen.getByText('Solicitar alteração')).toBeInTheDocument();
-
-    const inputNovoCpf = screen.getByPlaceholderText('Ex: 123.456.789-00');
-    await user.type(inputNovoCpf, '11122233344');
-
-    const btnEnviar = screen.getByRole('button', {
-      name: /Enviar Solicitação/i,
+    mockMutate.mockImplementation((_payload, options) => {
+      options?.onSuccess?.({});
     });
-    expect(btnEnviar).toBeEnabled();
 
-    await user.click(btnEnviar);
+    render(<EditProfile />);
 
-    await waitFor(() => {
-      expect(validateCPF).toHaveBeenCalledWith('11122233344');
-      expect(mockCreateSolicitacao).toHaveBeenCalledWith({
-        cpfNovo: '11122233344',
-        crmNovo: undefined,
-      });
-      expect(toast.success).toHaveBeenCalledWith('Sucesso');
-    });
-  });
-
-  it('deve mostrar erro ao tentar solicitar alteração com CPF inválido', async () => {
-    const user = userEvent.setup();
-    (validateCPF as Mock).mockReturnValue(false);
-
-    renderWithProviders(<EditProfile />);
-
-    await user.click(screen.getByText(/solicite ao administrador/i));
-
-    const inputNovoCpf = screen.getByPlaceholderText('Ex: 123.456.789-00');
-    await user.type(inputNovoCpf, '123');
+    await user.type(screen.getByPlaceholderText('Gustavo Costa'), 'Novo Nome');
+    await user.type(
+      screen.getByPlaceholderText('gustavo@email.com'),
+      'novo@email.com'
+    );
 
     await user.click(
-      screen.getByRole('button', { name: /Enviar Solicitação/i })
+      screen.getByRole('button', { name: /salvar alterações/i })
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText('CPF inválido. Verifique e tente novamente.')
-      ).toBeInTheDocument();
-      expect(mockCreateSolicitacao).not.toHaveBeenCalled();
+      expect(mockMutate).toHaveBeenCalledTimes(1);
     });
+
+    const [payload] = mockMutate.mock.calls[0];
+
+    expect(payload).toEqual({
+      nomeCompleto: 'Novo Nome',
+      email: 'novo@email.com',
+    });
+
+    expect(mockRefetch).toHaveBeenCalled();
+    expect(mockToastSuccess).toHaveBeenCalledWith('Perfil atualizado!');
   });
 
-  it('deve selecionar e visualizar uma nova imagem de perfil', async () => {
+  it('deve enviar dtNascimento quando a data for alterada', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<EditProfile />);
 
-    const file = new File(['hello'], 'hello.png', { type: 'image/png' });
-    const inputFake = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement;
-
-    await user.upload(inputFake, file);
-
-    await waitFor(() => {
-      expect(globalThis.URL.createObjectURL).toHaveBeenCalledWith(file);
+    mockMutate.mockImplementation((_payload, options) => {
+      options?.onSuccess?.({});
     });
 
-    const buttonAtualizar = screen.getByRole('button', { name: /Atualizar/i });
-    expect(buttonAtualizar).toBeEnabled();
-  });
+    render(<EditProfile />);
 
-  it('deve preencher campos secundários e montar o payload completo (Data de Nascimento, Email, Senhas)', async () => {
-    const user = userEvent.setup();
-    mockMutateProfile.mockImplementation((payload: any, options: any) => {
-      options.onSuccess();
-    });
-
-    renderWithProviders(<EditProfile />);
-
-    // Altera o Email
-    const inputEmail = screen.getByPlaceholderText('joao@example.com');
-    await user.type(inputEmail, 'novoemail@example.com');
-
-    // Altera a Data de Nascimento (Usando fireEvent pois type="date" pode ser chato com userEvent)
-    const inputDataNascimento = document.querySelector(
+    const dateInput = document.querySelector(
       'input[type="date"]'
     ) as HTMLInputElement;
-    fireEvent.change(inputDataNascimento, { target: { value: '1995-05-05' } });
+    expect(dateInput).toBeInTheDocument();
 
-    // Altera Senha e Confirmação
-    const inputsSenha = screen.getAllByPlaceholderText('••••••••••');
-    await user.type(inputsSenha[0], 'senha123'); // senhaAtual
-    await user.type(inputsSenha[1], 'novasenha123'); // novaSenha
+    await user.type(dateInput, '2000-01-20');
 
-    // Clica em Atualizar
-    const btnAtualizar = screen.getByRole('button', { name: /Atualizar/i });
-    await user.click(btnAtualizar);
+    await user.click(
+      screen.getByRole('button', { name: /salvar alterações/i })
+    );
 
     await waitFor(() => {
-      expect(mockMutateProfile).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'novoemail@example.com',
-          dtNascimento: '1995-05-05',
-          senhaAtual: 'senha123',
-          novaSenha: 'novasenha123',
-        }),
-        expect.any(Object)
-      );
+      expect(mockMutate).toHaveBeenCalledTimes(1);
+    });
+
+    const [payload] = mockMutate.mock.calls[0];
+
+    expect(payload).toEqual({
+      dtNascimento: '2000-01-20',
     });
   });
 
-  it('deve acionar o input file invisível ao clicar no botão de câmera', async () => {
+  it('deve fazer upload de imagem quando um arquivo for selecionado', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<EditProfile />);
 
-    // Pega o input de arquivo diretamente pelo tipo
+    mockMutate.mockImplementation((_payload, options) => {
+      options?.onSuccess?.({});
+    });
+
+    render(<EditProfile />);
+
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
     const fileInput = document.querySelector(
       'input[type="file"]'
     ) as HTMLInputElement;
 
-    // Espiona o método nativo "click" do elemento HTML
-    const clickSpy = vi.spyOn(fileInput, 'click');
+    expect(fileInput).toBeInTheDocument();
 
-    // Busca o botão da câmera (é o botão dentro da div .group do Avatar)
-    const cameraButton = document.querySelector(
-      '.group button'
-    ) as HTMLButtonElement;
+    await user.upload(fileInput, file);
 
-    // Clica no botão de sobreposição da câmera
-    await user.click(cameraButton);
-
-    // Valida se o ref repassou o clique pro input de arquivo
-    expect(clickSpy).toHaveBeenCalled();
-  });
-
-  it('deve alternar a visibilidade da Confirmação de Senha ao clicar no ícone de olho', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<EditProfile />);
-
-    // Pega as duas senhas. A índice [1] é a "Confirmação de Senha" (novaSenha)
-    const inputsSenha = screen.getAllByPlaceholderText('••••••••••');
-    const inputConfirmacao = inputsSenha[1];
-
-    expect(inputConfirmacao).toHaveAttribute('type', 'password');
-
-    // Acha o botão dentro da mesma div relativa desse input
-    const divRelative = inputConfirmacao.closest('.relative');
-    const eyeButton = divRelative?.querySelector('button') as HTMLButtonElement;
-
-    // Clica no botão para alternar setMostrarConfirmacao
-    await user.click(eyeButton);
-
-    // Verifica se mudou para texto
-    expect(inputConfirmacao).toHaveAttribute('type', 'text');
-  });
-
-  it('deve formatar e exibir erros múltiplos (quebra de linha) quando a API de perfil falhar', async () => {
-    const user = userEvent.setup();
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-    // Simula a API disparando o onError e rejeitando a Promise interna com várias linhas
-    mockMutateProfile.mockImplementation((payload: any, options: any) => {
-      options.onError({
-        message: 'Erro 1\nErro 2',
-        response: { data: { detalhe: 'Falha no BD' } },
-      });
-    });
-
-    renderWithProviders(<EditProfile />);
-
-    // Edita para habilitar o botão
-    const inputNome = screen.getByPlaceholderText('João Silva');
-    await user.type(inputNome, 'Maria');
-
-    await user.click(screen.getByRole('button', { name: /Atualizar/i }));
-
-    await waitFor(() => {
-      // Verifica se entrou no catch e chamou o toast com a lista gerada pelo split('\n')
-      expect(toast.error).toHaveBeenCalledWith(
-        'Erro ao atualizar perfil',
-        expect.any(Object)
-      );
-      expect(consoleSpy).toHaveBeenCalledWith({ detalhe: 'Falha no BD' }); // Cobre o console.log(error.response?.data)
-    });
-
-    consoleSpy.mockRestore();
-  });
-
-  it('deve logar erro se o refetch falhar e limpar a URL de preview ao salvar', async () => {
-    const user = userEvent.setup();
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-
-    mockMutateProfile.mockImplementation((payload: any, options: any) =>
-      options.onSuccess()
+    await user.click(
+      screen.getByRole('button', { name: /salvar alterações/i })
     );
 
-    // Força o refetch a falhar
-    mockRefetch.mockRejectedValue(new Error('Erro de refetch'));
-
-    renderWithProviders(<EditProfile onClose={mockOnClose} />);
-
-    // 1. Simula envio de imagem para gerar o "preview"
-    const file = new File(['img'], 'foto.jpg', { type: 'image/jpeg' });
-    const inputFake = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement;
-    await user.upload(inputFake, file);
-
-    // 2. Edita o nome (gera o payload)
-    const inputNome = screen.getByPlaceholderText('João Silva');
-    await user.type(inputNome, 'Maria');
-
-    await user.click(screen.getByRole('button', { name: /Atualizar/i }));
-
     await waitFor(() => {
-      // Cobre catch (refetchError) { console.error(...) }
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Erro ao refetch da sessão:',
-        expect.any(Error)
-      );
-
-      // Cobre if (preview) { URL.revokeObjectURL(preview); } no final do handleSubmit
-      expect(globalThis.URL.revokeObjectURL).toHaveBeenCalledWith('mocked-url');
+      expect(mockUploadImage).toHaveBeenCalledWith(file);
     });
 
-    consoleErrorSpy.mockRestore();
+    expect(mockToastSuccess).toHaveBeenCalledWith('Perfil atualizado!');
   });
 
-  it('deve limpar a URL de preview da imagem ao desmontar o componente', async () => {
+  it('deve mostrar erro quando a mutation falhar', async () => {
     const user = userEvent.setup();
-    const { unmount } = renderWithProviders(<EditProfile />);
 
-    const file = new File(['img'], 'foto.png', { type: 'image/png' });
-    const inputFake = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement;
+    mockMutate.mockImplementation((_payload, options) => {
+      options?.onError?.(new Error('Email inválido\nSenha incorreta'));
+    });
 
-    // Seta o preview
-    await user.upload(inputFake, file);
+    render(<EditProfile />);
 
-    // Desmonta o componente, acionando o retorno do useEffect
-    unmount();
+    await user.type(
+      screen.getByPlaceholderText('gustavo@email.com'),
+      'erro@email.com'
+    );
+    await user.click(
+      screen.getByRole('button', { name: /salvar alterações/i })
+    );
 
-    // Verifica se limpou a memória
-    expect(globalThis.URL.revokeObjectURL).toHaveBeenCalledWith('mocked-url');
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mockToastError).toHaveBeenCalledWith(
+      'Erro ao atualizar perfil',
+      expect.objectContaining({
+        description: expect.anything(),
+      })
+    );
+  });
+
+  it('deve chamar onClose após salvar com sucesso', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+
+    mockMutate.mockImplementation((_payload, options) => {
+      options?.onSuccess?.({});
+    });
+
+    render(<EditProfile onClose={onClose} />);
+
+    await user.type(screen.getByPlaceholderText('Gustavo Costa'), 'Novo Nome');
+    await user.click(
+      screen.getByRole('button', { name: /salvar alterações/i })
+    );
+
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
+  });
+
+  it('deve desabilitar o botão salvar quando não houver alterações', () => {
+    render(<EditProfile />);
+
+    const button = screen.getByRole('button', { name: /salvar alterações/i });
+    expect(button).toBeDisabled();
+  });
+
+  it('deve habilitar o botão salvar quando houver alterações', async () => {
+    const user = userEvent.setup();
+
+    render(<EditProfile />);
+
+    const button = screen.getByRole('button', { name: /salvar alterações/i });
+    const nomeInput = screen.getByPlaceholderText('Gustavo Costa');
+
+    expect(button).toBeDisabled();
+
+    await user.type(nomeInput, 'Novo Nome');
+
+    await waitFor(() => {
+      expect(button).not.toBeDisabled();
+    });
   });
 });

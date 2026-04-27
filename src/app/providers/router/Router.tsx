@@ -13,7 +13,6 @@ const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
-const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 
 const withSuspense = (Component: React.ComponentType) => (
@@ -60,14 +59,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowed_roles={['ADMIN']}>
         <AppLayout>{withSuspense(ControleUsuarios)}</AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/notificacoes',
-    element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
-        <AppLayout>{withSuspense(Notificacoes)}</AppLayout>
       </ProtectedRoute>
     ),
   },
