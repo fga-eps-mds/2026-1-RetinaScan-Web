@@ -6,11 +6,6 @@ on:
       - main
     types:
       - closed
-
-  # push:
-  #   branches:
-  #     - develop
-
   workflow_dispatch:
 
 jobs:
@@ -51,23 +46,16 @@ jobs:
         run: |
           git config --global user.email "${{ secrets.USER_EMAIL }}"
           git config --global user.name "${{ secrets.USER_NAME }}"
-
           git clone --single-branch --branch main "https://x-access-token:${{ secrets.API_TOKEN_GITHUB }}@github.com/fga-eps-mds/2026-1-RetinaScan-Doc" doc
-
           mkdir -p doc/analytics/raw-data
-
           cp -R analytics-raw-data/*.json doc/analytics/raw-data/
-
           cd doc
           git add .
-
           git commit -m "Adicionando métricas do repositório ${{ github.event.repository.name }} ${{ github.ref_name }}" || echo "Sem alterações para commit"
-
           git push
 
-            - name: Envia métricas como assets da release
-
-      - run: |
+      - name: Envia métricas como assets da release
+        run: |
           # Pega a última tag criada pelo parser
           TAG=$(git describe --tags --abbrev=0)
 
