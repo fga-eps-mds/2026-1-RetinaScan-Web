@@ -1,10 +1,17 @@
-import { useState } from "react"
+import { useState } from 'react';
 
-export function useNotifications() {
-  const [notifications, setNotifications] = useState([])
+type Notification = {
+  id: number;
+  title: string;
+};
+
+function useNotifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   return {
     notifications,
     setNotifications,
-  }
+  };
 }
+
+export { useNotifications };
