@@ -33,8 +33,14 @@ jobs:
         run: mkdir -p analytics-raw-data
 
       - name: Coletar métricas no SonarCloud
-        # Mantendo o padrão de execução do parser do professor
-        run: python ./sonar_scripts/parser.py ${{ github.event.repository.name }} ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.API_TOKEN_GITHUB }}
+          REPO: ${{ github.event.repository.name }}
+          REPO_DOC: '2026-1-RetinaScan-Doc'
+          RELEASE_MAJOR: ${{ contains(github.event.pull_request.labels.*.name, 'MAJOR RELEASE') }}
+          RELEASE_MINOR: ${{ contains(github.event.pull_request.labels.*.name, 'MINOR RELEASE') }}
+          RELEASE_FIX: ${{ contains(github.event.pull_request.labels.*.name, 'FIX RELEASE') }}
+        run: python ./sonar_scripts/parser.py
 
       - name: Envia métricas para repo de Doc
         run: |
