@@ -110,7 +110,9 @@ describe('Login', () => {
       await screen.findByText(/credenciais inválidas/i)
     ).toBeInTheDocument();
 
-    expect(mocks.toastError).toHaveBeenCalledWith('Credenciais inválidas');
+    expect(mocks.toastError).toHaveBeenCalledWith('Credenciais inválidas', {
+      description: 'Verifique suas credenciais e tente novamente.',
+    });
   });
 
   it('mostra erro genérico quando ocorre exceção', async () => {

@@ -1,9 +1,38 @@
-import {
-  parseApiError as parseSharedApiError,
-  type ParsedApiError,
-} from '@/shared/parseApiError';
+type ParsedApiError = {
+  message: string;
+  fieldErrors: Record<string, string>;
+};
 
-const DEFAULT_MESSAGE = 'Não foi possível cadastrar o usuário.';
+export const parseApiError = (errorBody: unknown): ParsedApiError => {
+  if (!errorBody || typeof errorBody !== 'object') {
+    return {
+      message: 'Não foi possível cadastrar o usuário.',
+      fieldErrors: {},
+    };
+  }
 
-export const parseApiError = (errorBody: unknown): ParsedApiError =>
-  parseSharedApiError(errorBody, DEFAULT_MESSAGE);
+  const body = errorBody as {
+    message?: string;
+    errors?: Record<string, string[] | undefined>;
+  };
+
+  const fieldErrors: Record<string, string> = {};
+
+  if (body.errors) {
+    for (const [field, messages] of Object.entries(body.errors)) {
+      if (messages?.length) {
+        fieldErrors[field] = messages[0];
+      }
+    }
+  }
+
+  const firstFieldError = Object.values(fieldErrors)[0];
+
+  return {
+    message:
+      firstFieldError ||
+      body.message ||
+      'Não foi possível cadastrar o usuário.',
+    fieldErrors,
+  };
+};

@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-
-  --font-heading: "Inter", sans-serif;
+  /* PRIORIDADE: Configurações do Primeiro CSS */
+  --font-heading: "Plus Jakarta Sans", sans-serif;
   --font-body: "Inter", sans-serif;
   
   --color-background: hsl(var(--background));
@@ -29,7 +29,7 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
-  /* Sidebar - Mapeado para Primária Escura (#12223A) */
+  /* Sidebar - Mapeamento correto para Shadcn/Lucide */
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-primary: hsl(var(--sidebar-primary));
@@ -39,50 +39,63 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-  /* Tokens Clínicos - Mapeados para Sucesso e Erro oficiais */
+  /* Tokens Clínicos */
   --color-clinical-success: hsl(var(--clinical-success));
+  --color-clinical-warning: hsl(var(--clinical-warning));
   --color-clinical-critical: hsl(var(--clinical-critical));
+  --color-clinical-info: hsl(var(--clinical-info));
+  --color-clinical-ai: hsl(var(--clinical-ai));
+
+  /* Raio das Bordas */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
 @layer base {
   :root {
-    /* Fundo (#EFF6FF) -> hsl(214, 100%, 97%) */
-    --background: 214 100% 97%;
-    --foreground: 215 25% 15%; /* Preto utilitário para texto */
-    
+    /* Cores do Primeiro CSS (Base Shadcn) */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
     --card: 0 0% 100%;
     --card-foreground: 215 25% 15%;
-    
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
-
-    /* Primária (#1A63AB) -> hsl(210, 73%, 39%) */
-    --primary: 210 73% 39%;
+    --primary: 201 96% 32%;
     --primary-foreground: 0 0% 100%;
-
-    /* Sucesso (#00A63E) -> hsl(142, 100%, 33%) */
-    --clinical-success: 142 100% 33%;
-    
-    /* Erro (#E7000B) -> hsl(357, 100%, 45%) */
-    --destructive: 357 100% 45%;
-    --clinical-critical: 357 100% 45%;
+    --secondary: 210 18% 95%;
+    --secondary-foreground: 215 25% 25%;
+    --muted: 210 14% 93%;
+    --muted-foreground: 215 12% 50%;
+    --accent: 174 83% 32%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
+    --ring: 201 96% 32%;
+    --radius: 0.625rem;
 
-    /* Sidebar - Primária Escura (#12223A) -> hsl(216, 52%, 15%) */
-    --sidebar-background: 216 52% 15%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 210 73% 39%;
-    --sidebar-border: 216 50% 20%;
+    /* Clinical tokens */
+    --clinical-success: 158 64% 40%;
+    --clinical-warning: 38 92% 50%;
+    --clinical-critical: 0 72% 51%;
+    --clinical-info: 201 96% 32%;
+    --clinical-ai: 174 83% 32%;
 
-    --secondary: 214 32% 91%;
-    --muted: 214 32% 91%;
-    --muted-foreground: 215 16% 47%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 210 73% 39%;
-    --radius: 0.5rem;
+    /* Sidebar */
+    --sidebar-background: 215 25% 12%;
+    --sidebar-foreground: 210 14% 83%;
+    --sidebar-primary: 201 96% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 20% 18%;
+    --sidebar-accent-foreground: 210 14% 90%;
+    --sidebar-border: 215 20% 20%;
+    --sidebar-ring: 201 96% 50%;
   }
-}
+
   .dark {
     /* Mantenha aqui as variáveis Dark em HSL se quiser compatibilidade total */
     --background: 215 25% 10%;
@@ -92,6 +105,7 @@
     --border: 215 20% 20%;
     /* Se preferir as cores do segundo arquivo para o Dark, você pode usar o bloco .dark dele aqui */
   }
+}
 
 @layer base {
   * {
@@ -100,25 +114,9 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    font-weight: 400; /* Inter Regular */
   }
-  /* Hierarquia de títulos: Inter Semi Bold (600) */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    font-weight: 600;
-  }
-}
-
-@layer base {
-  :root {
-    /* ... suas outras cores que você já mudou ... */
-    
-    --primary: 210 73% 39%; /* Azul do manual */
-    
-    /* ADICIONE ESTA LINHA: É o tom esverdeado/azulado que dava profundidade ao seu gradiente antigo */
-    --accent: 174 83% 32%; 
-    
-    /* ... resto das variáveis ... */
   }
 }
 
@@ -134,39 +132,5 @@
   }
   .shadow-clinical-lg {
     box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
-  }
-}
-
-@layer utilities {
-  /* ... seus gradientes e sombras existentes ... */
-
-  .scrollbar-transparent {
-    /* Firefox */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
-
-    /* Chrome, Edge e Safari */
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
-    }
-    &:hover::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  /* Caso queira a opção de esconder totalmente */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
   }
 }

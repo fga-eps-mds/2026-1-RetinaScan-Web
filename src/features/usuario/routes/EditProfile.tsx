@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,40 +5,32 @@ import { useSession } from '@/lib/auth-client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { toast } from 'sonner';
+import { Camera } from 'lucide-react';
 import { useUpdateProfileImage } from '../hooks/useUpdateProfileImage';
-import { formatCpf, formatCrm } from '@/utils/formatters';
-import { formatDateInput, formatDateLabel } from '@/utils/date';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Camera, Eye, EyeOff } from 'lucide-react';
-import { validateCPF } from '@/utils/validators';
-import { useCreateSolicitacaoCpfCrm } from '../hooks/useCreateSolicitacaoCpfCrm';
-import { mapSolicitacaoErrors } from '@/utils/mappers/mapSolicitacaoErrors';
 
 type EditProfileProps = {
   onClose?: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
 };
 
-const showSubmitErrorsToast = (errors: Record<string, string>) => {
-  const messages = Object.values(errors);
+const formatDateLabel = (dateValue?: Date | string | null) => {
+  if (!dateValue) return 'Não informada';
 
-  toast.error('Verifique os campos antes de enviar.', {
-    description: (
-      <ul className="mt-2 list-disc pl-4 text-sm">
-        {messages.map((message, index) => (
-          <li key={index}>{message}</li>
-        ))}
-      </ul>
-    ),
-  });
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+
+  return Number.isNaN(date.getTime())
+    ? 'Não informada'
+    : new Intl.DateTimeFormat('pt-BR').format(date);
+};
+
+const formatDateInput = (dateValue?: Date | string | null) => {
+  if (!dateValue) return '';
+
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().split('T')[0];
 };
 
 const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
@@ -56,16 +47,6 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
   const [novaSenha, setNovaSenha] = useState('');
   const [preview, setPreview] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const [novoCrm, setNovoCrm] = useState('');
-  const [novoCpf, setNovoCpf] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const {
-    mutateAsync: createSolicitacaoCpfCrm,
-    isPending: isCreatingSolicitacaoCpfCrm,
-  } = useCreateSolicitacaoCpfCrm();
 
   const currentEmail = session?.user.email ?? '';
   const currentBirthDate = useMemo(
@@ -129,14 +110,6 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
       payload.novaSenha = novaSenha.trim();
     }
 
-    if (novoCrm.trim()) {
-      payload.crm = novoCrm.trim();
-    }
-
-    if (novoCpf.trim()) {
-      payload.cpf = novoCpf.trim();
-    }
-
     if (Object.keys(payload).length === 0 && !selectedFile) {
       toast.error('Nenhuma alteração para salvar.');
       return;
@@ -177,6 +150,7 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
 
       setPreview('');
       onClose?.();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const messages = error.message?.split('\n').filter(Boolean) || [
         'Erro desconhecido',
@@ -196,61 +170,6 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
     }
   };
 
-  const handleSolicitarCpfCrm = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFieldErrors({});
-
-    if (!novoCpf.trim() && !novoCrm.trim()) {
-      setFieldErrors({
-        geral: 'Informe ao menos um campo para solicitar a alteração.',
-      });
-      return;
-    }
-
-    if (novoCpf.trim() !== '') {
-      const isValid = validateCPF(novoCpf);
-
-      if (!isValid) {
-        setFieldErrors({
-          novoCpf: 'CPF inválido. Verifique e tente novamente.',
-        });
-        return;
-      }
-    }
-
-    try {
-      const response = await createSolicitacaoCpfCrm({
-        cpfNovo: novoCpf.trim() || undefined,
-        crmNovo: novoCrm.trim() || undefined,
-      });
-
-      toast.success(response.mensagem || 'Solicitação enviada!');
-
-      setNovoCpf('');
-      setNovoCrm('');
-      setFieldErrors({});
-      setIsModalOpen(false);
-    } catch (error) {
-      const mappedErrors = mapSolicitacaoErrors(error);
-
-      if (Object.keys(mappedErrors).length > 0) {
-        setFieldErrors(mappedErrors);
-        showSubmitErrorsToast(mappedErrors);
-        return;
-      }
-
-      const message =
-        (error as any)?.response?.data?.mensagem ||
-        (error as any)?.response?.data?.message ||
-        (error as any)?.mensagem ||
-        'Tente novamente em instantes.';
-
-      toast.error('Erro ao enviar solicitação.', {
-        description: message,
-      });
-    }
-  };
-
   const userImage = session?.user.image ?? '';
 
   const imageUrl = useMemo(() => {
@@ -263,116 +182,28 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
     return userImage;
   }, [userImage]);
 
-  const isSolicitacaoValida =
-    Boolean(novoCrm.trim()) || Boolean(novoCpf.trim());
-
   return (
-    <div className="px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-5">
-        <div className="space-y-2 text-center">
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <label className="text-blue-500 text-sm font-semibold underline cursor-pointer">
-                Para a alteração de CRM ou CPF, solicite ao administrador
-              </label>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-sm font-semibold text-center">
-                  Solicitar alteração
-                </DialogTitle>
-                <div className="border-t my-4" />
-                <DialogDescription className=" text-sm text-foreground">
-                  Informe quais dados deseja alterar. Sua solicitação será
-                  enviada ao administrador para análise.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={handleSolicitarCpfCrm}>
-                <div className="space-y-2 mt-4">
-                  <label className="text-sm font-bold text-foreground">
-                    Novo CRM:{' '}
-                  </label>
-                  <Input
-                    type="text"
-                    value={novoCrm}
-                    onChange={(e) => {
-                      setNovoCrm(formatCrm(e.target.value));
-                      setFieldErrors((prev) => {
-                        const next = { ...prev };
-                        delete next.novoCrm;
-                        return next;
-                      });
-                    }}
-                    placeholder="Ex: 123456/UF"
-                  />
-                  {fieldErrors.novoCrm && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.novoCrm}
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2 mt-4">
-                  <label className="text-sm font-bold text-foreground">
-                    Novo CPF:{' '}
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Ex: 123.456.789-00"
-                    value={novoCpf}
-                    onChange={(e) => {
-                      setNovoCpf(formatCpf(e.target.value));
-                      setFieldErrors((prev) => {
-                        const next = { ...prev };
-                        delete next.novoCpf;
-                        return next;
-                      });
-                    }}
-                  />
-                  {fieldErrors.novoCpf && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.novoCpf}
-                    </span>
-                  )}
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    type="submit"
-                    className="bg-[#185CA1] hover:bg-[#0E4A8B] text-white"
-                    disabled={
-                      isCreatingSolicitacaoCpfCrm || !isSolicitacaoValida
-                    }
-                  >
-                    {isCreatingSolicitacaoCpfCrm
-                      ? 'Enviando...'
-                      : 'Enviar Solicitação'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="mt-2 mb-2 flex flex-col items-center justify-center">
+    <div className="px-1 py-1 sm:px-2">
+      <div className="flex flex-col gap-4">
+        <div className="mb-5 flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-center">
           <div className="group relative">
-            <Avatar className="h-28 w-28 border bg-muted shadow-sm">
+            <Avatar className="h-36 w-36 border-4 border-background shadow-lg">
               <AvatarImage
                 src={preview || imageUrl}
                 className="object-cover"
                 crossOrigin="anonymous"
               />
-              <AvatarFallback className="text-4xl text-muted-foreground font-medium">
-                {session?.user.name?.substring(0, 2).toUpperCase() || 'AD'}
+              <AvatarFallback className="text-5xl">
+                {session?.user.name?.substring(0, 2).toUpperCase() || 'US'}
               </AvatarFallback>
             </Avatar>
 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 opacity-0 transition-all duration-200 group-hover:opacity-100"
+              className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/55 opacity-0 transition-all duration-200 group-hover:opacity-100"
             >
-              <Camera className="h-6 w-6 text-white" />
+              <Camera className="h-5 w-5 text-white" />
             </button>
 
             <input
@@ -385,123 +216,83 @@ const EditProfile = ({ onClose, onDirtyChange }: EditProfileProps) => {
           </div>
         </div>
 
-        <div className="flex flex-row gap-20">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-bold text-foreground">CRM</label>
-            <p className="rounded-md py-2 text-sm font-semibold text-muted-foreground">
-              {session?.user.crm ? formatCrm(session?.user.crm) : '-'}
+            <p className="rounded-md py-2 text-sm font-semibold text-foreground">
+              {session?.user.crm ?? '-'}
             </p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-foreground">CPF</label>
-            <p className="rounded-md py-2 text-sm font-semibold text-muted-foreground">
-              {session?.user.cpf ? formatCpf(session?.user.cpf) : '-'}
+            <p className="rounded-md py-2 text-sm font-semibold text-foreground">
+              {session?.user.cpf ?? '-'}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold">Nome Completo</label>
-            <Input
-              type="text"
-              placeholder={session?.user.name || 'Ana Costa Neves'}
-              value={nomeCompleto}
-              onChange={(e) => setNomeCompleto(e.target.value)}
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold">Nome Completo</label>
+          <Input
+            type="text"
+            placeholder={session?.user.name || 'Digite seu nome completo'}
+            value={nomeCompleto}
+            onChange={(e) => setNomeCompleto(e.target.value)}
+          />
+        </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold">Email</label>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold">E-mail</label>
+          <Input
+            type="email"
+            placeholder={currentEmail || 'Digite seu e-mail'}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold">Data de nascimento</label>
+          <Input
+            type="date"
+            value={dataNascimento}
+            onChange={(e) => setDataNascimento(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Data atual: {birthDateLabel}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Senha atual</label>
             <Input
-              type="email"
-              placeholder={currentEmail || 'anacosta@retina'}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="password"
+              value={senhaAtual}
+              onChange={(e) => setSenhaAtual(e.target.value)}
+              placeholder="••••••••"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Data de nascimento</label>
-
+            <label className="text-sm font-semibold">Nova senha</label>
             <Input
-              type="date"
-              value={dataNascimento}
-              onChange={(e) => setDataNascimento(e.target.value)}
+              type="password"
+              value={novaSenha}
+              onChange={(e) => setNovaSenha(e.target.value)}
+              placeholder="Crie uma nova senha"
             />
-
-            <p className="text-xs text-muted-foreground">
-              Data atual: {birthDateLabel}
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold">Senha</label>
-            <div className="relative">
-              <Input
-                type={mostrarSenha ? 'text' : 'password'}
-                value={senhaAtual}
-                onChange={(e) => setSenhaAtual(e.target.value)}
-                placeholder="••••••••••"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {mostrarSenha ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold">
-              Confirmação de Senha
-            </label>
-            <div className="relative">
-              <Input
-                type={mostrarConfirmacao ? 'text' : 'password'}
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
-                placeholder="••••••••••"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setMostrarConfirmacao(!mostrarConfirmacao)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {mostrarConfirmacao ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end gap-3 pt-2 border-t border-transparent">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            className="bg-[#C8C8C8] hover:bg-gray-400 text-black"
-          >
+        <div className="mt-6 flex justify-end gap-2 pt-4">
+          <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
 
-          <Button
-            disabled={isPending || !isDirty}
-            onClick={handleSubmit}
-            className="bg-[#185CA1] hover:bg-[#0E4A8B] text-white"
-          >
-            Atualizar
+          <Button disabled={isPending || !isDirty} onClick={handleSubmit}>
+            Salvar Alterações
           </Button>
         </div>
       </div>
