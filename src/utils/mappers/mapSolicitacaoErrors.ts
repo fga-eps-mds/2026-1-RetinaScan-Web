@@ -1,10 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const mapSolicitacaoErrors = (error: unknown) => {
   const nextErrors: Record<string, string> = {};
 
   const apiFields =
-    (error as any)?.response?.data?.fields ??
-    (error as any)?.fields ??
-    [];
+    (error as any)?.response?.data?.fields ?? (error as any)?.fields ?? [];
 
   if (!Array.isArray(apiFields)) return nextErrors;
 
