@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import ModalNovoUser from '@/features/admin/components/ModalNovoUser';
 import { useCreateUser } from '@/features/admin/hooks/useCreateUser';
 
-// Mock do módulo
 vi.mock('@/features/admin/hooks/useCreateUser', () => ({
   useCreateUser: vi.fn(),
 }));
@@ -16,7 +15,16 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Correção para Radix UI / JSDOM
+vi.mock('@/components/ui/dialog', () => ({
+  Dialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
+  DialogContent: ({ children }: any) => <div>{children}</div>,
+  DialogHeader: ({ children }: any) => <div>{children}</div>,
+  DialogTitle: ({ children }: any) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: any) => <p>{children}</p>,
+  DialogFooter: ({ children }: any) => <div>{children}</div>,
+  DialogTrigger: ({ children }: any) => <div>{children}</div>,
+}));
+
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 vi.stubGlobal(
   'PointerEvent',
@@ -29,7 +37,6 @@ describe('ModalNovoUser', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Uso correto do vi.mocked para tipagem e funcionalidade
     vi.mocked(useCreateUser).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
@@ -77,7 +84,6 @@ describe('ModalNovoUser', () => {
 
     render(<ModalNovoUser isOpen={true} onClose={onClose} />);
     const submitBtn = screen.getByRole('button', { name: /cadastrando.../i });
-
     expect(submitBtn).toBeDisabled();
   });
 });
