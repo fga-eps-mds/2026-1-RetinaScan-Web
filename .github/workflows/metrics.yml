@@ -6,18 +6,17 @@ on:
       - main
     types:
       - closed
-
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'NOT RELEASE') == false
+    if: >
+      github.event_name == 'push' || 
+      (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'NOT RELEASE') == false)
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,9 +36,18 @@ jobs:
           echo GITHUB_TOKEN=${{ secrets.API_TOKEN_GITHUB }} >> ./sonar_scripts/.env
           echo REPO=${{ github.event.repository.name }} >> ./sonar_scripts/.env
           echo REPO_DOC=${{ secrets.REPO_DOC }} >> ./sonar_scripts/.env
-          echo RELEASE_MAJOR=${{ contains(github.event.pull_request.labels.*.name, 'MAJOR RELEASE') }} >> ./sonar_scripts/.env
-          echo RELEASE_MINOR=${{ contains(github.event.pull_request.labels.*.name, 'MINOR RELEASE') }} >> ./sonar_scripts/.env
-          echo RELEASE_FIX=${{ contains(github.event.pull_request.labels.*.name, 'FIX RELEASE') }} >> ./sonar_scripts/.env
+
+          # Lógica para labels (só roda se for pull_request)
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo RELEASE_MAJOR=${{ contains(github.event.pull_request.labels.*.name, 'MAJOR RELEASE') }} >> ./sonar_scripts/.env
+            echo RELEASE_MINOR=${{ contains(github.event.pull_request.labels.*.name, 'MINOR RELEASE') }} >> ./sonar_scripts/.env
+            echo RELEASE_FIX=${{ contains(github.event.pull_request.labels.*.name, 'FIX RELEASE') }} >> ./sonar_scripts/.env
+          else
+            # Para push direto, assume FIX como padrão
+            echo RELEASE_MAJOR=false >> ./sonar_scripts/.env
+            echo RELEASE_MINOR=false >> ./sonar_scripts/.env
+            echo RELEASE_FIX=true >> ./sonar_scripts/.env
+          fi
 
       - name: Criar diretório
         run: mkdir -p analytics-raw-data
@@ -61,10 +69,7 @@ jobs:
 
       - name: Envia métricas como assets da release
         run: |
-          # Pega a última tag criada pelo parser
           TAG=$(git describe --tags --abbrev=0)
-
-          # Itera sobre os arquivos e faz upload via GH CLI (já disponível no ubuntu-latest)
           for file in analytics-raw-data/*.json; do
             gh release upload $TAG "$file"
           done
