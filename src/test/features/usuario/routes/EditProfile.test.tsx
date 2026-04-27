@@ -22,7 +22,6 @@ import { useUpdateProfileImage } from '@/features/usuario/hooks/useUpdateProfile
 import { useCreateSolicitacaoCpfCrm } from '@/features/usuario/hooks/useCreateSolicitacaoCpfCrm';
 import { toast } from 'sonner';
 import { validateCPF } from '@/utils/validators';
-import { mapSolicitacaoErrors } from '@/utils/mappers/mapSolicitacaoErrors';
 
 // --- Mocks com caminhos correspondentes aos imports ---
 vi.mock('@/lib/auth-client', () => ({
