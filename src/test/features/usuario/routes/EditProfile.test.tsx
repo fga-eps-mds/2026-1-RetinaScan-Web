@@ -2,6 +2,7 @@ import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import EditProfile from '@/features/usuario/routes/EditProfile';
 
 const {
@@ -10,12 +11,14 @@ const {
   mockRefetch,
   mockToastSuccess,
   mockToastError,
+  mockCreateSolicitacao,
 } = vi.hoisted(() => ({
   mockMutate: vi.fn(),
   mockUploadImage: vi.fn(),
   mockRefetch: vi.fn(),
   mockToastSuccess: vi.fn(),
   mockToastError: vi.fn(),
+  mockCreateSolicitacao: vi.fn(),
 }));
 
 vi.mock('@/lib/auth-client', () => ({
@@ -44,6 +47,13 @@ vi.mock('@/features/usuario/hooks/useUpdateProfile', () => ({
 vi.mock('@/features/usuario/hooks/useUpdateProfileImage', () => ({
   useUpdateProfileImage: () => ({
     mutateAsync: mockUploadImage,
+  }),
+}));
+
+vi.mock('../hooks/useCreateSolicitacaoCpfCrm', () => ({
+  useCreateSolicitacaoCpfCrm: () => ({
+    mutateAsync: mockCreateSolicitacao,
+    isPending: false,
   }),
 }));
 
@@ -81,9 +91,36 @@ vi.mock('@/components/ui/avatar', () => ({
   ),
 }));
 
+vi.mock('@/components/ui/dialog', () => ({
+  Dialog: ({ children }: any) => <div data-testid="mock-dialog">{children}</div>,
+  DialogTrigger: ({ children }: any) => <div>{children}</div>,
+  DialogContent: ({ children }: any) => <div>{children}</div>,
+  DialogHeader: ({ children }: any) => <div>{children}</div>,
+  DialogTitle: ({ children }: any) => <div>{children}</div>,
+  DialogDescription: ({ children }: any) => <div>{children}</div>,
+  DialogFooter: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('lucide-react', () => ({
   Camera: () => <svg data-testid="camera-icon" />,
+  Eye: () => <svg />,
+  EyeOff: () => <svg />,
 }));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+    mutations: { retry: false },
+  },
+});
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+};
 
 describe('EditProfile', () => {
   beforeEach(() => {
@@ -93,7 +130,7 @@ describe('EditProfile', () => {
   });
 
   it('deve renderizar os dados básicos do usuário', () => {
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
     expect(screen.getByText('12345')).toBeInTheDocument();
     expect(screen.getByText('123.456.789-00')).toBeInTheDocument();
@@ -108,7 +145,7 @@ describe('EditProfile', () => {
     const user = userEvent.setup();
     const onDirtyChange = vi.fn();
 
-    render(<EditProfile onDirtyChange={onDirtyChange} />);
+    renderWithProviders(<EditProfile onDirtyChange={onDirtyChange} />);
 
     expect(onDirtyChange).toHaveBeenCalledWith(false);
 
@@ -127,7 +164,7 @@ describe('EditProfile', () => {
       options?.onSuccess?.({});
     });
 
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
     await user.type(screen.getByPlaceholderText('Gustavo Costa'), 'Novo Nome');
     await user.type(
@@ -135,9 +172,7 @@ describe('EditProfile', () => {
       'novo@email.com'
     );
 
-    await user.click(
-      screen.getByRole('button', { name: /salvar alterações/i })
-    );
+    await user.click(screen.getByRole('button', { name: /atualizar/i }));
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledTimes(1);
@@ -161,7 +196,7 @@ describe('EditProfile', () => {
       options?.onSuccess?.({});
     });
 
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
     const dateInput = document.querySelector(
       'input[type="date"]'
@@ -170,9 +205,7 @@ describe('EditProfile', () => {
 
     await user.type(dateInput, '2000-01-20');
 
-    await user.click(
-      screen.getByRole('button', { name: /salvar alterações/i })
-    );
+    await user.click(screen.getByRole('button', { name: /atualizar/i }));
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledTimes(1);
@@ -192,7 +225,7 @@ describe('EditProfile', () => {
       options?.onSuccess?.({});
     });
 
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
     const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
     const fileInput = document.querySelector(
@@ -203,9 +236,7 @@ describe('EditProfile', () => {
 
     await user.upload(fileInput, file);
 
-    await user.click(
-      screen.getByRole('button', { name: /salvar alterações/i })
-    );
+    await user.click(screen.getByRole('button', { name: /atualizar/i }));
 
     await waitFor(() => {
       expect(mockUploadImage).toHaveBeenCalledWith(file);
@@ -221,15 +252,13 @@ describe('EditProfile', () => {
       options?.onError?.(new Error('Email inválido\nSenha incorreta'));
     });
 
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
     await user.type(
       screen.getByPlaceholderText('gustavo@email.com'),
       'erro@email.com'
     );
-    await user.click(
-      screen.getByRole('button', { name: /salvar alterações/i })
-    );
+    await user.click(screen.getByRole('button', { name: /atualizar/i }));
 
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledTimes(1);
@@ -251,12 +280,10 @@ describe('EditProfile', () => {
       options?.onSuccess?.({});
     });
 
-    render(<EditProfile onClose={onClose} />);
+    renderWithProviders(<EditProfile onClose={onClose} />);
 
     await user.type(screen.getByPlaceholderText('Gustavo Costa'), 'Novo Nome');
-    await user.click(
-      screen.getByRole('button', { name: /salvar alterações/i })
-    );
+    await user.click(screen.getByRole('button', { name: /atualizar/i }));
 
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
@@ -264,18 +291,18 @@ describe('EditProfile', () => {
   });
 
   it('deve desabilitar o botão salvar quando não houver alterações', () => {
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
-    const button = screen.getByRole('button', { name: /salvar alterações/i });
+    const button = screen.getByRole('button', { name: /atualizar/i });
     expect(button).toBeDisabled();
   });
 
   it('deve habilitar o botão salvar quando houver alterações', async () => {
     const user = userEvent.setup();
 
-    render(<EditProfile />);
+    renderWithProviders(<EditProfile />);
 
-    const button = screen.getByRole('button', { name: /salvar alterações/i });
+    const button = screen.getByRole('button', { name: /atualizar/i });
     const nomeInput = screen.getByPlaceholderText('Gustavo Costa');
 
     expect(button).toBeDisabled();

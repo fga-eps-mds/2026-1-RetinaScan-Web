@@ -3,9 +3,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { signIn } from '@/lib/auth-client';
 import { motion } from 'framer-motion';
-import { Eye, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
@@ -13,6 +14,7 @@ const Login = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [mostrarSenha, setMostrarSenha] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,9 +42,7 @@ const Login = () => {
   };
 
   return (
-   
     <div className="min-h-screen flex bg-[#EFF6FF]">
-      
       <div className="hidden lg:flex lg:w-1/2 gradient-clinical relative overflow-hidden items-center justify-center p-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -71,7 +71,6 @@ const Login = () => {
           className="w-full max-w-sm space-y-8"
         >
           <div className="lg:hidden flex items-center gap-3 justify-center">
-
             <div className="w-10 h-10 rounded-xl gradient-clinical flex items-center justify-center">
               <Eye className="w-5 h-5 text-white" />
             </div>
@@ -114,13 +113,25 @@ const Login = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  type="password"
+                  type={mostrarSenha ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Digite sua senha"
                   className="pl-9 bg-white"
                 />
+                <button
+                type="button"
+                onClick={() => setMostrarSenha(!mostrarSenha)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {mostrarSenha ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+
               </div>
 
               <div className="flex items-center justify-between">
