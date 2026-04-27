@@ -3,7 +3,7 @@ import {
   type ParsedApiError,
 } from '@/shared/parseApiError';
 
-const DEFAULT_MESSAGE = 'Não foi possível cadastrar o usuário.';
+const DEFAULT_MESSAGE = 'Nao foi possivel criar o exame.';
 
 export const parseApiError = (errorBody: unknown): ParsedApiError =>
   parseSharedApiError(errorBody, DEFAULT_MESSAGE);
