@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { lazy } from 'react';
-import { withSuspense } from '@/utils/lazy-warper/lazy-warper';
+import { withSuspense } from '@/utils/lazy-warpper/lazy-warpper';
 
 describe('withSuspense', () => {
   it('deve renderizar o fallback de carregamento inicialmente', () => {
