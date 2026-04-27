@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { Check, CircleX, FileText, Loader2 } from 'lucide-react';
+import {
+  Check,
+  CircleX,
+  FileText,
+  Hash,
+  Loader2,
+  Mail,
+  UserRound,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Solicitacao } from '../types/Solicitacao';
@@ -86,9 +94,7 @@ const SolicitacaoCardAdmin = ({
         motivoRejeicao: motivoRejeicao.trim(),
       });
       await refetch();
-
       toast.success('Solicitação recusada com sucesso.');
-
       setMotivoRejeicao('');
     } catch (error: any) {
       toast.error('Erro ao recusar solicitação.', {
@@ -113,16 +119,61 @@ const SolicitacaoCardAdmin = ({
           <CardDescription className="break-all">
             ID da solicitação: {solicitacao.id}
           </CardDescription>
-
-          <CardDescription className="break-all">
-            ID do usuário: {solicitacao.idUsuario}
-          </CardDescription>
         </div>
 
         <div>{getStatusBadge(solicitacao.status)}</div>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <div className="rounded-xl border bg-muted/30 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <UserRound className="h-4 w-4" />
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Dados do solicitante
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Informações do usuário que pediu a alteração
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-lg border bg-background/80 p-3">
+              <p className="mb-1 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <Hash className="h-3.5 w-3.5" />
+                ID do usuário
+              </p>
+              <p className="break-all text-sm font-medium text-foreground">
+                {solicitacao.idUsuario}
+              </p>
+            </div>
+
+            <div className="rounded-lg border bg-background/80 p-3">
+              <p className="mb-1 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <UserRound className="h-3.5 w-3.5" />
+                Nome
+              </p>
+              <p className="break-words text-sm font-medium text-foreground">
+                {solicitacao.nomeCompleto}
+              </p>
+            </div>
+
+            <div className="rounded-lg border bg-background/80 p-3">
+              <p className="mb-1 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <Mail className="h-3.5 w-3.5" />
+                Email
+              </p>
+              <p className="break-all text-sm font-medium text-foreground">
+                {solicitacao.email}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border bg-muted/30 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

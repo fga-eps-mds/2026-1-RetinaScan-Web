@@ -1,8 +1,6 @@
 import { Inbox, Loader2 } from 'lucide-react';
-
 import { useGetSolicitacoes } from '../hooks/useGetSolicitacoes';
 import SolicitacaoCardAdmin from './SolicitacaoCardAdmin';
-
 import { Card, CardContent } from '@/components/ui/card';
 
 const SolicitacoesAdmin = () => {

@@ -4,6 +4,8 @@ export type Solicitacao = {
   cpfNovo: string;
   crmNovo: string;
   status: 'PENDENTE' | 'APROVADA' | 'REJEITADA';
+  nomeCompleto: string;
+  email: string;
   motivoRejeicao?: string;
   analisadoPor: null;
   analisadoEm: null;
