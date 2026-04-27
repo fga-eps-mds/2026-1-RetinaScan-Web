@@ -8,7 +8,6 @@ import {
   Users,
   LogOut,
   Pencil,
-  BellRing,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
@@ -37,12 +36,6 @@ const navItems = [
     icon: Users,
     label: 'Controle de usuários',
     allowed_roles: ['ADMIN'],
-  },
-  {
-    to: '/notificacoes',
-    icon: BellRing,
-    label: 'Notificações',
-    allowed_roles: ['ADMIN', 'MEDICO'],
   },
 ];
 
