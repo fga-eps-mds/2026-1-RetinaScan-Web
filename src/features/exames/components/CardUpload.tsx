@@ -9,10 +9,14 @@ interface ImageUploadBoxProps {
   onImageChange: (file: File | null) => void;
 }
 export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
-  const { preview, handleFileChange, removeImage } = useImageUpload(onImageChange);
+  const { preview, handleFileChange, handleDrop, removeImage } = useImageUpload(onImageChange);
 
   return (
-    <Card className="w-full max-w-[500px] p-8 border-2 border-dashed flex flex-col gap-4">      
+    <Card 
+      className="w-full max-w-[500px] p-8 border-2 border-dashed flex flex-col gap-4"      
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleDrop}
+    >
       <div className="mb-4 flex items-center gap-2 self-start font-semibold text-sm">
         <Upload/>
         {label}
@@ -22,15 +26,14 @@ export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
         {preview ? (
           <>
             <img 
-              src={preview}  
-              alt="Preview" 
-              className="h-full rounded-md object-contain" 
-            />
+             src={preview}
+             className="h-full rounded-md object-contain" />
             <Button
               size="icon"
               className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
               onClick={removeImage}
             >
+              <X className="h-4 w-4" />
             </Button>
           </>
         ) : (

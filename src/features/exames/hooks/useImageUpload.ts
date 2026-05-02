@@ -14,6 +14,14 @@ export function useImageUpload(onImageChange: (file: File | null) => void) {
     }
   };
 
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); 
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileChange(file);
+    }
+  };
+
   const removeImage = () => {
     setPreview(null);
     onImageChange(null);
@@ -22,6 +30,8 @@ export function useImageUpload(onImageChange: (file: File | null) => void) {
   return {
     preview,
     handleFileChange,
+    handleDrop,
     removeImage
   };
+  
 }

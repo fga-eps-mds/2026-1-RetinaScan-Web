@@ -14,7 +14,7 @@ const UploadExame = () => {
       toast.error("Selecione pelo menos uma imagem para análise.");
       return;
     }
-     // console inicial para test, precisa integrar com a api
+     // console inicial para teste, precisa integrar com a api
     console.log("Enviando para o exame:", id, { imageOE, imageOD });
     toast.success("Imagens enviadas para processamento!");
   };
@@ -42,11 +42,11 @@ const UploadExame = () => {
         />
       </div>
 
-      <footer className="mt-12 flex flex-col items-center gap-4">
+      <div className="mt-12 flex flex-col items-center gap-4">
         <p className="text-xs text-muted-foreground">
           Aceitos: JPG, PNG, TIFF (Max 10MB)
         </p>
-        <p className="max-w-md text-center text-xs text-muted-foreground/80">
+        <p className=" text-center text-xs text-muted-foreground/80">
           Envie pelo menos uma imagem. Casos monoculares podem ter apenas um olho.
         </p>
         
@@ -54,9 +54,9 @@ const UploadExame = () => {
           onClick={handleUpload}
           className="mt-4 bg-[#00b34d] px-12 py-6 text-lg font-bold hover:bg-[#009940]"
         >
-          Enviar para Análise da IA
+          Enviar para Análise
         </Button>
-      </footer>
+      </div>
     </div>
   );
 };
