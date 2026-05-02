@@ -1,56 +1,41 @@
-import { useCallback, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, ImageIcon, X } from 'lucide-react';
+import { useImageUpload } from '../hooks/useImageUpload';
 
 interface ImageUploadBoxProps {
   label: string;
   side: 'OE' | 'OD';
   onImageChange: (file: File | null) => void;
 }
-
 export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
-  const [preview, setPreview] = useState<string | null>(null);
-
-  const handleFileChange = (file: File) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      onImageChange(file);
-    }
-  };
-
-  const removeImage = () => {
-    setPreview(null);
-    onImageChange(null);
-  };
+  const { preview, handleFileChange, removeImage } = useImageUpload(onImageChange);
 
   return (
-    <Card className="relative flex flex-col items-center justify-center border-2 border-dashed p-6 transition-colors hover:border-primary/50">
+    <Card className="w-full max-w-[500px] p-8 border-2 border-dashed flex flex-col gap-4">      
       <div className="mb-4 flex items-center gap-2 self-start font-semibold text-sm">
-        <Upload className="h-6 w-6" />
+        <Upload/>
         {label}
       </div>
 
       <div className="relative flex min-h-[350px] w-full flex-col items-center justify-center rounded-lg bg-muted/30">
         {preview ? (
           <>
-            <img src={preview} alt="Preview" className="h-full max-h-[240px] rounded-md object-contain" />
+            <img 
+              src={preview}  
+              alt="Preview" 
+              className="h-full rounded-md object-contain" 
+            />
             <Button
-              variant="destructive"
               size="icon"
               className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
               onClick={removeImage}
             >
-              <X className="h-4 w-4" />
             </Button>
           </>
         ) : (
-          <div className="flex flex-col items-center text-center">
-            <ImageIcon className="mb-4 h-12 w-12 text-muted-foreground/40" />
+          <div className="flex flex-col items-center text-center gap-6">
+            <ImageIcon className="h-12 w-12 text-muted-foreground/40" />
             <p className="mb-2 text-sm text-muted-foreground">Enviar ou arrastar imagem</p>
             <label>
               <input

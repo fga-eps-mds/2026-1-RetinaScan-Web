@@ -14,14 +14,13 @@ const UploadExame = () => {
       toast.error("Selecione pelo menos uma imagem para análise.");
       return;
     }
-
-    // Aqui entrará sua lógica de Mutation para enviar ao backend
+     // console inicial para test, precisa integrar com a api
     console.log("Enviando para o exame:", id, { imageOE, imageOD });
     toast.success("Imagens enviadas para processamento!");
   };
 
   return (
-    <div className="w-fullflex items-center justify-center flex-col gap-12 p-8">
+    <div className="w-full flex  justify-center flex-col gap-2 p-8">
        <header className="text-center">
           <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
             Novo Exame
