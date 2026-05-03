@@ -53,6 +53,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
             cd /home/retinascan/homolog/2026-1-RetinaScan-Web
             git pull origin develop
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.homolog.yml up -d --build
             docker image prune -f
           EOF

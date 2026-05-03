@@ -1,0 +1,10 @@
+services:
+  2026-1-retinascan-web-homolog:
+    container_name: 2026-1-RetinaScan-Web-Homolog
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - '${PORT}:3001'
+    env_file:
+      - .env.prod
