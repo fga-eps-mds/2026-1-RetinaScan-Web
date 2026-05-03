@@ -1,5 +1,5 @@
 export function validateCPF(value: string) {
-  let cpf = value.replace(/\D/g, '');
+  const cpf = value.replace(/\D/g, '');
 
   if (cpf.length !== 11) return false;
 
