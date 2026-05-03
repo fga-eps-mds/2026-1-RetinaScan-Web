@@ -3,17 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import UploadExame from '@/features/exames/routes/UploudExame';
 import { toast } from 'sonner';
+import * as validator from '@/utils/validators/exam';
 
-// mock do useParams
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router');
-  return {
-    ...actual,
-    useParams: () => ({ id: '123' }),
-  };
-});
+// Mock do useParams do react-router
+vi.mock('react-router', () => ({
+  useParams: () => ({ id: '123' }),
+}));
 
-// mock do toast
+// Mock do toast da biblioteca sonner
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -21,51 +18,75 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// Mock do utilitário de validação
+vi.mock('@/utils/validators/exam', () => ({
+  isValidExamId: vi.fn(() => true),
+}));
+
 describe('UploadExame', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renderiza os dois uploads', () => {
+  it('renderiza os dois campos de upload e o cabeçalho', () => {
     render(<UploadExame />);
 
-    expect(screen.getByText(/Olho esquerdo/i)).toBeInTheDocument();
-    expect(screen.getByText(/Olho direito/i)).toBeInTheDocument();
+    expect(screen.getByText(/Novo Exame/i)).toBeInTheDocument();
+    expect(screen.getByText(/Olho esquerdo \(OE\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Olho direito \(OD\)/i)).toBeInTheDocument();
   });
 
-  it('mostra erro se tentar enviar sem imagem', async () => {
-    const user = userEvent.setup();
-
+  it('deve manter o botão desabilitado se não houver imagens', () => {
     render(<UploadExame />);
 
-    await user.click(
-      screen.getByRole('button', { name: /Enviar para Análise/i })
-    );
-
-    expect(toast.error).toHaveBeenCalledWith(
-      'Selecione pelo menos uma imagem para análise.'
-    );
+    const button = screen.getByRole('button', { name: /Enviar para Análise/i });
+    
+    // Verifica se o atributo disabled está presente
+    expect(button).toBeDisabled();
+    // Verifica se a classe de estilo desabilitado foi aplicada
+    expect(button).toHaveClass('bg-gray-400');
   });
 
-  it('envia com sucesso quando tem imagem', async () => {
-    const user = userEvent.setup();
+  it('deve exibir mensagem de erro quando o ID do exame for inválido', () => {
+    // Força o validador a retornar false para este teste específico
+    vi.mocked(validator.isValidExamId).mockReturnValueOnce(false);
 
     render(<UploadExame />);
 
-    const input = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement;
+    expect(
+      screen.getByText(/Erro: Sessão de exame inválida ou ID não encontrado/i)
+    ).toBeInTheDocument();
+    
+    const button = screen.getByRole('button', { name: /Enviar para Análise/i });
+    expect(button).toBeDisabled();
+  });
 
-    const file = new File(['dummy'], 'test.png', { type: 'image/png' });
+  it('deve habilitar o botão e enviar com sucesso ao fazer upload de uma imagem', async () => {
+    const user = userEvent.setup();
+    render(<UploadExame />);
 
-    await user.upload(input, file);
+    // Buscamos o input de arquivo. Usamos Type Assertion 'as HTMLInputElement' para o TS
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    
+    if (!fileInput) {
+      throw new Error('Input de arquivo não encontrado no DOM');
+    }
 
-    await user.click(
-      screen.getByRole('button', { name: /Enviar para Análise/i })
-    );
+    const file = new File(['conteudo-da-imagem'], 'olho.png', { type: 'image/png' });
 
-    expect(toast.success).toHaveBeenCalledWith(
-      'Imagens enviadas para processamento!'
-    );
+    // Simula o upload do arquivo
+    await user.upload(fileInput, file);
+
+    const button = screen.getByRole('button', { name: /Enviar para Análise/i });
+
+    // O botão deve ser habilitado após o upload
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveClass('bg-[#00b34d]');
+
+    // Simula o clique
+    await user.click(button);
+
+    // Verifica se o toast de sucesso foi chamado
+    expect(toast.success).toHaveBeenCalledWith('Imagens enviadas para processamento!');
   });
 });
