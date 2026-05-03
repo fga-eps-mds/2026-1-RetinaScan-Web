@@ -1,17 +1,24 @@
 import { useState } from 'react';
+import { toast } from 'sonner'
+import { validateFile } from '@/utils/validators/file';
 
 export function useImageUpload(onImageChange: (file: File | null) => void) {
   const [preview, setPreview] = useState<string | null>(null);
 
   const handleFileChange = (file: File) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      onImageChange(file);
+
+    const errorMessage = validateFile(file);
+    if (errorMessage) {
+      toast.error(errorMessage);
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    onImageChange(file);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {

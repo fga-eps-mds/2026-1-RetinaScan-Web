@@ -9,6 +9,7 @@ interface ImageUploadBoxProps {
   onImageChange: (file: File | null) => void;
 }
 export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
+  // O hook agora já faz a validação de tamanho e tipo que criamos
   const { preview, handleFileChange, handleDrop, removeImage } = useImageUpload(onImageChange);
 
   return (
@@ -18,7 +19,7 @@ export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
       onDrop={handleDrop}
     >
       <div className="mb-4 flex items-center gap-2 self-start font-semibold text-sm">
-        <Upload/>
+        <Upload className="h-4 w-4" />
         {label}
       </div>
 
@@ -26,11 +27,13 @@ export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
         {preview ? (
           <>
             <img 
-             src={preview}
-             className="h-full rounded-md object-contain" />
+              src={preview} 
+              alt={label}
+              className="h-full rounded-md object-contain" 
+            />
             <Button
               size="icon"
-              className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+              className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-destructive text-white"
               onClick={removeImage}
             >
               <X className="h-4 w-4" />
@@ -44,10 +47,13 @@ export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
               <input
                 type="file"
                 className="hidden"
-                accept="image/*"
-                onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
+                accept=".jpg,.jpeg,.png" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileChange(file);
+                }}
               />
-              <span className="cursor-pointer rounded-md border px-4 py-2 text-xs font-medium shadow-sm hover:bg-accent">
+              <span className="cursor-pointer rounded-md border px-4 py-2 text-xs font-medium shadow-sm hover:bg-accent transition-colors">
                 Selecione imagem
               </span>
             </label>

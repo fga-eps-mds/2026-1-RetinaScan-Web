@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/exames/upload',
+    path: '/exames/upload/:id',
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(UploadExame)}</AppLayout>
