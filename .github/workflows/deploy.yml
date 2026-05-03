@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://retinascan.site
+      url: https://retinascan.site/
 
     steps:
       - name: Checkout
@@ -32,25 +32,23 @@ jobs:
           CF_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
+          mkdir -p $HOME/.ssh
+          chmod 700 $HOME/.ssh
 
-          # Configura o acesso via túnel e ignora a validação manual de fingerprint (essencial para CI/CD)
-          cat <<EOF > ~/.ssh/config
+          cat <<EOF > $HOME/.ssh/config
           Host retinascanvm.retinascan.site
               ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
               StrictHostKeyChecking no
               UserKnownHostsFile /dev/null
           EOF
 
-          # Grava a chave privada de forma segura
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "$SSH_KEY" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
 
       - name: Execute Docker Compose on VM
         run: |
-          ssh ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
-            # Caminho para a pasta de produção
-            cd /home/retinascan/2026-1-RetinaScan-Web
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
+            cd /home/retinascan/production/2026-1-RetinaScan-Web
             git pull origin main
             docker compose -f docker-compose.prod.yml up -d --build
             docker image prune -f
