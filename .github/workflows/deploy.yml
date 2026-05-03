@@ -31,13 +31,14 @@ jobs:
           CF_ID: ${{ secrets.CF_CLIENT_ID }}
           CF_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
         run: |
-          mkdir -p ~/.ssh
-          echo "Host retinascanvm.retinascan.site
-            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET" >> ~/.ssh/config
+          mkdir -p $HOME/.ssh
 
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan retinascanvm.retinascan.site >> ~/.ssh/known_hosts
+          echo "Host retinascanvm.retinascan.site
+            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET" > $HOME/.ssh/config
+
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          ssh-keyscan retinascanvm.retinascan.site >> $HOME/.ssh/known_hosts
 
       - name: Execute Docker Compose on VM
         run: |
