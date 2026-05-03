@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useCreateExam } from '../hooks/useCreateExam';
 import { parseApiError } from '../api/parseApiError';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import type { SexoExame } from '../types/exam';
 
 const formatCpf = (value: string): string => {
@@ -251,6 +251,16 @@ const NovoExame = () => {
         >
           {createExamMutation.isPending ? 'Salvando...' : 'Continuar'}
         </Button>
+        <Button
+            variant="ghost"
+            asChild
+            size="sm"
+            className="self-center text-muted-foreground underline"
+          >
+            <Link to="/exames/upload"> 
+              Ir para Upload (Teste)
+            </Link>
+          </Button>
       </form>
     </div>
   );
