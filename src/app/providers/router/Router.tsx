@@ -5,7 +5,7 @@ import { lazy, Suspense } from 'react';
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
 import Loading from '@/components/layout/loading/Loading';
-import UploadExame from '@/features/exames/routes/UploudExame';
+import UploadExame from '@/features/exames/routes/UploadExame';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
 const Exames = lazy(() => import('@/features/exames/routes/Exames'));

@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import type { AxiosError } from 'axios';
 import { useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ImageUploadBox } from '../components/CardUpload';
 import { toast } from 'sonner';
 import { isValidExamId } from '@/utils/validators/exam';
+import { api } from '@/shared/api';
 
 const UploadExame = () => {
   const { id } = useParams();
@@ -16,13 +18,33 @@ const UploadExame = () => {
 
   const canSubmit = hasValidExam && hasImages;
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleUpload = async () => {
     if (!canSubmit) {
       toast.error('Vínculo com exame ausente ou imagens inválidas.');
       return;
     }
 
-    toast.success('Imagens enviadas para processamento!');
+    const form = new FormData();
+    if (imageOD) form.append('olhoDireito', imageOD);
+    if (imageOE) form.append('olhoEsquerdo', imageOE);
+
+    try {
+      setIsUploading(true);
+      await api.post(`/api/exams/${id}/images`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Imagens enviadas para processamento!');
+      setImageOE(null);
+      setImageOD(null);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const message = axiosErr?.response?.data?.message || (err instanceof Error ? err.message : 'Erro ao enviar imagens');
+      toast.error(String(message));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -36,7 +58,7 @@ const UploadExame = () => {
         </p>
       </header>
 
-      <div className="flex items-center justify-center gap-16 border-t border-border/100 mt-8 pt-8">
+      <div className="flex items-center justify-center gap-16 border-t border-border mt-8 pt-8">
         <ImageUploadBox
           label="Olho esquerdo (OE)"
           side="OE"
@@ -67,14 +89,14 @@ const UploadExame = () => {
 
         <Button
           onClick={handleUpload}
-          disabled={!canSubmit}
-          className={`mt-4 px-12 py-6 text-lg font-bold transition-all ${
-            canSubmit
+          disabled={!canSubmit || isUploading}
+          className={`mt-4 px-12 py-5 text-lg font-bold transition-all ${
+            canSubmit && !isUploading
               ? 'bg-[#00b34d] hover:bg-[#009940] opacity-100'
               : 'bg-gray-400 cursor-not-allowed opacity-50'
           }`}
         >
-          Enviar para Análise
+          {isUploading ? 'Enviando...' : 'Enviar para Análise'}
         </Button>
       </div>
     </div>
