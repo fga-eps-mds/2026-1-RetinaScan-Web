@@ -1,0 +1,49 @@
+name: Deploy Homolog
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+permissions:
+  deployments: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: homolog
+      url: https://homolog.retinascan.site/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Cloudflared
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+
+      - name: SSH Setup
+        env:
+          CF_ID: ${{ secrets.CF_CLIENT_ID }}
+          CF_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "Host retinascanvm.retinascan.site
+            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET" >> ~/.ssh/config
+
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan retinascanvm.retinascan.site >> ~/.ssh/known_hosts
+
+      - name: Execute Docker Compose on VM
+        run: |
+          ssh ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
+            cd /home/retinascan/homolog/2026-1-RetinaScan-Web
+            git pull origin develop
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker image prune -f
+          EOF
