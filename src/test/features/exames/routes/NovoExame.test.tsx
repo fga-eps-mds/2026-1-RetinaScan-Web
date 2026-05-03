@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NovoExame from '@/features/exames/routes/NovoExame';
 import { useCreateExam } from '@/features/exames/hooks/useCreateExam';
 import { toast } from 'sonner';
+import { MemoryRouter } from 'react-router';
+
 
 const mocks = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
@@ -46,7 +48,11 @@ describe('NovoExame', () => {
 
     mocks.mutateAsync.mockResolvedValue({ id: 'exam-1' });
 
-    render(<NovoExame />);
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
 
     await user.type(
       screen.getByPlaceholderText('Digite o nome completo do paciente'),
@@ -104,7 +110,11 @@ describe('NovoExame', () => {
       },
     });
 
-    render(<NovoExame />);
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
 
     await user.type(
       screen.getByPlaceholderText('Digite o nome completo do paciente'),
@@ -136,7 +146,11 @@ describe('NovoExame', () => {
       isPending: true,
     } as any);
 
-    render(<NovoExame />);
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
 
     expect(screen.getByRole('button', { name: 'Salvando...' })).toBeDisabled();
   });
