@@ -30,20 +30,27 @@ jobs:
         env:
           CF_ID: ${{ secrets.CF_CLIENT_ID }}
           CF_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          # O Host aqui define como o comando ssh deve se comportar para esse domínio
-          echo "Host retinascanvm.retinascan.site
-            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET" >> ~/.ssh/config
+          # Cria a pasta e garante permissão total pro runner nela
+          mkdir -p $HOME/.ssh
+          chmod 700 $HOME/.ssh
 
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan retinascanvm.retinascan.site >> ~/.ssh/known_hosts
+          cat <<EOF > $HOME/.ssh/config
+          Host retinascanvm.retinascan.site
+              ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+          EOF
+
+          # Grava a chave usando a variável de env (muito mais seguro)
+          echo "$SSH_KEY" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
 
       - name: Execute Docker Compose on VM
         run: |
-          # Importante: O host aqui deve bater com o "Host" definido acima no config
-          ssh ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
+          # Adicionamos a flag -o para reforçar que não queremos validar o host
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
             cd /home/retinascan/homolog/2026-1-RetinaScan-Web
             git pull origin develop
             docker compose -f docker-compose.prod.yml up -d --build
