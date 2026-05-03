@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 export function validateCPF(value: string) {
   let cpf = value.replace(/\D/g, '');
 
