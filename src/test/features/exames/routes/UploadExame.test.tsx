@@ -8,6 +8,7 @@ import { api } from '@/shared/api';
 
 const mocks = vi.hoisted(() => ({
   apiPost: vi.fn(),
+  useParams: vi.fn(() => ({ id: '550e8400-e29b-41d4-a716-446655440000' })),
 }));
 
 // Mock do api
@@ -19,7 +20,7 @@ vi.mock('@/shared/api', () => ({
 
 // Mock do useParams do react-router
 vi.mock('react-router', () => ({
-  useParams: () => ({ id: '550e8400-e29b-41d4-a716-446655440000' }),
+  useParams: mocks.useParams,
 }));
 
 // Mock do toast da biblioteca sonner
@@ -156,6 +157,43 @@ describe('UploadExame', () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Imagem inválida');
+    });
+  });
+
+  it('deve usar a mensagem de erro do objeto Error quando a API falha sem response', async () => {
+    const user = userEvent.setup();
+    mocks.apiPost.mockRejectedValue(new Error('Falha inesperada'));
+
+    render(<UploadExame />);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['conteudo'], 'olho.png', { type: 'image/png' });
+    await user.upload(fileInput, file);
+
+    await user.click(screen.getByRole('button', { name: /Enviar para Análise/i }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Falha inesperada');
+    });
+  });
+
+  it('deve limpar o estado de envio após sucesso', async () => {
+    const user = userEvent.setup();
+    mocks.apiPost.mockResolvedValue({ data: { success: true } });
+
+    render(<UploadExame />);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['conteudo'], 'olho.png', { type: 'image/png' });
+    await user.upload(fileInput, file);
+
+    const button = screen.getByRole('button', { name: /Enviar para Análise/i });
+    expect(button).not.toBeDisabled();
+
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Enviar para Análise/i })).toBeDisabled();
     });
   });
 });

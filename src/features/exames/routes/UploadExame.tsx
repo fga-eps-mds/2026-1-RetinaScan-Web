@@ -26,11 +26,6 @@ const UploadExame = () => {
       return;
     }
 
-    if (!id) {
-      toast.error('ID de exame ausente.');
-      return;
-    }
-
     const form = new FormData();
     if (imageOD) form.append('olhoDireito', imageOD);
     if (imageOE) form.append('olhoEsquerdo', imageOE);
