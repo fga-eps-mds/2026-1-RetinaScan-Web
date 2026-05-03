@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useCreateExam } from '../hooks/useCreateExam';
 import { parseApiError } from '../api/parseApiError';
 import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import type { SexoExame } from '../types/exam';
 
 const formatCpf = (value: string): string => {
@@ -48,7 +48,7 @@ const NovoExame = () => {
     setFieldErrors({});
 
     try {
-      await createExamMutation.mutateAsync({
+      const exam = await createExamMutation.mutateAsync({
         nomeCompleto,
         cpf: cpf.replaceAll(/\D/g, ''),
         sexo: sexo as SexoExame,
@@ -58,9 +58,9 @@ const NovoExame = () => {
         descricao: descricao.trim() ? descricao : undefined,
       });
 
-      toast.success('Exame criado com sucesso.');
+      toast.success('Exame criado com sucesso. Redirecionando para upload...');
       resetForm();
-      navigate('/exames');
+      navigate(`/exames/upload/${exam.id}`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const { message, fieldErrors } = parseApiError(err?.response?.data);
@@ -251,16 +251,6 @@ const NovoExame = () => {
         >
           {createExamMutation.isPending ? 'Salvando...' : 'Continuar'}
         </Button>
-        <Button
-            variant="ghost"
-            asChild
-            size="sm"
-            className="self-center text-muted-foreground underline"
-          >
-            <Link to="/exames/upload"> 
-              Ir para Upload (Teste)
-            </Link>
-          </Button>
       </form>
     </div>
   );
