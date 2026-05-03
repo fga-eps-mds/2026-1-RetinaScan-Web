@@ -5,6 +5,7 @@ on:
     branches: [develop]
   pull_request:
     branches: [develop]
+    types: [closed]
 
 permissions:
   deployments: write
