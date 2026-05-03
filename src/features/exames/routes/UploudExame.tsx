@@ -10,22 +10,18 @@ const UploadExame = () => {
   const [imageOE, setImageOE] = useState<File | null>(null);
   const [imageOD, setImageOD] = useState<File | null>(null);
 
-  
   const hasValidExam = isValidExamId(id);
 
- 
   const hasImages = !!imageOE || !!imageOD;
 
   const canSubmit = hasValidExam && hasImages;
 
   const handleUpload = async () => {
-   
     if (!canSubmit) {
       toast.error('Vínculo com exame ausente ou imagens inválidas.');
       return;
     }
 
-    console.log('Enviando para o exame:', id, { imageOE, imageOD });
     toast.success('Imagens enviadas para processamento!');
   };
 
@@ -54,7 +50,6 @@ const UploadExame = () => {
       </div>
 
       <div className="mt-12 flex flex-col items-center gap-4">
-    
         <p className="text-xs text-muted-foreground">
           Aceitos: JPG, JPEG, PNG (Max 10MB)
         </p>
@@ -72,7 +67,6 @@ const UploadExame = () => {
 
         <Button
           onClick={handleUpload}
-         
           disabled={!canSubmit}
           className={`mt-4 px-12 py-6 text-lg font-bold transition-all ${
             canSubmit
