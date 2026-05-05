@@ -49,7 +49,7 @@ jobs:
       - name: Execute Docker Compose on VM
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@retinascanvm.retinascan.site << 'EOF'
-            cd /home/retinascan/production/2026-1-RetinaScan-Web
+            cd /home/retinascan/2026-1-RetinaScan-Web
             git pull origin main
             docker compose -f docker-compose.prod.yml up -d --build
             docker image prune -f
