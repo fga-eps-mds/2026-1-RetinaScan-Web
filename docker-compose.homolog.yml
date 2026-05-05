@@ -1,6 +1,6 @@
 services:
-  2026-1-retinascan-web-prod:
-    container_name: 2026-1-RetinaScan-Web-Prod
+  2026-1-retinascan-web-homolog:
+    container_name: 2026-1-RetinaScan-Web-Homolog
     build:
       context: .
       dockerfile: Dockerfile.prod

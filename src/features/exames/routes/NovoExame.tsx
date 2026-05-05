@@ -48,7 +48,7 @@ const NovoExame = () => {
     setFieldErrors({});
 
     try {
-      await createExamMutation.mutateAsync({
+      const exam = await createExamMutation.mutateAsync({
         nomeCompleto,
         cpf: cpf.replaceAll(/\D/g, ''),
         sexo: sexo as SexoExame,
@@ -58,9 +58,9 @@ const NovoExame = () => {
         descricao: descricao.trim() ? descricao : undefined,
       });
 
-      toast.success('Exame criado com sucesso.');
+      toast.success('Exame criado com sucesso. Redirecionando para upload...');
       resetForm();
-      navigate('/exames');
+      navigate(`/exames/upload/${exam.id}`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const { message, fieldErrors } = parseApiError(err?.response?.data);

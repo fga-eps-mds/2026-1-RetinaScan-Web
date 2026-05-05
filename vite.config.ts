@@ -9,6 +9,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
     globals: true,
+    reporters: [
+      'default',
+      ['vitest-sonar-reporter', { outputFile: './coverage/sonar-report.xml' }],
+    ],
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     include: [

@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NovoExame from '@/features/exames/routes/NovoExame';
 import { useCreateExam } from '@/features/exames/hooks/useCreateExam';
 import { toast } from 'sonner';
+import { MemoryRouter } from 'react-router';
+
 
 const mocks = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
@@ -46,7 +48,11 @@ describe('NovoExame', () => {
 
     mocks.mutateAsync.mockResolvedValue({ id: 'exam-1' });
 
-    render(<NovoExame />);
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
 
     await user.type(
       screen.getByPlaceholderText('Digite o nome completo do paciente'),
@@ -86,8 +92,8 @@ describe('NovoExame', () => {
     });
     expect(new Date(payload.dtHora).toString()).not.toBe('Invalid Date');
 
-    expect(toast.success).toHaveBeenCalledWith('Exame criado com sucesso.');
-    expect(mocks.navigate).toHaveBeenCalledWith('/exames');
+    expect(toast.success).toHaveBeenCalledWith('Exame criado com sucesso. Redirecionando para upload...');
+    expect(mocks.navigate).toHaveBeenCalledWith('/exames/upload/exam-1');
   });
 
   it('mostra erro quando a API falha', async () => {
@@ -104,7 +110,11 @@ describe('NovoExame', () => {
       },
     });
 
-    render(<NovoExame />);
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
 
     await user.type(
       screen.getByPlaceholderText('Digite o nome completo do paciente'),
@@ -136,8 +146,44 @@ describe('NovoExame', () => {
       isPending: true,
     } as any);
 
-    render(<NovoExame />);
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
 
     expect(screen.getByRole('button', { name: 'Salvando...' })).toBeDisabled();
+  });
+
+  it('navega para upload page com exam id apos criar exame com sucesso', async () => {
+    const user = userEvent.setup();
+    const examId = '550e8400-e29b-41d4-a716-446655440000';
+
+    mocks.mutateAsync.mockResolvedValue({ id: examId });
+
+    render(
+      <MemoryRouter>
+        <NovoExame />
+      </MemoryRouter>
+    );
+
+    await user.type(
+      screen.getByPlaceholderText('Digite o nome completo do paciente'),
+      'Maria da Silva'
+    );
+    const birthDateInput = document.querySelector('input[type="date"]');
+    fireEvent.change(birthDateInput!, { target: { value: '1990-01-15' } });
+    await user.selectOptions(screen.getByRole('combobox'), 'FEMININO');
+    await user.type(screen.getByPlaceholderText('000.000.000-00'), '12345678901');
+    await user.type(
+      screen.getByPlaceholderText(/motivo do exame/i),
+      'Visao turva'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith(`/exames/upload/${examId}`);
+    });
   });
 });
