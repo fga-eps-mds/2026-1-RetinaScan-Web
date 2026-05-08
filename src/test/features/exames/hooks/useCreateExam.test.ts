@@ -2,8 +2,8 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createExam } from '@/features/exames/api/createExam';
-import { useCreateExam } from '@/features/exames/hooks/useCreateExam';
+import { createExam } from '@/features/criacao-exames/api/createExam';
+import { useCreateExam } from '@/features/criacao-exames/hooks/useCreateExam';
 
 vi.mock('@/features/exames/api/createExam', () => ({
   createExam: vi.fn(),

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ImageUploadBox } from '@/features/exames/components/CardUpload';
+import { ImageUploadBox } from '@/features/criacao-exames/components/CardUpload';
 import { vi, describe, it, expect, beforeAll } from 'vitest';
 
 //  Mock do fileReader

@@ -2,8 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import NovoExame from '@/features/exames/routes/NovoExame';
-import { useCreateExam } from '@/features/exames/hooks/useCreateExam';
+import NovoExame from '@/features/criacao-exames/routes/NovoExame';
+import { useCreateExam } from '@/features/criacao-exames/hooks/useCreateExam';
 import { toast } from 'sonner';
 import { MemoryRouter } from 'react-router';
 

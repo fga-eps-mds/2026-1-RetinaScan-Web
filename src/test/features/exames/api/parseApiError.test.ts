@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseApiError } from '@/features/exames/api/parseApiError';
+import { parseApiError } from '@/features/criacao-exames/api/parseApiError';
 
 describe('parseApiError (exames)', () => {
   it('retorna mensagem padrao quando corpo e invalido', () => {

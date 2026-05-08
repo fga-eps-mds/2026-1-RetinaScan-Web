@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import UploadExame from '@/features/exames/routes/UploadExame';
+import UploadExame from '@/features/criacao-exames/routes/UploadExame';
 import { toast } from 'sonner';
 import * as validator from '@/utils/validators/exam';
 import { api } from '@/shared/api';

@@ -5,11 +5,11 @@ import { lazy, Suspense } from 'react';
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
 import Loading from '@/components/layout/loading/Loading';
-import UploadExame from '@/features/exames/routes/UploadExame';
+import UploadExame from '@/features/criacao-exames/routes/UploadExame';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
-const Exames = lazy(() => import('@/features/exames/routes/Exames'));
-const NovoExame = lazy(() => import('@/features/exames/routes/NovoExame'));
+const Exames = lazy(() => import('@/features/historico-exames/routes/Exames'));
+const NovoExame = lazy(() => import('@/features/criacao-exames/routes/NovoExame'));
 const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')

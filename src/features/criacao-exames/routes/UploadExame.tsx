@@ -36,8 +36,8 @@ const UploadExame = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       toast.success('Imagens enviadas para processamento!');
-      setImageOE(null);
       setImageOD(null);
+      setImageOE(null);
     } catch (err) {
       const axiosErr = err as AxiosError<{ message?: string }>;
       const message = axiosErr?.response?.data?.message || (err instanceof Error ? err.message : 'Erro ao enviar imagens');
@@ -59,15 +59,15 @@ const UploadExame = () => {
       </header>
 
       <div className="flex items-center justify-center gap-16 border-t border-border mt-8 pt-8">
+      <ImageUploadBox
+        label="Olho direito (OD)"
+        side="OD"
+        onImageChange={setImageOD}
+      />
         <ImageUploadBox
           label="Olho esquerdo (OE)"
           side="OE"
           onImageChange={setImageOE}
-        />
-        <ImageUploadBox
-          label="Olho direito (OD)"
-          side="OD"
-          onImageChange={setImageOD}
         />
       </div>
 
