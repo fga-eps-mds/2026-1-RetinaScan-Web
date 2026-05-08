@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
 }));
 
-vi.mock('@/features/exames/hooks/useCreateExam', () => ({
+vi.mock('@/features/criacao-exames/hooks/useCreateExam', () => ({
   useCreateExam: vi.fn(),
 }));
 

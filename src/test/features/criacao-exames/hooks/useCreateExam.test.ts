@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createExam } from '@/features/criacao-exames/api/createExam';
 import { useCreateExam } from '@/features/criacao-exames/hooks/useCreateExam';
 
-vi.mock('@/features/exames/api/createExam', () => ({
+vi.mock('@/features/criacao-exames/api/createExam', () => ({
   createExam: vi.fn(),
 }));
 
