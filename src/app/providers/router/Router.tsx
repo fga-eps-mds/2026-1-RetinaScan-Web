@@ -14,6 +14,7 @@ const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
+const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/HistoricoExame'));
 const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 
@@ -36,9 +37,17 @@ export const router = createBrowserRouter([
     path: '/exames',
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
-        <AppLayout>{withSuspense(Exames)}</AppLayout>
+        <AppLayout>{withSuspense(HistoricoExame)}</AppLayout>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: '/exames',
+    element: (
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+        <AppLayout>{withSuspense(HistoricoExame)}</AppLayout>
+     </ProtectedRoute>
+     ),
   },
   {
     path: '/exames/novo',
