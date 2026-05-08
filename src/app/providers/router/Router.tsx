@@ -8,7 +8,7 @@ import Loading from '@/components/layout/loading/Loading';
 import UploadExame from '@/features/criacao-exames/routes/UploadExame';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
-const Exames = lazy(() => import('@/features/historico-exames/routes/Exames'));
+const Exames = lazy(() => import('@/features/historico-exames/routes/ResultadoExame'));
 const NovoExame = lazy(() => import('@/features/criacao-exames/routes/NovoExame'));
 const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
