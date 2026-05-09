@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { CardHistorico } from '../components/CardHistorico';
-import { Card } from '@/components/ui/card';
 
 // Quando a API integrar a api, tem que tirar esses dados setados
 const MOCK_DATA = [
@@ -30,10 +29,14 @@ const HistoricoExame = () => {
   }, []);
 
   return (
-    <div className="w-full p-8">
-      <header className="text-center mb-8">
-        <h2 className="text-4xl font-bold text-muted-foreground sm:text-2xl">Exames</h2>
-        <p className="text-md text-muted-foreground">Histórico completo de retinografias</p>
+    <div className="w-full flex justify-center flex-col gap-2 p-8">
+      <header className="text-center">
+        <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
+          Exames
+        </h2>
+        <p className="text-md text-muted-foreground">
+         Histórico completo de retinografias
+        </p>
       </header>
       
       <div className="mt-8 pt-8 border-t border-border">

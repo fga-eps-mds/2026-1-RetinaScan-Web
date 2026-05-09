@@ -17,7 +17,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   }
   return (
     <span className={cn(
-      "px-3 py-1 rounded-md text-lg whitespace-nowrap",
+      "px-3 py-1 rounded-md text-md whitespace-nowrap",
       getStatusStyles(status)
     )}>
       {status}
