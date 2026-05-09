@@ -5,9 +5,20 @@ import { StatusBadge } from "./StatusTag";
 import { cn } from "@/lib/utils";
 import { Search, ListFilter } from "lucide-react"; 
 import { Input } from "@/components/ui/input"; 
+import { useFiltroExames } from "../hooks/useFiltroExames";
 
 // vai puxar de dados quando tiver integrado
 export function CardHistorico({ dados }) {
+
+  const {
+    filtroPrioridade,
+    setFiltroPrioridade,
+    busca,
+    setBusca,
+    dadosFiltrados,
+  } = useFiltroExames(dados);
+
+  
   return (
     <Card className="w-full border-none shadow-sm p-8 bg-white rounded-[24px]">
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
@@ -20,16 +31,20 @@ export function CardHistorico({ dados }) {
             <Input 
               placeholder="Filtrar por prioridade" 
               className="border-slate-200 text-muted-foreground h-12 rounded-xl"
+              value={filtroPrioridade}
+              onChange={(e) => setFiltroPrioridade(e.target.value)}
             />
-            <ListFilter className="absolute right-3 top-3.5 h-5 w-5 text-slate-400 pointer-events-none" />
+            <ListFilter className="absolute right-3 top-3.5 h-5 w-5 text-muted-foreground  pointer-events-none" />
           </div>
           
           <div className="relative w-full md:w-[320px]">
             <Input 
               placeholder="Buscar exame ou paciente..." 
               className="border-slate-200 text-muted-foreground h-12 pr-10 rounded-xl"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
             />
-            <Search className="absolute right-3 top-3.5 h-5 w-5 text-slate-400 pointer-events-none" />
+            <Search className="absolute right-3 top-3.5 h-5 w-5 text-muted-foreground  pointer-events-none" />
           </div>
         </div>
       </div>
@@ -46,8 +61,8 @@ export function CardHistorico({ dados }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {dados.length > 0 ? (
-            dados.map((exame) => (
+          {dadosFiltrados.length > 0 ? (
+            dadosFiltrados.map((exame) => (
               <TableRow 
                 key={exame.id} >
                 <TableCell>
@@ -68,7 +83,7 @@ export function CardHistorico({ dados }) {
 
                 <TableCell
                   className={cn(
-                    "text-lg text-center font-bold",
+                    "text-md text-center font-bold",
                     exame.score_ia > 80
                       ? "text-red-500"
                       : "text-green-500",
@@ -91,7 +106,7 @@ export function CardHistorico({ dados }) {
             <TableRow>
               <TableCell
                 colSpan={7}
-                className="text-xl text-center text-muted-foreground"
+                className="text-xl text-center text-muted-foreground py-40"
               >
                 Ainda não existem exames cadastrados.
               </TableCell>

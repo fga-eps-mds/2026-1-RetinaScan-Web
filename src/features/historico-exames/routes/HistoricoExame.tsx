@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { CardHistorico } from '../components/CardHistorico';
 
-// Quando a API integrar a api, tem que tirar esses dados setados
+// Quando integrar a api, tem que tirar esses dados setados
+// por enquanto para mostra a tela coloca na rota historico-exames
 const MOCK_DATA = [
   { id: "EX-2026-0036", paciente: "PAC-1187", olho: "AO", score_ia: 91, status: "Prioridade", data: "18/04/2026" },
   { id: "EX-2026-0035", paciente: "PAC-2200", olho: "AO", score_ia: 23, status: "Normal", data: "11/04/2026" },
@@ -16,7 +17,7 @@ const HistoricoExame = () => {
     const carregarExames = async () => {
       setLoading(true);
       try {
-        // SETANDO OS DADOS: 
+        // SETANDO OS DADOS, QUANDO A API INTEGRAR, TEM QUE TIRAR E COLOCAR O FETCH
         setExames(MOCK_DATA); 
       } catch (error) {
         console.error("Erro ao buscar exames:", error);
