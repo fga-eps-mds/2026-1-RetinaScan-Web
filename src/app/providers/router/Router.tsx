@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/exames:id',
+    path: '/exames',
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Exames)}</AppLayout>
