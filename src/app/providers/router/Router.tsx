@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
   {
     path: '/exames/novo',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['MEDICO']}>
         <AppLayout>{withSuspense(NovoExame)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
   {
     path: '/exames/upload/:id',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['MEDICO']}>
         <AppLayout>{withSuspense(UploadExame)}</AppLayout>
       </ProtectedRoute>
     ),
