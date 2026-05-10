@@ -32,7 +32,7 @@ describe('CardHistorico (Integração)', () => {
     expect(screen.getByText('Ana Silva')).toBeInTheDocument();
     expect(screen.getByText('Bruno Costa')).toBeInTheDocument();
 
-    const inputBusca = screen.getByPlaceholderText(/Buscar exame ou paciente/i);
+    const inputBusca = screen.getByPlaceholderText(/Buscar exame/i);
 
     // Digita "Bruno" para testar a lógica real do hook + debounce (se houver)
     fireEvent.change(inputBusca, { target: { value: 'Bruno' } });
@@ -47,7 +47,7 @@ describe('CardHistorico (Integração)', () => {
   it('deve validar o formato do ID usando a lógica real do validador', async () => {
     render(<CardHistorico dados={mockDados} isLoading={false} isError={false} />);
 
-    const inputBusca = screen.getByPlaceholderText(/Buscar exame ou paciente/i);
+    const inputBusca = screen.getByPlaceholderText(/Buscar exame/i);
 
     // Digita um ID fora do padrão EX-0000-0000
     fireEvent.change(inputBusca, { target: { value: 'ID-ERRADO' } });
@@ -60,7 +60,7 @@ describe('CardHistorico (Integração)', () => {
   it('deve limpar todos os campos e restaurar a lista ao clicar em Limpar Filtros', async () => {
     render(<CardHistorico dados={mockDados} isLoading={false} isError={false} />);
 
-    const inputBusca = screen.getByPlaceholderText(/Buscar exame ou paciente/i);
+    const inputBusca = screen.getByPlaceholderText(/Buscar exame/i);
     fireEvent.change(inputBusca, { target: { value: 'Paciente Inexistente' } });
 
     // Aguarda aparecer o estado vazio
