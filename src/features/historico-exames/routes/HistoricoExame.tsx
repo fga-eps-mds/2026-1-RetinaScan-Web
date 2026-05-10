@@ -1,26 +1,23 @@
 import { useState, useEffect } from 'react';
 import { CardHistorico } from '../components/CardHistorico';
-
-// Quando integrar a api, tem que tirar esses dados setados
-// por enquanto para mostra a tela coloca na rota historico-exames
-const MOCK_DATA = [
-  { id: "EX-2026-0036", paciente: "PAC-1187", olho: "AO", score_ia: 91, status: "Prioridade", data: "18/04/2026" },
-  { id: "EX-2026-0035", paciente: "PAC-2200", olho: "AO", score_ia: 23, status: "Normal", data: "11/04/2026" },
-  { id: "EX-2026-0034", paciente: "PAC-8829", olho: "AO", score_ia: null, status: "Pendente", data: "09/04/2026" },
-];
+import { MOCK_HISTORICO } from '../mocks/relatorioMock';
+import type { ExameHistory } from '../types/exam-history';
 
 const HistoricoExame = () => {
-  const [exames, setExames] = useState([]);
+  const [exames, setExames] = useState<ExameHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const carregarExames = async () => {
       setLoading(true);
+      setError(false);
       try {
-        // SETANDO OS DADOS, QUANDO A API INTEGRAR, TEM QUE TIRAR E COLOCAR O FETCH
-        setExames(MOCK_DATA); 
-      } catch (error) {
-        console.error("Erro ao buscar exames:", error);
+        // Quando a API estiver pronta, basta substituir MOCK_HISTORICO pelo fetch/axios
+        setExames(MOCK_HISTORICO); 
+      } catch (err) {
+        console.error('Erro ao buscar exames:', err);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -36,18 +33,16 @@ const HistoricoExame = () => {
           Exames
         </h2>
         <p className="text-md text-muted-foreground">
-         Histórico completo de retinografias
+          Histórico completo de retinografias
         </p>
       </header>
-      
+
       <div className="mt-8 pt-8 border-t border-border">
-        {loading ? (
-          <p className="text-center py-10 text-muted-foreground font-medium">
-            Carregando exames...
-          </p>
-        ) : (
-          <CardHistorico dados={exames} />
-        )}
+        <CardHistorico 
+          dados={exames} 
+          isLoading={loading} 
+          isError={error} 
+        />
       </div>
     </div>
   );
