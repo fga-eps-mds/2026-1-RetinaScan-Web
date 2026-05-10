@@ -2,7 +2,7 @@ name: Export de métricas
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
     types: [closed]
   workflow_dispatch:
 
