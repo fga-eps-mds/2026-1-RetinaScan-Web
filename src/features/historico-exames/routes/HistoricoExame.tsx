@@ -23,23 +23,28 @@ const HistoricoExame = () => {
       try {
         /** * INTEGRATION_POINT:
          * Substitua o MOCK_HISTORICO pela chamada real da sua API ou Service.
-         * Exemplo: const { data } = await api.get<ExameHistory[]>('/exames');
          */
         setExames(MOCK_HISTORICO); 
         
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isMounted) return;
 
         setError(true);
-        const isAuthError = err.status === 401;
+
+        // Tratamento seguro do erro para evitar o uso de 'any'
+        const status = err && typeof err === 'object' && 'status' in err 
+          ? (err as { status: number }).status 
+          : null;
+
+        const isAuthError = status === 401;
 
         // Feedback visual amigável via Toast
         toast.error(isAuthError ? 'Sessão expirada' : 'Erro de conexão', {
-          id: 'historico-fetch-error', // Evita duplicação de toasts
+          id: 'historico-fetch-error', 
           description: isAuthError
             ? 'Seu token expirou. Por favor, realize o login novamente.'
             : 'Não foi possível conectar ao servidor. Tente novamente mais tarde.',
-          icon: null, // Evita conflito visual com o closeButton do Toaster
+          icon: null,
           action: isAuthError
             ? {
                 label: 'Login',
@@ -54,7 +59,6 @@ const HistoricoExame = () => {
 
     carregarExames();
 
-    // Cleanup para evitar vazamento de memória e chamadas duplicadas em componentes desmontados
     return () => {
       isMounted = false;
     };
@@ -72,11 +76,6 @@ const HistoricoExame = () => {
       </header>
 
       <div className="mt-8 pt-8 border-t border-border">
-        {/* O CardHistorico gerencia internamente:
-            - Skeleton Screen (quando isLoading for true)
-            - Estado de Erro (quando isError for true)
-            - Validações de Busca e Filtros
-        */}
         <CardHistorico 
           dados={exames} 
           isLoading={loading} 
