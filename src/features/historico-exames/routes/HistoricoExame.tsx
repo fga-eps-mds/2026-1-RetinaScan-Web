@@ -5,11 +5,6 @@ import { toast } from 'sonner';
 import { fetchExames } from '../service/examesApi';
 import { useSession } from '@/lib/auth-client';
 
-const HistoricoExame = () => {
-  const [exames, setExames] = useState<ExameHistory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const { data: session } = useSession();
 
   function getTokenFromSession(sess: unknown): string {
     if (!sess || typeof sess !== 'object') return '';
@@ -31,6 +26,13 @@ const HistoricoExame = () => {
 
     return '';
   }
+
+const HistoricoExame = () => {
+  const [exames, setExames] = useState<ExameHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const { data: session } = useSession();
+
 
   const token = getTokenFromSession(session);
 
@@ -66,7 +68,7 @@ const HistoricoExame = () => {
           action: isAuthError
             ? {
                 label: 'Login',
-                onClick: () => (window.location.href = '/login'),
+                onClick: () => (globalThis.location.href = '/login'),
               }
             : undefined,
         });

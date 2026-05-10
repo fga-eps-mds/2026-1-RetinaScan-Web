@@ -3,9 +3,8 @@ import { CardResultado } from '../components/CardResultado';
 import { CardImagens } from '../components/CardImagens';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, DownloadIcon, Share2 } from 'lucide-react';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { getResultadoExameMock } from '../mocks/relatorioMock';
-import { useNavigate } from 'react-router';
 
 interface ResultadoExameProps {
   examIdOverride?: string;
