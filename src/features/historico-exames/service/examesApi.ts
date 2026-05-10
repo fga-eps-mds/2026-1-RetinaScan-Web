@@ -11,6 +11,7 @@ type BackendExamItem = {
   status: string;
 };
 function mapToExameHistory(item: BackendExamItem): ExameHistory {
+  // NOSONAR: Math.random é usado para mock apenas.
   const randomScore = Math.floor(Math.random() * 101);
 
   const score = randomScore;
