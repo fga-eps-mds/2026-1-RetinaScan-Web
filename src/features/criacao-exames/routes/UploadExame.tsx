@@ -14,15 +14,15 @@ const UploadExame = () => {
 
   const hasValidExam = isValidExamId(id);
 
-  const hasImages = !!imageOE || !!imageOD;
+  const hasAtLeastOneImage = !!imageOE || !!imageOD;
 
-  const canSubmit = hasValidExam && hasImages;
+  const canSubmit = hasValidExam && hasAtLeastOneImage;
 
   const [isUploading, setIsUploading] = useState(false);
 
   const handleUpload = async () => {
     if (!canSubmit) {
-      toast.error('Vínculo com exame ausente ou imagens inválidas.');
+      toast.error('Vínculo com exame ausente ou imagem inválida.');
       return;
     }
 
@@ -83,8 +83,7 @@ const UploadExame = () => {
         )}
 
         <p className="text-center text-xs text-muted-foreground/80">
-          Envie pelo menos uma imagem. Casos monoculares podem ter apenas um
-          olho.
+          Envie uma ou duas imagens. Casos monoculares podem ter apenas um olho.
         </p>
 
         <Button
