@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { CardHistorico } from '../components/CardHistorico';
-import { MOCK_HISTORICO } from '../mocks/relatorioMock';
 import type { ExameHistory } from '../types/exam-history';
 import { toast } from 'sonner';
+import { fetchExames } from '../service/examesApi';
+import { useSession } from '@/lib/auth-client';
 
-/**
- * Página de Histórico de Exames
- * Gerencia o ciclo de vida dos dados, estados de carregamento e notificações.
- */
 const HistoricoExame = () => {
   const [exames, setExames] = useState<ExameHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     let isMounted = true;
@@ -21,24 +19,25 @@ const HistoricoExame = () => {
       setError(false);
 
       try {
-        /** * INTEGRATION_POINT:
-         * Substitua o MOCK_HISTORICO pela chamada real da sua API ou Service.
-         */
-        setExames(MOCK_HISTORICO); 
+        const sess: any = session as any;
+        const token =
+          sess?.accessToken || sess?.token || sess?.idToken || sess?.user?.token || sess?.session?.token || '';
+
+        const remote = await fetchExames(token);
+
+        setExames(remote);
         
       } catch (err: unknown) {
         if (!isMounted) return;
 
         setError(true);
 
-        // Tratamento seguro do erro para evitar o uso de 'any'
         const status = err && typeof err === 'object' && 'status' in err 
           ? (err as { status: number }).status 
           : null;
 
         const isAuthError = status === 401;
 
-        // Feedback visual amigável via Toast
         toast.error(isAuthError ? 'Sessão expirada' : 'Erro de conexão', {
           id: 'historico-fetch-error', 
           description: isAuthError
