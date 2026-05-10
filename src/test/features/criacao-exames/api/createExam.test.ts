@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { api } from '@/shared/api';
-import { createExam } from '@/features/exames/api/createExam';
+import { createExam } from '@/features/criacao-exames/api/createExam';
 
 vi.mock('@/shared/api', () => ({
   api: {

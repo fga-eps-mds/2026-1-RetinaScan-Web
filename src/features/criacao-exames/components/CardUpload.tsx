@@ -14,7 +14,7 @@ export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
 
   return (
     <Card 
-      className="w-full max-w-[500px] p-8 border-2 border-dashed flex flex-col gap-4"      
+      className="w-full max-w-125 p-8 border-2 border-dashed flex flex-col gap-4"      
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
@@ -23,7 +23,7 @@ export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
         {label}
       </div>
 
-      <div className="relative flex min-h-[350px] w-full flex-col items-center justify-center rounded-lg bg-muted/30">
+      <div className="relative flex min-h-90 w-full flex-col items-center justify-center rounded-lg bg-muted/30">
         {preview ? (
           <>
             <img 

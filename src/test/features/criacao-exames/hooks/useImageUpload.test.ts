@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useImageUpload } from '@/features/exames/hooks/useImageUpload';
+import { useImageUpload } from '@/features/criacao-exames/hooks/useImageUpload';
 import { toast } from 'sonner';
 import * as fileValidators from '@/utils/validators/file';
 
