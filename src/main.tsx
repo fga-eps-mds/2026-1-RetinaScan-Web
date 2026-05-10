@@ -13,6 +13,12 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>
-    <Toaster />
+    <Toaster
+    position="bottom-right"
+    expand={false}
+    richColors
+    duration={3000}
+    closeButton={true}
+    />
   </StrictMode>
 );
