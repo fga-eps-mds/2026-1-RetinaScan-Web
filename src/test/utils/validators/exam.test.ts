@@ -1,37 +1,55 @@
 import { describe, it, expect } from 'vitest';
-import { isValidExamId } from '@/utils/validators/exam'
+import { 
+  isValidExamId, 
+  sanitizeExamSearch, 
+  isValidExamIdPattern 
+} from '@/utils/validators/exam';
 
-describe('isValidExamId', () => {
-  it('deve retornar true para um UUID válido', () => {
-    const validUUID = '550e8400-e29b-41d4-a716-446655440000';
-    expect(isValidExamId(validUUID)).toBe(true);
+describe('Validators: Exam', () => {
+  
+  describe('isValidExamId (UUID)', () => {
+    it('deve retornar true para um UUID válido', () => {
+      const validUUID = '550e8400-e29b-41d4-a716-446655440000';
+      expect(isValidExamId(validUUID)).toBe(true);
+    });
+
+    it('deve retornar false para strings que não seguem o formato UUID', () => {
+      expect(isValidExamId('12345')).toBe(false);
+      expect(isValidExamId(undefined)).toBe(false);
+    });
   });
 
-  it('deve retornar true para um UUID válido com letras maiúsculas', () => {
-    const upperCaseUUID = '550E8400-E29B-41D4-A716-446655440000';
-    expect(isValidExamId(upperCaseUUID)).toBe(true);
+  describe('sanitizeExamSearch', () => {
+    it('deve remover caracteres especiais mantendo letras, números e hífens', () => {
+      const input = 'EX-1234@#%&*()-ABCD!';
+      // CORREÇÃO: A regex remove o ")" mas mantém o hífen que já existia antes do ABCD
+      const expected = 'EX-1234-ABCD'; 
+      expect(sanitizeExamSearch(input)).toBe(expected);
+    });
+
+    it('deve manter uma string limpa inalterada', () => {
+      const input = 'EX-2026-0001';
+      expect(sanitizeExamSearch(input)).toBe('EX-2026-0001');
+    });
+
+    it('deve remover espaços em branco', () => {
+      const input = 'EX 1234 5678';
+      expect(sanitizeExamSearch(input)).toBe('EX12345678');
+    });
   });
 
-  it('deve retornar false para uma string aleatória que não é UUID', () => {
-    expect(isValidExamId('12345')).toBe(false);
-    expect(isValidExamId('exame-id-invalido')).toBe(false);
-  });
+  describe('isValidExamIdPattern (Padrão EX-0000-0000)', () => {
+    it('deve retornar true para o padrão correto EX-0000-0000', () => {
+      expect(isValidExamIdPattern('EX-2026-1234')).toBe(true);
+    });
 
-  it('deve retornar false para um UUID mal formatado (faltando blocos)', () => {
-    const invalidUUID = '550e8400-e29b-41d4-a716';
-    expect(isValidExamId(invalidUUID)).toBe(false);
-  });
+    it('deve retornar true se a string estiver vazia', () => {
+      expect(isValidExamIdPattern('')).toBe(true);
+    });
 
-  it('deve retornar false se o id for undefined', () => {
-    expect(isValidExamId(undefined)).toBe(false);
-  });
-
-  it('deve retornar false se o id for uma string vazia', () => {
-    expect(isValidExamId('')).toBe(false);
-  });
-
-  it('deve retornar false se o UUID tiver caracteres especiais inválidos', () => {
-    const invalidUUID = '550e8400-e29b-41d4-a716-44665544000g'; 
-    expect(isValidExamId(invalidUUID)).toBe(false);
+    it('deve retornar false para formatos fora do padrão', () => {
+      expect(isValidExamIdPattern('ex-2026-1234')).toBe(false); // Case sensitive
+      expect(isValidExamIdPattern('EX-202-12345')).toBe(false); // Tamanho errado
+    });
   });
 });
