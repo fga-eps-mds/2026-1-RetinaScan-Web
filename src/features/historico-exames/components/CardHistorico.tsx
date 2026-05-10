@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { HistoricoSkeleton } from './HistoricoSkeleton';
 import { useFiltroExames } from '../hooks/useFiltroExames';
 import type { ExameHistory } from '../types/exam-history';
+import { useNavigate } from 'react-router';
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +35,7 @@ export function CardHistorico({
   isLoading,
   isError,
 }: CardHistoricoProps) {
+  const navigate = useNavigate();
   const {
     filtroPrioridade,
     setFiltroPrioridade,
@@ -50,15 +52,15 @@ export function CardHistorico({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Card className="mx-auto w-full max-w-6xl px-6 border-none shadow-sm p-10 bg-white rounded-[24px]">
-      <div className="flex flex-wrap items-center justify-between gap-3 ">
+      <Card className="mx-auto w-full max-w-6xl px-6 border-none shadow-sm p-10 bg-white rounded-3xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 ">
           <h2 className="text-xl font-bold text-black w-full md:w-auto">
             Histórico de Exames
           </h2>
 
           <div className="flex items-center gap-4 w-full md:w-auto">
             {/* Input de Filtro por Prioridade */}
-            <div className="relative w-full md:w-[240px]">
+            <div className="relative w-full md:w-60">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="mx-auto w-full">
@@ -116,16 +118,28 @@ export function CardHistorico({
         <Table>
           <TableHeader className="text-xl border-b">
             <TableRow className="border-none hover:bg-transparent h-16">
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="font-bold text-center text-black">ID</TableHead>
-              <TableHead className="font-bold text-center text-black">Paciente</TableHead>
-              <TableHead className="font-bold text-center text-black">Olho</TableHead>
-              <TableHead className="font-bold text-center text-black">Score IA</TableHead>
-              <TableHead className="font-bold text-center text-black">Status</TableHead>
-              <TableHead className="font-bold text-center text-black">Data</TableHead>
+              <TableHead className="w-12.5"></TableHead>
+              <TableHead className="font-bold text-center text-black">
+                Paciente
+              </TableHead>
+              <TableHead className="font-bold text-center text-black">
+                Olho
+              </TableHead>
+              <TableHead className="font-bold text-center text-black">
+                Score IA
+              </TableHead>
+              <TableHead className="font-bold text-center text-black">
+                Status
+              </TableHead>
+              <TableHead className="font-bold text-center text-black">
+                Data
+              </TableHead>
+              <TableHead className="font-bold text-center text-black">
+                ID
+              </TableHead>
             </TableRow>
           </TableHeader>
-          
+
           <TableBody>
             {/* Renderização Condicional de Estados (Loading, Error, Empty, Data) */}
             {isLoading ? (
@@ -136,7 +150,9 @@ export function CardHistorico({
                   <div className="flex flex-col items-center justify-center gap-3 text-red-500">
                     <AlertCircle className="h-10 w-10" />
                     <div className="text-center">
-                      <p className="text-lg font-medium">Não foi possível carregar os exames.</p>
+                      <p className="text-lg font-medium">
+                        Não foi possível carregar os exames.
+                      </p>
                       <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-sm underline text-red-600 hover:text-red-800 transition-colors"
@@ -149,15 +165,28 @@ export function CardHistorico({
               </TableRow>
             ) : dadosFiltrados.length > 0 ? (
               dadosFiltrados.map((exame) => (
-                <TableRow key={exame.id} className="group border-slate-50">
+                <TableRow
+                  key={exame.idExame}
+                  className="group cursor-pointer border-slate-50 transition-colors hover:bg-slate-50 focus-visible:bg-slate-50"
+                  tabIndex={0}
+                  role="link"
+                  aria-label={`Abrir resultado do exame ${exame.idExame}`}
+                  onClick={() =>
+                    navigate(`/exames/${encodeURIComponent(exame.idExame)}`)
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      navigate(`/exames/${encodeURIComponent(exame.idExame)}`);
+                    }
+                  }}
+                >
                   <TableCell>
-                    <Checkbox className="border-[2px] transition-colors" />
+                    <Checkbox className="border-2 transition-colors" />
                   </TableCell>
-                  <TableCell className="text-center text-md text-muted-foreground py-7">
-                    {exame.id}
-                  </TableCell>
+
                   <TableCell className="text-center text-md text-muted-foreground font-medium">
-                    {exame.paciente}
+                    {exame.nomePaciente}
                   </TableCell>
                   <TableCell className="text-center text-md text-muted-foreground">
                     {exame.olho}
@@ -166,7 +195,7 @@ export function CardHistorico({
                     className={cn(
                       'text-md text-center font-bold',
                       exame.scoreIA !== null
-                        ? exame.scoreIA > "80"
+                        ? exame.scoreIA > '80'
                           ? 'text-red-500'
                           : 'text-green-500'
                         : 'text-muted-foreground/50'
@@ -179,6 +208,9 @@ export function CardHistorico({
                   </TableCell>
                   <TableCell className="text-center text-md text-muted-foreground">
                     {exame.data}
+                  </TableCell>
+                  <TableCell className="text-center text-md text-muted-foreground py-7">
+                    {exame.idExame}
                   </TableCell>
                 </TableRow>
               ))

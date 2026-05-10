@@ -1,10 +1,17 @@
 import { Card } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
+import type { ResultadoExameMock } from '../mocks/relatorioMock';
 import { detalhesRelatorioMock } from '../mocks/relatorioMock';
 
-export function CardDetalhes() {
+interface CardDetalhesProps {
+  detalhes?: Partial<ResultadoExameMock>;
+}
+
+export function CardDetalhes({
+  detalhes = detalhesRelatorioMock,
+}: CardDetalhesProps) {
   return (
-    <Card className="w-full max-w-100 h-64 border-0.5 p-6">
+    <Card className="w-full max-w-100 h-62 border-0.5 p-6">
       <div className="mb-2 flex items-center gap-2 border-b border-border pb-2 font-semibold text-lg text-foreground">
         <span>Detalhes da Análise</span>
       </div>
@@ -13,28 +20,28 @@ export function CardDetalhes() {
         <div className="space-y-2">
           <div>
             <label className="text-sm font-bold text-foreground">
-            ID da Análise
+              ID da Análise
             </label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {detalhesRelatorioMock.idAnalise}
+              {detalhes.idExame}
             </p>
           </div>
 
           <div>
             <label className="text-sm font-bold text-foreground">
-            ID do Paciente
+              ID do Paciente
             </label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {detalhesRelatorioMock.idPaciente}
+              {detalhes.idPaciente}
             </p>
           </div>
-
           <div>
             <label className="text-sm font-bold text-foreground">
-            Nome do Paciente
+              Data e hora
             </label>
-            <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {detalhesRelatorioMock.nomePaciente}
+            <p className="mt-1 flex items-center gap-2 rounded-md text-sm font-semibold text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              {detalhes.dataHora}
             </p>
           </div>
         </div>
@@ -42,18 +49,19 @@ export function CardDetalhes() {
         <div className="space-y-2">
           <div>
             <label className="text-sm font-bold text-foreground">
-            Nome do Médico
+              Nome do Paciente
             </label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {detalhesRelatorioMock.nomeMedico}
+              {detalhes.nomePaciente}
             </p>
           </div>
 
           <div>
-            <label className="text-sm font-bold text-foreground">Data e hora</label>
-            <p className="mt-1 flex items-center gap-2 rounded-md text-sm font-semibold text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              {detalhesRelatorioMock.dataHora}
+            <label className="text-sm font-bold text-foreground">
+              Nome do Médico
+            </label>
+            <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
+              {detalhes.nomeMedico}
             </p>
           </div>
         </div>
