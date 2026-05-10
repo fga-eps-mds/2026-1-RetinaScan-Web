@@ -50,8 +50,8 @@ export function CardHistorico({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Card className="mx-auto w-full max-w-7xl px-6 border-none shadow-sm p-10 bg-white rounded-[24px]">
-      <div className="flex flex-wrap items-center justify-between gap-3 p-6">
+      <Card className="mx-auto w-full max-w-6xl px-6 border-none shadow-sm p-10 bg-white rounded-[24px]">
+      <div className="flex flex-wrap items-center justify-between gap-3 ">
           <h2 className="text-xl font-bold text-black w-full md:w-auto">
             Histórico de Exames
           </h2>
