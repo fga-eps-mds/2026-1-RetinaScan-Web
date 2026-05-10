@@ -3,22 +3,32 @@ import { describe, it, expect, vi } from 'vitest';
 import { CardHistorico } from '@/features/historico-exames'; 
 import type { ExameHistory } from '@/features/historico-exames'; 
 
-// NOTA: Removi o vi.mock do useFiltroExames para testar a lógica real
+const navigateMock = vi.fn();
+
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
+});
+
 
 const mockDados: ExameHistory[] = [
   { 
-    id: 'EX-1234-5678', 
-    paciente: 'Ana Silva', 
+    idExame: 'EX-1234-5678', 
+    nomePaciente: 'Ana Silva', 
     olho: 'OD' as any, 
-    scoreIA: 90, 
+    scoreIA: '90', 
     status: 'Normal', 
     data: '2026-05-10' 
   },
   { 
-    id: 'EX-0000-1111', 
-    paciente: 'Bruno Costa', 
+    idExame: 'EX-0000-1111', 
+    nomePaciente: 'Bruno Costa', 
     olho: 'OE' as any, 
-    scoreIA: 30, 
+    scoreIA: '30', 
     status: 'Prioridade', 
     data: '2026-05-09' 
   },
@@ -83,5 +93,13 @@ describe('CardHistorico (Integração)', () => {
     // No HistoricoSkeleton, os checkboxes ficam desabilitados
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes[0]).toBeDisabled();
+  });
+
+  it('deve navegar para o resultado do exame ao clicar na linha', () => {
+    render(<CardHistorico dados={mockDados} isLoading={false} isError={false} />);
+
+    fireEvent.click(screen.getByRole('link', { name: /abrir resultado do exame ex-1234-5678/i }));
+
+    expect(navigateMock).toHaveBeenCalledWith('/exames/EX-1234-5678');
   });
 });

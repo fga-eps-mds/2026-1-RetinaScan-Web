@@ -4,9 +4,9 @@ import { useFiltroExames } from '@/features/historico-exames';
 import type { ExameHistory } from '@/features/historico-exames'; 
 
 const mockDados: ExameHistory[] = [
-  { id: 'EX-1234-5678', paciente: 'Ana Silva', olho: 'OD' as any, scoreIA: 90, status: 'Normal', data: '2026-05-10' },
-  { id: 'EX-9999-0000', paciente: 'Bruno Costa', olho: 'OE' as any, scoreIA: 30, status: 'Prioridade', data: '2026-05-09' },
-  { id: 'EX-5555-4444', paciente: 'Carlos Souza', olho: 'OD' as any, scoreIA: 50, status: 'Pendente', data: '2026-05-08' },
+  { idExame: 'EX-1234-5678', nomePaciente: 'Ana Silva', olho: 'OD' as any, scoreIA: '90', status: 'Normal', data: '2026-05-10' },
+  { idExame: 'EX-9999-0000', nomePaciente: 'Bruno Costa', olho: 'OE' as any, scoreIA: '30', status: 'Prioridade', data: '2026-05-09' },
+  { idExame: 'EX-5555-4444', nomePaciente: 'Carlos Souza', olho: 'OD' as any, scoreIA: '50', status: 'Pendente', data: '2026-05-08' },
 ];
 
 describe('useFiltroExames', () => {
@@ -39,7 +39,7 @@ describe('useFiltroExames', () => {
     });
 
     expect(result.current.dadosFiltrados).toHaveLength(1);
-    expect(result.current.dadosFiltrados[0].paciente).toBe('Bruno Costa');
+    expect(result.current.dadosFiltrados[0].nomePaciente).toBe('Bruno Costa');
   });
 
   it('deve combinar filtros de prioridade e busca', () => {

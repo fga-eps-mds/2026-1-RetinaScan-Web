@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import ResultadoExame from '@/features/historico-exames/routes/ResultadoExame';
+import { MemoryRouter, Route, Routes } from 'react-router';
 
 vi.mock('@/features/historico-exames/components/CardImagens', () => ({
   CardImagens: () => <div data-testid="card-imagens-mock" />,
@@ -16,9 +17,15 @@ vi.mock('@/features/historico-exames/components/CardDetalhes', () => ({
 
 describe('ResultadoExame', () => {
   it('renderiza o cabeçalho, as ações principais e os cards da tela', () => {
-    render(<ResultadoExame />);
+    render(
+      <MemoryRouter initialEntries={['/exames/EX-2026-0036']}>
+        <Routes>
+          <Route path="/exames/:id" element={<ResultadoExame />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-    expect(screen.getByRole('heading', { name: /exame ra-001/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /exame ex-2026-0036/i })).toBeInTheDocument();
     expect(
       screen.getByText('Detalhes e resultado do exame')
     ).toBeInTheDocument();
