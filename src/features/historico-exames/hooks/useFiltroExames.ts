@@ -1,23 +1,31 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "./useDebounce";
-import type { ExameHistory } from '../types/exam-history'
+import { sanitizeExamSearch, isValidExamIdPattern } from "@/utils/validators";
+import type { ExameHistory } from '../types/exam-history';
 
 export function useFiltroExames(dadosIniciais: ExameHistory[]) {
   const [filtroPrioridade, setFiltroPrioridade] = useState("");
   const [busca, setBusca] = useState("");
 
-    // Criamos o valor "atrasado" (300ms)
+  // Valida se o texto segue o padrão EX-0000-0000
+  const isSearchValid = useMemo(() => isValidExamIdPattern(busca), [busca]);
+
+  // Delay de 300ms para evitar re-filtros excessivos durante a digitação
   const buscaDebounced = useDebounce(busca, 300);
 
+  // Aplica sanitização (remove caracteres especiais) antes de atualizar o estado
+  const handleBuscaChange = (valor: string) => {
+    const valorLimpo = sanitizeExamSearch(valor);
+    setBusca(valorLimpo);
+  };
+
+  // Processa a filtragem combinada (Prioridade + Busca)
   const dadosFiltrados = useMemo(() => {
     return dadosIniciais.filter((exame) => {
-      // Ajustado para scoreIA e tipagem correta
       const batePrioridade =
         filtroPrioridade === "" || 
         exame.status.toLowerCase().includes(filtroPrioridade.toLowerCase());
 
-
-      // IMPORTANTE: Use o buscaDebounced para o filtro
       const bateBusca =
         buscaDebounced === "" ||
         exame.id.toLowerCase().includes(buscaDebounced.toLowerCase()) ||
@@ -31,7 +39,8 @@ export function useFiltroExames(dadosIniciais: ExameHistory[]) {
     filtroPrioridade,
     setFiltroPrioridade,
     busca,
-    setBusca,
+    setBusca: handleBuscaChange,
+    isSearchValid,
     dadosFiltrados,
   };
 }

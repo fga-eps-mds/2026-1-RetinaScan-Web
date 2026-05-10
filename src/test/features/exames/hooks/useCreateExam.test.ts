@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createExam } from '@/features/criacao-exames/api/createExam';
 import { useCreateExam } from '@/features/criacao-exames/hooks/useCreateExam';
 
-vi.mock('@/features/exames/api/createExam', () => ({
+vi.mock('@/features/criacao-exames/api/createExam', () => ({
   createExam: vi.fn(),
 }));
 
@@ -43,7 +43,13 @@ describe('useCreateExam', () => {
     result.current.mutate(examData as any);
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(vi.mocked(createExam).mock.calls[0][0]).toEqual(examData);
+
+    // CORREÇÃO: Validamos que o primeiro argumento é o examData. 
+    // O segundo argumento (contexto do QueryClient) é ignorado com expect.anything()
+    expect(vi.mocked(createExam)).toHaveBeenCalledWith(
+      examData,
+      expect.anything()
+    );
   });
 
   it('deve retornar erro quando a mutacao falha', async () => {
