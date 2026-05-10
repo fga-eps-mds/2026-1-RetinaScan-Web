@@ -11,6 +11,29 @@ const HistoricoExame = () => {
   const [error, setError] = useState(false);
   const { data: session } = useSession();
 
+  function getTokenFromSession(sess: unknown): string {
+    if (!sess || typeof sess !== 'object') return '';
+    const s = sess as Record<string, unknown>;
+
+    if (typeof s.accessToken === 'string') return s.accessToken;
+    if (typeof s.token === 'string') return s.token;
+    if (typeof s.idToken === 'string') return s.idToken;
+
+    if (s.user && typeof s.user === 'object') {
+      const user = s.user as Record<string, unknown>;
+      if (typeof user.token === 'string') return user.token;
+    }
+
+    if (s.session && typeof s.session === 'object') {
+      const ss = s.session as Record<string, unknown>;
+      if (typeof ss.token === 'string') return ss.token;
+    }
+
+    return '';
+  }
+
+  const token = getTokenFromSession(session);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -19,27 +42,23 @@ const HistoricoExame = () => {
       setError(false);
 
       try {
-        const sess: any = session as any;
-        const token =
-          sess?.accessToken || sess?.token || sess?.idToken || sess?.user?.token || sess?.session?.token || '';
-
         const remote = await fetchExames(token);
 
         setExames(remote);
-        
       } catch (err: unknown) {
         if (!isMounted) return;
 
         setError(true);
 
-        const status = err && typeof err === 'object' && 'status' in err 
-          ? (err as { status: number }).status 
-          : null;
+        const status =
+          err && typeof err === 'object' && 'status' in err
+            ? (err as { status: number }).status
+            : null;
 
         const isAuthError = status === 401;
 
         toast.error(isAuthError ? 'Sessão expirada' : 'Erro de conexão', {
-          id: 'historico-fetch-error', 
+          id: 'historico-fetch-error',
           description: isAuthError
             ? 'Seu token expirou. Por favor, realize o login novamente.'
             : 'Não foi possível conectar ao servidor. Tente novamente mais tarde.',
@@ -61,7 +80,7 @@ const HistoricoExame = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [token]);
 
   return (
     <div className="w-full flex justify-center flex-col gap-2 p-8 animate-in fade-in duration-500">
@@ -75,11 +94,7 @@ const HistoricoExame = () => {
       </header>
 
       <div className="mt-8 pt-8 border-t border-border">
-        <CardHistorico 
-          dados={exames} 
-          isLoading={loading} 
-          isError={error} 
-        />
+        <CardHistorico dados={exames} isLoading={loading} isError={error} />
       </div>
     </div>
   );

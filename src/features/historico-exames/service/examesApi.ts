@@ -1,6 +1,7 @@
 import type { ExameHistory } from '../types/exam-history';
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:3000';
+const BASE_URL =
+  (import.meta.env.VITE_API_URL as string) ?? 'http://localhost:3000';
 
 type BackendExamItem = {
   id: string;
@@ -10,7 +11,7 @@ type BackendExamItem = {
   status: string;
 };
 function mapToExameHistory(item: BackendExamItem): ExameHistory {
-  const randomScore = Math.floor(Math.random() * 101); 
+  const randomScore = Math.floor(Math.random() * 101);
 
   const score = randomScore;
 
@@ -45,16 +46,16 @@ export async function fetchExames(token?: string): Promise<ExameHistory[]> {
   });
 
   if (!resp.ok) {
-    const error = new Error('Erro ao buscar exames');
-    (error as any).status = resp.status;
-    throw error;
+    const err = new Error('Erro ao buscar exames') as Error & { status?: number };
+    err.status = resp.status;
+    throw err;
   }
 
   const body = await resp.json();
 
   const items: BackendExamItem[] = Array.isArray(body)
     ? body
-    : body?.data ?? [];
+    : (body?.data ?? []);
 
   return items.map(mapToExameHistory);
 }
