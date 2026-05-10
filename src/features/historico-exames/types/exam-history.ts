@@ -2,8 +2,8 @@ export type StatusExame = 'Prioridade' | 'Normal' | 'Pendente';
 export type TipoOlho = 'Ambos' | 'Esquerdo' | 'Direito';
 
 export interface ExameHistory {
-  id: string;             
-  paciente: string;       
+  idExame: string;
+  nomePaciente: string;       
   olho: TipoOlho;       
   scoreIA: string | null; 
   status: StatusExame;    

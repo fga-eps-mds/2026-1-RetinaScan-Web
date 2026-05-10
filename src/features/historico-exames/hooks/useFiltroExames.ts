@@ -28,8 +28,8 @@ export function useFiltroExames(dadosIniciais: ExameHistory[]) {
 
       const bateBusca =
         buscaDebounced === "" ||
-        exame.id.toLowerCase().includes(buscaDebounced.toLowerCase()) ||
-        exame.paciente.toLowerCase().includes(buscaDebounced.toLowerCase());
+        exame.idExame.toLowerCase().includes(buscaDebounced.toLowerCase()) ||
+        exame.nomePaciente.toLowerCase().includes(buscaDebounced.toLowerCase());
 
       return batePrioridade && bateBusca;
     });
