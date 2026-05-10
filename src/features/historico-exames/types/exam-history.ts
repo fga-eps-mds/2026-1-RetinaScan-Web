@@ -5,7 +5,7 @@ export interface ExameHistory {
   id: string;             
   paciente: string;       
   olho: TipoOlho;       
-  scoreIA: number | null; 
+  scoreIA: string | null; 
   status: StatusExame;    
   data: string;           
 }

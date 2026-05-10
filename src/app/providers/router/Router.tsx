@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/historico-exames',
+    path: '/exames',
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(HistoricoExame)}</AppLayout>
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/exames',
+    path: '/exames/:id',
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Exames)}</AppLayout>

@@ -5,7 +5,7 @@ export const MOCK_HISTORICO: ExameHistory[] = [
     id: "EX-2026-0036", 
     paciente: "PAC-1187", 
     olho: "Ambos", 
-    scoreIA: 91, 
+    scoreIA: "91", 
     status: "Prioridade", 
     data: "18/04/2026" 
   },
@@ -13,8 +13,16 @@ export const MOCK_HISTORICO: ExameHistory[] = [
     id: "EX-2026-0035", 
     paciente: "PAC-2200", 
     olho: "Direito", 
-    scoreIA: 23, 
+    scoreIA: "23", 
     status: "Normal", 
+    data: "11/04/2026" 
+  },
+    { 
+    id: "EX-2026-0036", 
+    paciente: "PAC-3300", 
+    olho: "Esquerdo", 
+    scoreIA: "--", 
+    status: "Pendente", 
     data: "11/04/2026" 
   }
 ];
