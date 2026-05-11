@@ -186,13 +186,12 @@ export function CardHistorico({
                         align="start"
                         className="w-full"
                       >
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="pendente">Pendente</SelectItem>
-                        <SelectItem value="concluido">Concluído</SelectItem>
-                        <SelectItem value="em_processamento">
-                          Em processamento
+                        <SelectItem value="all">TODOS</SelectItem>
+                        <SelectItem value="CRIADO">CRIADO</SelectItem>
+                        <SelectItem value="CONCLUIDO">CONCLuÍDO</SelectItem>
+                        <SelectItem value="EM_PROCESSAMENTO">
+                          EM PROCESSAMENTO
                         </SelectItem>
-                        <SelectItem value="criado">Criado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
