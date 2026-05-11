@@ -31,11 +31,10 @@ describe('useExamsPagination', () => {
 
   it('deve chamar getExams com os params corretos e retornar apenas pagination', async () => {
     const params = {
+      cpf: '12345678900',
+      nomeCompleto: 'Ana Silva',
       page: 2,
       pageSize: 20,
-      nomeCompleto: 'Ana',
-      id: '',
-      status: 'Normal',
     };
 
     const mockPagination = {
@@ -76,8 +75,7 @@ describe('useExamsPagination', () => {
       page: 1,
       pageSize: 20,
       nomeCompleto: '',
-      id: '',
-      status: '',
+      cpf: '',
     };
 
     const mockPagination = {
@@ -108,8 +106,7 @@ describe('useExamsPagination', () => {
       page: 1,
       pageSize: 20,
       nomeCompleto: '',
-      id: '',
-      status: '',
+      cpf: '',
     };
 
     const error = new Error('Erro ao buscar paginação');
@@ -132,16 +129,14 @@ describe('useExamsPagination', () => {
       page: 1,
       pageSize: 20,
       nomeCompleto: '',
-      id: '',
-      status: '',
+      cpf: '',
     };
 
     const secondParams = {
       page: 2,
       pageSize: 20,
       nomeCompleto: '',
-      id: '',
-      status: '',
+      cpf: '',
     };
 
     vi.mocked(getExamsApi.getExams)
