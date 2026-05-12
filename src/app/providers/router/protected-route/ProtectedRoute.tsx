@@ -21,7 +21,7 @@ export const ProtectedRoute = ({
     );
   }
 
-  if (!session) {
+  if (!session?.user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

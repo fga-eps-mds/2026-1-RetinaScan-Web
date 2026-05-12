@@ -75,7 +75,7 @@ const TabelaUsers = () => {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="overflow-hidden rounded-xl p-8 border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 p-6">
         <h1 className="text-xl font-heading font-bold text-gray-900">
           Usuários Cadastrados
@@ -89,14 +89,14 @@ const TabelaUsers = () => {
             placeholder="Buscar por nome, e-mail ou CRM"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 md:w-80"
+            className="w-full pl-9 md:w-80 border-slate-200 h-12 pr-10 "
           />
         </div>
       </div>
 
       <Table>
-        <TableHeader>
-          <TableRow>
+          <TableHeader className="text-xl border-b">
+            <TableRow className="border-none hover:bg-transparent h-16">
             <TableHead />
             <TableHead className="font-semibold">Nome</TableHead>
             <TableHead className="font-semibold">E-mail</TableHead>
@@ -156,18 +156,26 @@ const TabelaUsers = () => {
                     <Checkbox />
                   </TableCell>
 
-                  <TableCell className="font-medium">
+                  <TableCell className="text-center text-md text-muted-foreground">
                     {user.nomeCompleto}
                   </TableCell>
 
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="text-center text-md text-muted-foreground">
+                    {user.email}
+                  </TableCell>
 
-                  <TableCell>{user.crm ?? '-'}</TableCell>
+                  <TableCell className="text-center text-md text-muted-foreground">
+                    {user.crm ?? '-'}
+                  </TableCell>
 
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell className="text-center text-md text-muted-foreground py-7">
+                    {formatDate(user.createdAt)}
+                  </TableCell>
 
                   <TableCell>
-                    <Badge variant={variant}>{label}</Badge>
+                    <Badge className="px-3 py-1 rounded-md text-md whitespace-nowrap" variant={variant}>
+                      {label}
+                    </Badge>
                   </TableCell>
 
                   <TableCell>
