@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { toast } from 'sonner'
+import { toast } from 'sonner';
 import { validateFile } from '@/utils/validators/file';
 
 export function useImageUpload(onImageChange: (file: File | null) => void) {
   const [preview, setPreview] = useState<string | null>(null);
 
   const handleFileChange = (file: File) => {
-
     const errorMessage = validateFile(file);
     if (errorMessage) {
       toast.error(errorMessage);
@@ -15,14 +14,16 @@ export function useImageUpload(onImageChange: (file: File | null) => void) {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreview(reader.result as string);
+      if (typeof reader.result === 'string') {
+        setPreview(reader.result);
+      }
     };
     reader.readAsDataURL(file);
     onImageChange(file);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); 
+    e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
       handleFileChange(file);
@@ -38,7 +39,6 @@ export function useImageUpload(onImageChange: (file: File | null) => void) {
     preview,
     handleFileChange,
     handleDrop,
-    removeImage
+    removeImage,
   };
-  
 }

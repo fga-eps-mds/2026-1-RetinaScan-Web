@@ -24,7 +24,7 @@ const navItems = [
     to: '/exames/novo',
     icon: Plus,
     label: 'Novo exame',
-    allowed_roles: ['ADMIN', 'MEDICO'],
+    allowed_roles: ['MEDICO'],
   },
   {
     to: '/exames',

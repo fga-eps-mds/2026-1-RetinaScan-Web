@@ -9,12 +9,11 @@ interface ImageUploadBoxProps {
   onImageChange: (file: File | null) => void;
 }
 export function ImageUploadBox({ label, onImageChange }: ImageUploadBoxProps) {
-  // O hook agora já faz a validação de tamanho e tipo que criamos
   const { preview, handleFileChange, handleDrop, removeImage } = useImageUpload(onImageChange);
 
   return (
     <Card 
-      className="w-full max-w-125 p-8 border-2 border-dashed flex flex-col gap-4"      
+      className="w-full max-w-110 p-8 border-2 border-dashed flex flex-col gap-4"      
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >

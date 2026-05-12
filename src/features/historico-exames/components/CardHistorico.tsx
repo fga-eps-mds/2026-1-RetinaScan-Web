@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -11,74 +12,218 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './StatusTag';
 import { cn } from '@/lib/utils';
-import { Search, ListFilter, AlertCircle, Inbox, XCircle } from 'lucide-react';
+import {
+  Search,
+  AlertCircle,
+  Inbox,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCcw,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { HistoricoSkeleton } from './HistoricoSkeleton';
-import { useFiltroExames } from '../hooks/useFiltroExames';
-import type { ExameHistory } from '../types/exam-history';
+import { useNavigate } from 'react-router';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useGetExams } from '../hooks/useGetExams';
+import { useExamsPagination } from '../hooks/useGetTotalPages';
+import { useDebouncedValue } from '../hooks/useDebounce';
+import { formatDate } from '@/utils/formatters';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CardHistoricoProps {
-  dados: ExameHistory[];
-  isLoading: boolean;
-  isError: boolean;
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
 }
 
+const EXAM_ID_REGEX = /^EX-\d{4}-\d{4}$/i;
+
+function isBuscaId(val: string) {
+  return /^ex-/i.test(val) || /^\d/.test(val);
+}
+
+type ExamStatusFilter = 'all' | 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO';
+
 export function CardHistorico({
-  dados,
-  isLoading,
-  isError,
+  page = 1,
+  pageSize = 20,
+  onPageChange,
 }: CardHistoricoProps) {
-  const {
-    filtroPrioridade,
-    setFiltroPrioridade,
-    busca,
-    setBusca,
-    isSearchValid,
-    dadosFiltrados,
-  } = useFiltroExames(dados);
+  const navigate = useNavigate();
+  const [filtroStatus, setFiltroStatus] = useState<ExamStatusFilter>('all');
+  const [busca, setBusca] = useState('');
+
+  const buscaDebounced = useDebouncedValue(busca, 400);
+
+  const isSearchValid = useMemo(() => {
+    const valor = busca.trim();
+
+    if (!valor) return true;
+
+    if (isBuscaId(valor)) {
+      return EXAM_ID_REGEX.test(valor);
+    }
+
+    return true;
+  }, [busca]);
+
+  const params = useMemo(
+    () => ({
+      page,
+      pageSize,
+      nomeCompleto:
+        buscaDebounced.trim() && !EXAM_ID_REGEX.test(buscaDebounced.trim())
+          ? buscaDebounced.trim()
+          : '',
+      id:
+        buscaDebounced.trim() && EXAM_ID_REGEX.test(buscaDebounced.trim())
+          ? buscaDebounced.trim()
+          : '',
+      status: filtroStatus === 'all' ? '' : filtroStatus,
+    }),
+    [page, pageSize, buscaDebounced, filtroStatus]
+  );
 
   const limparFiltros = () => {
-    setFiltroPrioridade('');
+    setFiltroStatus('all');
     setBusca('');
+    onPageChange?.(1);
+  };
+
+  const {
+    data: exames = [],
+    isLoading,
+    isError,
+    isFetching,
+    isFetched,
+    refetch,
+  } = useGetExams(params);
+
+  const { data: pagination, isFetching: isFetchingPagination } =
+    useExamsPagination(params);
+
+  const hasData = exames.length > 0;
+  const hasActiveFilters = Boolean(busca.trim() || filtroStatus !== 'all');
+  const isTyping = busca !== buscaDebounced;
+
+  const isFirstLoad = !isFetched && isLoading;
+  const showSkeleton = isFirstLoad && !hasData;
+  const showError = isError && !hasData;
+  const showTypingHint = isTyping;
+  const showBackgroundUpdating =
+    !showSkeleton &&
+    !showTypingHint &&
+    !showError &&
+    (isFetching || isFetchingPagination);
+  const showEmpty =
+    !showSkeleton &&
+    !showError &&
+    !showTypingHint &&
+    !showBackgroundUpdating &&
+    !hasData;
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      onPageChange?.(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination?.totalPages && page < pagination.totalPages) {
+      onPageChange?.(page + 1);
+    }
   };
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Card className="mx-auto w-full max-w-6xl px-6 border-none shadow-sm p-10 bg-white rounded-[24px]">
-      <div className="flex flex-wrap items-center justify-between gap-3 ">
-          <h2 className="text-xl font-bold text-black w-full md:w-auto">
+      <Card className="mx-auto w-full max-w-6xl rounded-3xl border-none bg-white p-10 px-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="w-full text-xl font-bold text-black md:w-auto">
             Histórico de Exames
           </h2>
 
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            {/* Input de Filtro por Prioridade */}
-            <div className="relative w-full md:w-[240px]">
+          <div className="flex w-full flex-wrap items-center gap-4 md:w-auto">
+            <div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="mx-auto w-full">
-                    <Input
-                      placeholder="Filtrar por prioridade"
-                      className="border-slate-200 h-12 rounded-xl pr-10 focus-visible:ring-blue-600"
-                      value={filtroPrioridade}
-                      onChange={(e) => setFiltroPrioridade(e.target.value)}
-                      disabled={isLoading || isError}
+                  <Button
+                    type="button"
+                    onClick={handleRefresh}
+                    variant="outline"
+                    size="icon"
+                    disabled={isFetching || isFetchingPagination || isTyping}
+                    aria-label="Atualizar lista de exames"
+                  >
+                    <RefreshCcw
+                      className={cn(
+                        'h-4 w-4',
+                        (isFetching || isFetchingPagination || isTyping) &&
+                          'animate-spin'
+                      )}
                     />
-                    <ListFilter className="absolute right-3 top-3.5 h-5 w-5 text-muted-foreground pointer-events-none" />
-                  </div>
+                  </Button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-white border text-muted-foreground ">
-                  Filtre por: Prioridade, Normal ou Pendente
+
+                <TooltipContent className="border bg-white text-muted-foreground">
+                  Atualizar lista
                 </TooltipContent>
               </Tooltip>
             </div>
 
-            {/* Input de Busca com Validação Visual de ID */}
+            <div className="w-full md:w-60">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="mx-auto w-full">
+                    <Select
+                      value={filtroStatus}
+                      onValueChange={(value) => {
+                        setFiltroStatus(value as ExamStatusFilter);
+                        onPageChange?.(1);
+                      }}
+                      disabled={showSkeleton}
+                    >
+                      <SelectTrigger className="flex h-12 w-full items-center justify-between rounded-xl border-slate-200 px-3 text-left focus:ring-1 focus:ring-blue-600">
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+
+                      <SelectContent
+                        position="popper"
+                        align="start"
+                        className="w-full"
+                      >
+                        <SelectItem value="all">TODOS</SelectItem>
+                        <SelectItem value="CRIADO">CRIADO</SelectItem>
+                        <SelectItem value="CONCLUIDO">CONCLUÍDO</SelectItem>
+                        <SelectItem value="EM_PROCESSAMENTO">
+                          EM PROCESSAMENTO
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+
+                <TooltipContent className="border bg-white text-muted-foreground">
+                  Filtre por status
+                </TooltipContent>
+              </Tooltip>
+            </div>
+
             <div className="relative w-full md:w-[320px]">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -86,25 +231,29 @@ export function CardHistorico({
                     <Input
                       placeholder="Buscar exame..."
                       className={cn(
-                        'border-slate-200 h-12 pr-10 rounded-xl transition-all focus-visible:ring-blue-600',
+                        'h-12 rounded-xl border-slate-200 pr-10 transition-all focus-visible:ring-blue-600',
                         !isSearchValid &&
                           busca.length > 0 &&
                           'border-red-500 ring-1 ring-red-500 focus-visible:ring-red-500'
                       )}
                       value={busca}
-                      onChange={(e) => setBusca(e.target.value)}
-                      disabled={isLoading || isError}
+                      onChange={(e) => {
+                        setBusca(e.target.value);
+                        onPageChange?.(1);
+                      }}
+                      disabled={showSkeleton}
                     />
-                    <Search className="absolute right-3 top-3.5 h-5 w-5 text-muted-foreground pointer-events-none" />
+                    <Search className="pointer-events-none absolute right-3 top-3.5 h-5 w-5 text-muted-foreground" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="bg-white border text-muted-foreground ">
-                  Busque por Nome ou ID (Padrão: EX-0000-0000)
+
+                <TooltipContent className="border bg-white text-muted-foreground">
+                  Busque por Nome ou ID
                 </TooltipContent>
               </Tooltip>
 
               {!isSearchValid && busca.length > 0 && (
-                <span className="absolute -bottom-6 left-1 text-[10px] text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                <span className="animate-in fade-in slide-in-from-top-1 absolute -bottom-6 left-1 text-[10px] font-medium text-red-500">
                   Formato de ID inválido
                 </span>
               )}
@@ -112,104 +261,216 @@ export function CardHistorico({
           </div>
         </div>
 
-        {/* Tabela de Dados */}
-        <Table>
-          <TableHeader className="text-xl border-b">
-            <TableRow className="border-none hover:bg-transparent h-16">
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="font-bold text-center text-black">ID</TableHead>
-              <TableHead className="font-bold text-center text-black">Paciente</TableHead>
-              <TableHead className="font-bold text-center text-black">Olho</TableHead>
-              <TableHead className="font-bold text-center text-black">Score IA</TableHead>
-              <TableHead className="font-bold text-center text-black">Status</TableHead>
-              <TableHead className="font-bold text-center text-black">Data</TableHead>
-            </TableRow>
-          </TableHeader>
-          
-          <TableBody>
-            {/* Renderização Condicional de Estados (Loading, Error, Empty, Data) */}
-            {isLoading ? (
-              <HistoricoSkeleton />
-            ) : isError ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="py-40">
-                  <div className="flex flex-col items-center justify-center gap-3 text-red-500">
-                    <AlertCircle className="h-10 w-10" />
-                    <div className="text-center">
-                      <p className="text-lg font-medium">Não foi possível carregar os exames.</p>
-                      <button
-                        onClick={() => window.location.reload()}
-                        className="mt-2 text-sm underline text-red-600 hover:text-red-800 transition-colors"
+        {(showTypingHint || showBackgroundUpdating) && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <RefreshCcw className="h-4 w-4 animate-spin" />
+            {showTypingHint ? 'Buscando...' : 'Atualizando resultados...'}
+          </div>
+        )}
+
+        <div className="relative">
+          <Table
+            className={cn(
+              'mt-6 transition-opacity',
+              showTypingHint && hasData && 'opacity-80'
+            )}
+          >
+            <TableHeader className="border-b text-lg">
+              <TableRow className="h-16 border-none hover:bg-transparent">
+                <TableHead className="w-12.5" />
+                <TableHead className="text-center font-bold text-black">
+                  ID
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Paciente
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Olho
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Score IA
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Status
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Data
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {showSkeleton ? (
+                <HistoricoSkeleton />
+              ) : showError ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={7} className="py-28">
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="rounded-full bg-red-50 p-4 text-red-500">
+                        <AlertCircle className="h-8 w-8" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-lg font-semibold text-slate-900">
+                          Não foi possível carregar os exames
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Verifique sua conexão ou tente atualizar a lista
+                          novamente.
+                        </p>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleRefresh}
+                        className="rounded-full"
                       >
                         Tentar novamente
-                      </button>
+                      </Button>
                     </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : dadosFiltrados.length > 0 ? (
-              dadosFiltrados.map((exame) => (
-                <TableRow key={exame.id} className="group border-slate-50">
-                  <TableCell>
-                    <Checkbox className="border-[2px] transition-colors" />
-                  </TableCell>
-                  <TableCell className="text-center text-md text-muted-foreground py-7">
-                    {exame.id}
-                  </TableCell>
-                  <TableCell className="text-center text-md text-muted-foreground font-medium">
-                    {exame.paciente}
-                  </TableCell>
-                  <TableCell className="text-center text-md text-muted-foreground">
-                    {exame.olho}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-md text-center font-bold',
-                      exame.scoreIA !== null
-                        ? exame.scoreIA > "80"
-                          ? 'text-red-500'
-                          : 'text-green-500'
-                        : 'text-muted-foreground/50'
-                    )}
-                  >
-                    {exame.scoreIA ?? '--'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <StatusBadge status={exame.status} />
-                  </TableCell>
-                  <TableCell className="text-center text-md text-muted-foreground">
-                    {exame.data}
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="py-40">
-                  <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
-                    <Inbox className="h-12 w-12 opacity-20" />
-                    <div className="text-center">
-                      <p className="text-lg font-medium ">
-                        {busca || filtroPrioridade
-                          ? 'Nenhum resultado encontrado para os filtros aplicados.'
-                          : 'Ainda não existem exames registrados no histórico.'}
-                      </p>
-                      {(busca || filtroPrioridade) && (
+              ) : hasData ? (
+                exames.map((exame) => {
+                  const score =
+                    exame.scoreIA !== null && exame.scoreIA !== undefined
+                      ? Number(exame.scoreIA)
+                      : null;
+
+                  return (
+                    <TableRow
+                      key={exame.id}
+                      className="group cursor-pointer border-slate-50 transition-colors hover:bg-slate-50 focus-visible:bg-slate-50"
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Abrir resultado do exame ${exame.id}`}
+                      onClick={() =>
+                        navigate(`/exames/${encodeURIComponent(exame.id)}`)
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(`/exames/${encodeURIComponent(exame.id)}`);
+                        }
+                      }}
+                    >
+                      <TableCell>
+                        <Checkbox className="border-2 transition-colors" />
+                      </TableCell>
+
+                      <TableCell className="py-7 text-center text-md text-muted-foreground">
+                        {exame.id}
+                      </TableCell>
+
+                      <TableCell className="text-center text-md font-medium text-muted-foreground">
+                        {exame.nomeCompleto}
+                      </TableCell>
+
+                      <TableCell className="text-center text-md text-muted-foreground">
+                        {exame.olho}
+                      </TableCell>
+
+                      <TableCell
+                        className={cn(
+                          'text-md text-center font-bold',
+                          score !== null
+                            ? score > 80
+                              ? 'text-red-500'
+                              : 'text-green-500'
+                            : 'text-muted-foreground/50'
+                        )}
+                      >
+                        {score ?? '--'}
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        <StatusBadge status={exame.status} />
+                      </TableCell>
+
+                      <TableCell className="text-center text-md text-muted-foreground">
+                        {formatDate(exame.dtCriacao)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : showEmpty ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={7} className="py-28">
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="rounded-full bg-slate-50 p-4 text-muted-foreground">
+                        <Inbox className="h-8 w-8 opacity-70" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-lg font-semibold text-slate-900">
+                          {hasActiveFilters
+                            ? 'Nenhum resultado encontrado'
+                            : 'Ainda não existem exames registrados'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {hasActiveFilters
+                            ? 'Tente ajustar os filtros para encontrar outros exames.'
+                            : 'Assim que houver exames disponíveis, eles aparecerão aqui.'}
+                        </p>
+                      </div>
+
+                      {hasActiveFilters && (
                         <Button
                           variant="outline"
                           onClick={limparFiltros}
-                          className="mt-4 rounded-full border-blue-600 text-white-600 hover:bg-blue-50 transition-all"
+                          className="rounded-full"
                         >
                           <XCircle className="mr-2 h-4 w-4" />
-                          Limpar Filtros
+                          Limpar filtros
                         </Button>
                       )}
                     </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </div>
+
+        {pagination && !showError && (
+          <div className="mt-6 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {pagination.total} resultados - Página {pagination.page} de{' '}
+              {pagination.totalPages}
+            </span>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={
+                  pagination.page <= 1 ||
+                  isFetching ||
+                  isFetchingPagination ||
+                  isTyping
+                }
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={
+                  pagination.page >= pagination.totalPages ||
+                  isFetching ||
+                  isFetchingPagination ||
+                  isTyping
+                }
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </TooltipProvider>
   );

@@ -1,11 +1,10 @@
 export type StatusExame = 'Prioridade' | 'Normal' | 'Pendente';
-export type TipoOlho = 'Ambos' | 'Esquerdo' | 'Direito';
 
 export interface ExameHistory {
-  id: string;             
-  paciente: string;       
-  olho: TipoOlho;       
-  scoreIA: string | null; 
-  status: StatusExame;    
-  data: string;           
+  id: string;
+  nomeCompleto: string;
+  olho: 'AO' | 'OD';
+  scoreIA: string | null;
+  status: StatusExame;
+  dtCriacao: string;
 }
