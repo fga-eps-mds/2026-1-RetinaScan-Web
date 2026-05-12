@@ -54,17 +54,18 @@ function isBuscaId(val: string) {
   return /^ex-/i.test(val) || /^\d/.test(val);
 }
 
+type ExamStatusFilter = 'all' | 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO';
+
 export function CardHistorico({
   page = 1,
   pageSize = 20,
   onPageChange,
 }: CardHistoricoProps) {
   const navigate = useNavigate();
-  const [filtroPrioridade, setFiltroPrioridade] = useState('');
+  const [filtroStatus, setFiltroStatus] = useState<ExamStatusFilter>('all');
   const [busca, setBusca] = useState('');
 
   const buscaDebounced = useDebouncedValue(busca, 400);
-  const prioridadeDebounced = useDebouncedValue(filtroPrioridade, 300);
 
   const isSearchValid = useMemo(() => {
     const valor = busca.trim();
@@ -90,13 +91,13 @@ export function CardHistorico({
         buscaDebounced.trim() && EXAM_ID_REGEX.test(buscaDebounced.trim())
           ? buscaDebounced.trim()
           : '',
-      status: prioridadeDebounced.trim(),
+      status: filtroStatus === 'all' ? '' : filtroStatus,
     }),
-    [page, pageSize, buscaDebounced, prioridadeDebounced]
+    [page, pageSize, buscaDebounced, filtroStatus]
   );
 
   const limparFiltros = () => {
-    setFiltroPrioridade('');
+    setFiltroStatus('all');
     setBusca('');
     onPageChange?.(1);
   };
@@ -106,17 +107,32 @@ export function CardHistorico({
     isLoading,
     isError,
     isFetching,
+    isFetched,
     refetch,
   } = useGetExams(params);
 
-  const { data: pagination } = useExamsPagination(params);
+  const { data: pagination, isFetching: isFetchingPagination } =
+    useExamsPagination(params);
 
   const hasData = exames.length > 0;
-  const hasActiveFilters = Boolean(busca.trim() || filtroPrioridade.trim());
-  const isInitialLoading = isLoading && !hasData;
-  const isBackgroundFetching = isFetching && hasData;
-  const isTyping =
-    busca !== buscaDebounced || filtroPrioridade !== prioridadeDebounced;
+  const hasActiveFilters = Boolean(busca.trim() || filtroStatus !== 'all');
+  const isTyping = busca !== buscaDebounced;
+
+  const isFirstLoad = !isFetched && isLoading;
+  const showSkeleton = isFirstLoad && !hasData;
+  const showError = isError && !hasData;
+  const showTypingHint = isTyping;
+  const showBackgroundUpdating =
+    !showSkeleton &&
+    !showTypingHint &&
+    !showError &&
+    (isFetching || isFetchingPagination);
+  const showEmpty =
+    !showSkeleton &&
+    !showError &&
+    !showTypingHint &&
+    !showBackgroundUpdating &&
+    !hasData;
 
   const handleRefresh = () => {
     refetch();
@@ -151,13 +167,14 @@ export function CardHistorico({
                     onClick={handleRefresh}
                     variant="outline"
                     size="icon"
-                    disabled={isFetching || isTyping}
+                    disabled={isFetching || isFetchingPagination || isTyping}
                     aria-label="Atualizar lista de exames"
                   >
                     <RefreshCcw
                       className={cn(
                         'h-4 w-4',
-                        (isFetching || isTyping) && 'animate-spin'
+                        (isFetching || isFetchingPagination || isTyping) &&
+                          'animate-spin'
                       )}
                     />
                   </Button>
@@ -173,12 +190,16 @@ export function CardHistorico({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="mx-auto w-full">
-                    <Select disabled={isLoading}>
+                    <Select
+                      value={filtroStatus}
+                      onValueChange={(value) => {
+                        setFiltroStatus(value as ExamStatusFilter);
+                        onPageChange?.(1);
+                      }}
+                      disabled={showSkeleton}
+                    >
                       <SelectTrigger className="flex h-12 w-full items-center justify-between rounded-xl border-slate-200 px-3 text-left focus:ring-1 focus:ring-blue-600">
-                        <SelectValue
-                          placeholder="Filtrar por status"
-                          className="truncate"
-                        />
+                        <SelectValue placeholder="Filtrar por status" />
                       </SelectTrigger>
 
                       <SelectContent
@@ -188,7 +209,7 @@ export function CardHistorico({
                       >
                         <SelectItem value="all">TODOS</SelectItem>
                         <SelectItem value="CRIADO">CRIADO</SelectItem>
-                        <SelectItem value="CONCLUIDO">CONCLuÍDO</SelectItem>
+                        <SelectItem value="CONCLUIDO">CONCLUÍDO</SelectItem>
                         <SelectItem value="EM_PROCESSAMENTO">
                           EM PROCESSAMENTO
                         </SelectItem>
@@ -220,7 +241,7 @@ export function CardHistorico({
                         setBusca(e.target.value);
                         onPageChange?.(1);
                       }}
-                      disabled={isLoading}
+                      disabled={showSkeleton}
                     />
                     <Search className="pointer-events-none absolute right-3 top-3.5 h-5 w-5 text-muted-foreground" />
                   </div>
@@ -240,161 +261,179 @@ export function CardHistorico({
           </div>
         </div>
 
-        <Table className="mt-6">
-          <TableHeader className="border-b text-lg">
-            <TableRow className="h-16 border-none hover:bg-transparent">
-              <TableHead className="w-12.5" />
-              <TableHead className="text-center font-bold text-black">
-                ID
-              </TableHead>
-              <TableHead className="text-center font-bold text-black">
-                Paciente
-              </TableHead>
-              <TableHead className="text-center font-bold text-black">
-                Olho
-              </TableHead>
-              <TableHead className="text-center font-bold text-black">
-                Score IA
-              </TableHead>
-              <TableHead className="text-center font-bold text-black">
-                Status
-              </TableHead>
-              <TableHead className="text-center font-bold text-black">
-                Data
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+        {(showTypingHint || showBackgroundUpdating) && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <RefreshCcw className="h-4 w-4 animate-spin" />
+            {showTypingHint ? 'Buscando...' : 'Atualizando resultados...'}
+          </div>
+        )}
 
-          <TableBody>
-            {isInitialLoading ? (
-              <HistoricoSkeleton />
-            ) : isError ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="py-28">
-                  <div className="flex flex-col items-center justify-center gap-4 text-center">
-                    <div className="rounded-full bg-red-50 p-4 text-red-500">
-                      <AlertCircle className="h-8 w-8" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-lg font-semibold text-slate-900">
-                        Não foi possível carregar os exames
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Verifique sua conexão ou tente atualizar a lista
-                        novamente.
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => refetch()}
-                      className="rounded-full"
-                    >
-                      Tentar novamente
-                    </Button>
-                  </div>
-                </TableCell>
+        <div className="relative">
+          <Table
+            className={cn(
+              'mt-6 transition-opacity',
+              showTypingHint && hasData && 'opacity-80'
+            )}
+          >
+            <TableHeader className="border-b text-lg">
+              <TableRow className="h-16 border-none hover:bg-transparent">
+                <TableHead className="w-12.5" />
+                <TableHead className="text-center font-bold text-black">
+                  ID
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Paciente
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Olho
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Score IA
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Status
+                </TableHead>
+                <TableHead className="text-center font-bold text-black">
+                  Data
+                </TableHead>
               </TableRow>
-            ) : hasData ? (
-              exames.map((exame) => {
-                const score =
-                  exame.scoreIA !== null && exame.scoreIA !== undefined
-                    ? Number(exame.scoreIA)
-                    : null;
+            </TableHeader>
 
-                return (
-                  <TableRow
-                    key={exame.id}
-                    className="group cursor-pointer border-slate-50 transition-colors hover:bg-slate-50 focus-visible:bg-slate-50"
-                    tabIndex={0}
-                    role="link"
-                    aria-label={`Abrir resultado do exame ${exame.id}`}
-                    onClick={() =>
-                      navigate(`/exames/${encodeURIComponent(exame.id)}`)
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        navigate(`/exames/${encodeURIComponent(exame.id)}`);
-                      }
-                    }}
-                  >
-                    <TableCell>
-                      <Checkbox className="border-2 transition-colors" />
-                    </TableCell>
+            <TableBody>
+              {showSkeleton ? (
+                <HistoricoSkeleton />
+              ) : showError ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={7} className="py-28">
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="rounded-full bg-red-50 p-4 text-red-500">
+                        <AlertCircle className="h-8 w-8" />
+                      </div>
 
-                    <TableCell className="py-7 text-center text-md text-muted-foreground">
-                      {exame.id}
-                    </TableCell>
+                      <div className="space-y-1">
+                        <p className="text-lg font-semibold text-slate-900">
+                          Não foi possível carregar os exames
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Verifique sua conexão ou tente atualizar a lista
+                          novamente.
+                        </p>
+                      </div>
 
-                    <TableCell className="text-center text-md font-medium text-muted-foreground">
-                      {exame.nomeCompleto}
-                    </TableCell>
-                    <TableCell className="text-center text-md text-muted-foreground">
-                      {exame.olho}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        'text-md text-center font-bold',
-                        score !== null
-                          ? score > 80
-                            ? 'text-red-500'
-                            : 'text-green-500'
-                          : 'text-muted-foreground/50'
-                      )}
-                    >
-                      {score ?? '--'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <StatusBadge status={exame.status} />
-                    </TableCell>
-                    <TableCell className="text-center text-md text-muted-foreground">
-                      {formatDate(exame.dtCriacao)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="py-28">
-                  <div className="flex flex-col items-center justify-center gap-4 text-center">
-                    <div className="rounded-full bg-slate-50 p-4 text-muted-foreground">
-                      <Inbox className="h-8 w-8 opacity-70" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-lg font-semibold text-slate-900">
-                        {hasActiveFilters
-                          ? 'Nenhum resultado encontrado'
-                          : 'Ainda não existem exames registrados'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {hasActiveFilters
-                          ? 'Tente ajustar os filtros para encontrar outros exames.'
-                          : 'Assim que houver exames disponíveis, eles aparecerão aqui.'}
-                      </p>
-                    </div>
-
-                    {hasActiveFilters && (
                       <Button
+                        type="button"
                         variant="outline"
-                        onClick={limparFiltros}
+                        onClick={handleRefresh}
                         className="rounded-full"
                       >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Limpar filtros
+                        Tentar novamente
                       </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : hasData ? (
+                exames.map((exame) => {
+                  const score =
+                    exame.scoreIA !== null && exame.scoreIA !== undefined
+                      ? Number(exame.scoreIA)
+                      : null;
 
-        {pagination && (
+                  return (
+                    <TableRow
+                      key={exame.id}
+                      className="group cursor-pointer border-slate-50 transition-colors hover:bg-slate-50 focus-visible:bg-slate-50"
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Abrir resultado do exame ${exame.id}`}
+                      onClick={() =>
+                        navigate(`/exames/${encodeURIComponent(exame.id)}`)
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(`/exames/${encodeURIComponent(exame.id)}`);
+                        }
+                      }}
+                    >
+                      <TableCell>
+                        <Checkbox className="border-2 transition-colors" />
+                      </TableCell>
+
+                      <TableCell className="py-7 text-center text-md text-muted-foreground">
+                        {exame.id}
+                      </TableCell>
+
+                      <TableCell className="text-center text-md font-medium text-muted-foreground">
+                        {exame.nomeCompleto}
+                      </TableCell>
+
+                      <TableCell className="text-center text-md text-muted-foreground">
+                        {exame.olho}
+                      </TableCell>
+
+                      <TableCell
+                        className={cn(
+                          'text-md text-center font-bold',
+                          score !== null
+                            ? score > 80
+                              ? 'text-red-500'
+                              : 'text-green-500'
+                            : 'text-muted-foreground/50'
+                        )}
+                      >
+                        {score ?? '--'}
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        <StatusBadge status={exame.status} />
+                      </TableCell>
+
+                      <TableCell className="text-center text-md text-muted-foreground">
+                        {formatDate(exame.dtCriacao)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : showEmpty ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={7} className="py-28">
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="rounded-full bg-slate-50 p-4 text-muted-foreground">
+                        <Inbox className="h-8 w-8 opacity-70" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-lg font-semibold text-slate-900">
+                          {hasActiveFilters
+                            ? 'Nenhum resultado encontrado'
+                            : 'Ainda não existem exames registrados'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {hasActiveFilters
+                            ? 'Tente ajustar os filtros para encontrar outros exames.'
+                            : 'Assim que houver exames disponíveis, eles aparecerão aqui.'}
+                        </p>
+                      </div>
+
+                      {hasActiveFilters && (
+                        <Button
+                          variant="outline"
+                          onClick={limparFiltros}
+                          className="rounded-full"
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Limpar filtros
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </div>
+
+        {pagination && !showError && (
           <div className="mt-6 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
               {pagination.total} resultados - Página {pagination.page} de{' '}
@@ -406,7 +445,12 @@ export function CardHistorico({
                 variant="outline"
                 size="sm"
                 onClick={handlePreviousPage}
-                disabled={pagination.page <= 1 || isFetching || isTyping}
+                disabled={
+                  pagination.page <= 1 ||
+                  isFetching ||
+                  isFetchingPagination ||
+                  isTyping
+                }
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -418,19 +462,13 @@ export function CardHistorico({
                 disabled={
                   pagination.page >= pagination.totalPages ||
                   isFetching ||
+                  isFetchingPagination ||
                   isTyping
                 }
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-        )}
-
-        {(isBackgroundFetching || isTyping) && !isInitialLoading && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <RefreshCcw className="h-4 w-4 animate-spin" />
-            Atualizando resultados...
           </div>
         )}
       </Card>

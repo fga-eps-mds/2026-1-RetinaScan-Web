@@ -4,9 +4,9 @@ import type { PaginatedExams } from './useGetExams';
 
 export function useExamsPagination(params: ExamsParams) {
   return useQuery({
-    queryKey: ['exams', params],
+    queryKey: ['exams', 'pagination', params],
     queryFn: () => getExams(params),
-    staleTime: 30_000,
+    staleTime: 0,
     select: (response: PaginatedExams) => response.pagination,
   });
 }

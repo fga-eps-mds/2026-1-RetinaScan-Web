@@ -14,9 +14,9 @@ export interface PaginatedExams {
 
 export function useGetExams(params: ExamsParams) {
   return useQuery({
-    queryKey: ['exams', params],
+    queryKey: ['exams', 'list', params],
     queryFn: () => getExams(params),
-    staleTime: 30_000,
-    select: (response: PaginatedExams) => response.data, // Só retorna data
+    staleTime: 0,
+    select: (response: PaginatedExams) => response.data,
   });
 }
