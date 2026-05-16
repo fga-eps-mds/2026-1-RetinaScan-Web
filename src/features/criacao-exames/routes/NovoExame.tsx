@@ -7,6 +7,7 @@ import { parseApiError } from '../api/parseApiError';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import type { SexoExame } from '../types/exam';
+import { Comorbidades } from "../components/Comorbidades";
 
 const formatCpf = (value: string): string => {
   const digits = value.replaceAll(/\D/g, '').slice(0, 11);
@@ -72,7 +73,7 @@ const NovoExame = () => {
   };
 
   return (
-    <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
+    <div className="h-dvh overflow-y-auto px-6 py-8 sm:px-10 lg:px-12">
       <form
         className="mx-auto flex w-full max-w-6xl flex-col gap-6"
         onSubmit={handleCreateExam}
@@ -192,32 +193,27 @@ const NovoExame = () => {
             )}
           </Card>
         </div>
-        <Card className="p-4">
-          <label htmlFor="comorbidades" className="text-sm font-semibold">
-            Comorbidades
-          </label>
-          <textarea
-            id="comorbidades"
-            className="w-full min-h-32 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-            placeholder="Descreva as comorbidades do paciente, se houver"
-            rows={4}
-            value={comorbidades}
-            onChange={(e) => {
-              setComorbidades(e.target.value);
-              setFieldErrors((prev) => {
-                const next = { ...prev };
-                delete next.comorbidades;
-                return next;
-              });
-            }}
-          />
-          {fieldErrors.comorbidades && (
-            <p className="text-xs text-destructive">{fieldErrors.comorbidades}</p>
-          )}
-        </Card>
+        <Comorbidades
+          onChange={(value: string) => {
+            setComorbidades(value);
+            setFieldErrors((prev) => {
+              const next = { ...prev };
+              delete next.comorbidades;
+              return next;
+            });
+          }}
+          error={fieldErrors.comorbidades}
+          onClearError={() => {
+            setFieldErrors((prev) => {
+              const next = { ...prev };
+              delete next.comorbidades;
+              return next;
+            });
+          }}
+        />
         <Card className="p-4">
           <label htmlFor="descricao" className="text-sm font-semibold">
-            Descrição
+            Prontuário
           </label>
           <textarea
             id="descricao"
@@ -241,7 +237,6 @@ const NovoExame = () => {
         </Card>
 
         {error && <p className="text-xs text-destructive">{error}</p>}
-
 
         <Button
           type="submit"
