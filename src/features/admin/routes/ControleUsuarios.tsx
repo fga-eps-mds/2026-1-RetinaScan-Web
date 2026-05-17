@@ -1,15 +1,36 @@
 import { Button } from '@/components/ui/button';
 import TabelaUsers from '../components/TabelaUsers';
 import ModalNovoUser from '../components/ModalNovoUser';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InfoCards from '../components/InfoCards';
-import { useGetAllUsers } from '../hooks/useGetAllUsers';
+import { useSearchMedicos } from '../hooks/useSearchMedicos';
 import type { User } from '../types/user';
+import { toast } from 'sonner';
 
 const ControleUsuarios = () => {
   const [openModalNovoUser, setOpenModalNovoUser] = useState(false);
 
-  const { data: users = [], refetch } = useGetAllUsers();
+  // Atualizado: Estado agora suporta a propriedade opcional 'email'
+  const [filters, setFilters] = useState<{ nome?: string; crm?: string; email?: string }>({});
+
+  const {
+    data: apiResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useSearchMedicos(filters);
+
+  const users = apiResponse?.data || [];
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Erro ao carregar usuários.', {
+        description:
+          error instanceof Error ? error.message : 'Erro na requisição da API.',
+      });
+    }
+  }, [isError, error]);
 
   const totalUsers = users.length;
   const totalActiveUsers = users.filter(
@@ -23,7 +44,6 @@ const ControleUsuarios = () => {
           <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
             Gerenciamento e Controle de Acesso
           </h2>
-
           <p className="text-md text-muted-foreground">
             Cadastre e gerencie os profissionais da plataforma
           </p>
@@ -44,7 +64,27 @@ const ControleUsuarios = () => {
           </Button>
         </div>
 
-        <TabelaUsers />
+        <TabelaUsers
+          users={users}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          onSearchChange={(value) => {
+            const trimmedValue = value.trim();
+            
+            // Regras de detecção do input de busca
+            const isNumeric = /^\d+$/.test(trimmedValue);
+            const isEmail = trimmedValue.includes('@');
+
+            if (isNumeric) {
+              setFilters({ crm: trimmedValue });
+            } else if (isEmail) {
+              setFilters({ email: trimmedValue });
+            } else {
+              setFilters({ nome: trimmedValue || undefined });
+            }
+          }}
+        />
 
         <ModalNovoUser
           isOpen={openModalNovoUser}
