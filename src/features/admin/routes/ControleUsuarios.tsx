@@ -1,27 +1,49 @@
 import { Button } from '@/components/ui/button';
 import TabelaUsers from '../components/TabelaUsers';
 import ModalNovoUser from '../components/ModalNovoUser';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import InfoCards from '../components/InfoCards';
 import { useSearchMedicos } from '../hooks/useSearchMedicos';
+import { useDebouncedValue } from '@/features/historico-exames/hooks/useDebounce'; 
 import type { User } from '../types/user';
 import { toast } from 'sonner';
 
 const ControleUsuarios = () => {
   const [openModalNovoUser, setOpenModalNovoUser] = useState(false);
+  const [busca, setBusca] = useState('');
 
-  // Atualizado: Estado agora suporta a propriedade opcional 'email'
-  const [filters, setFilters] = useState<{ nome?: string; crm?: string; email?: string }>({});
+  const buscaDebounced = useDebouncedValue(busca, 400);
 
+  // Mapeia os parâmetros da API sanitizando inputs parciais para evitar HTTP 400
+  const filters = useMemo(() => {
+    const valorLimpado = buscaDebounced.trim();
+
+    if (!valorLimpado) return {};
+
+    const isNumeric = /^\d+$/.test(valorLimpado);
+    // Regex estrita para garantir domínio completo antes de chavear para query de email
+    const isCompleteEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valorLimpado);
+
+    return {
+      nome: !isNumeric && !isCompleteEmail ? valorLimpado : undefined,
+      crm: isNumeric ? valorLimpado : undefined,
+      email: isCompleteEmail ? valorLimpado : undefined,
+    };
+  }, [buscaDebounced]);
+
+  // Hook do TanStack Query para sincronização de estado assíncrono com cache
   const {
     data: apiResponse,
     isLoading,
     isError,
     error,
     refetch,
+    isFetching,
+    isFetched,
   } = useSearchMedicos(filters);
 
   const users = apiResponse?.data || [];
+  const isTyping = busca !== buscaDebounced;
 
   useEffect(() => {
     if (isError) {
@@ -69,21 +91,11 @@ const ControleUsuarios = () => {
           isLoading={isLoading}
           isError={isError}
           error={error}
-          onSearchChange={(value) => {
-            const trimmedValue = value.trim();
-            
-            // Regras de detecção do input de busca
-            const isNumeric = /^\d+$/.test(trimmedValue);
-            const isEmail = trimmedValue.includes('@');
-
-            if (isNumeric) {
-              setFilters({ crm: trimmedValue });
-            } else if (isEmail) {
-              setFilters({ email: trimmedValue });
-            } else {
-              setFilters({ nome: trimmedValue || undefined });
-            }
-          }}
+          isFetching={isFetching}
+          isFetched={isFetched}
+          isTyping={isTyping}
+          busca={busca}
+          onBuscaChange={(value: string) => setBusca(value)}
         />
 
         <ModalNovoUser
