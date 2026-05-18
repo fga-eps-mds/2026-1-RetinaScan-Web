@@ -4,7 +4,7 @@ import ModalNovoUser from '../components/ModalNovoUser';
 import { useState, useEffect, useMemo } from 'react';
 import InfoCards from '../components/InfoCards';
 import { useSearchMedicos } from '../hooks/useSearchMedicos';
-import { useDebouncedValue } from '@/features/historico-exames/hooks/useDebounce'; 
+import { useDebouncedValue } from '@/features/historico-exames/hooks/useDebounce';
 import type { User } from '../types/user';
 import { toast } from 'sonner';
 
@@ -22,8 +22,9 @@ const ControleUsuarios = () => {
 
     const isNumeric = /^\d+$/.test(valorLimpado);
     // Regex estrita para garantir domínio completo antes de chavear para query de email
-    const isCompleteEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valorLimpado);
-
+    const isCompleteEmail = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,8}$/.test(
+      valorLimpado
+    );
     return {
       nome: !isNumeric && !isCompleteEmail ? valorLimpado : undefined,
       crm: isNumeric ? valorLimpado : undefined,
