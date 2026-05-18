@@ -7,7 +7,10 @@ import { parseApiError } from '../api/parseApiError';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import type { SexoExame } from '../types/exam';
-import { Comorbidades } from "../components/Comorbidades";
+import {
+  Comorbidades,
+  type ComorbidadesFormValue,
+} from '../components/Comorbidades';
 
 const formatCpf = (value: string): string => {
   const digits = value.replaceAll(/\D/g, '').slice(0, 11);
@@ -18,12 +21,31 @@ const formatCpf = (value: string): string => {
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 };
 
+const createInitialComorbidades = (): ComorbidadesFormValue => ({
+  diabetes: false,
+  diabetesAnos: undefined,
+  diabetesUsoInsulina: false,
+  diabetesControlado: false,
+  hipertensao: false,
+  hipertensaoControlada: false,
+  altaMiopia: false,
+  glaucoma: false,
+  usoHidroxicloroquina: false,
+  uveite: false,
+  catarata: false,
+  outrasComorbidades: false,
+  outrasComorbidadesDescricao: undefined,
+  qualidadeTecnicaDificuldade: false,
+});
+
 const NovoExame = () => {
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [sexo, setSexo] = useState<SexoExame | ''>('');
   const [cpf, setCpf] = useState('');
-  const [comorbidades, setComorbidades] = useState('');
+  const [comorbidades, setComorbidades] = useState<ComorbidadesFormValue>(() =>
+    createInitialComorbidades()
+  );
   const [descricao, setDescricao] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -31,12 +53,20 @@ const NovoExame = () => {
   const navigate = useNavigate();
   const createExamMutation = useCreateExam();
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const resetForm = () => {
     setNomeCompleto('');
     setDataNascimento('');
     setSexo('');
     setCpf('');
-    setComorbidades('');
+    setComorbidades(createInitialComorbidades());
     setDescricao('');
     setError(null);
     setFieldErrors({});
@@ -55,16 +85,21 @@ const NovoExame = () => {
         sexo: sexo as SexoExame,
         dtNascimento: dataNascimento,
         dtHora: new Date().toISOString(),
-        comorbidades: comorbidades.trim() ? comorbidades : undefined,
+        comorbidades,
         descricao: descricao.trim() ? descricao : undefined,
       });
 
       toast.success('Exame criado com sucesso. Redirecionando para upload...');
       resetForm();
       navigate(`/exames/upload/${exam.id}`);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      const { message, fieldErrors } = parseApiError(err?.response?.data);
+    } catch (err: unknown) {
+      const apiError = err as {
+        response?: {
+          data?: unknown;
+        };
+      };
+
+      const { message, fieldErrors } = parseApiError(apiError?.response?.data);
 
       setError(message);
       setFieldErrors(fieldErrors);
@@ -82,7 +117,6 @@ const NovoExame = () => {
           <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
             Novo Exame
           </h2>
-
           <p className="text-md text-muted-foreground">
             Preencha os dados do paciente abaixo.
           </p>
@@ -95,20 +129,18 @@ const NovoExame = () => {
             </label>
             <Input
               id="nomeCompleto"
+              value={nomeCompleto}
               onChange={(e) => {
                 setNomeCompleto(e.target.value);
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.nomeCompleto;
-                  return next;
-                });
+                clearFieldError('nomeCompleto');
               }}
               placeholder="Digite o nome completo do paciente"
-              value={nomeCompleto}
               required
             />
             {fieldErrors.nomeCompleto && (
-              <p className="text-xs text-destructive">{fieldErrors.nomeCompleto}</p>
+              <p className="text-xs text-destructive">
+                {fieldErrors.nomeCompleto}
+              </p>
             )}
           </Card>
 
@@ -122,11 +154,7 @@ const NovoExame = () => {
               value={dataNascimento}
               onChange={(e) => {
                 setDataNascimento(e.target.value);
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.dtNascimento;
-                  return next;
-                });
+                clearFieldError('dtNascimento');
               }}
               className={
                 dataNascimento ? 'text-foreground' : 'text-muted-foreground'
@@ -134,10 +162,13 @@ const NovoExame = () => {
               required
             />
             {fieldErrors.dtNascimento && (
-              <p className="text-xs text-destructive">{fieldErrors.dtNascimento}</p>
+              <p className="text-xs text-destructive">
+                {fieldErrors.dtNascimento}
+              </p>
             )}
           </Card>
         </div>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card className="p-4">
             <label htmlFor="sexo" className="text-sm font-semibold">
@@ -148,13 +179,11 @@ const NovoExame = () => {
               value={sexo}
               onChange={(e) => {
                 setSexo(e.target.value as SexoExame);
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.sexo;
-                  return next;
-                });
+                clearFieldError('sexo');
               }}
-              className={`h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 ${sexo ? 'text-foreground' : 'text-muted-foreground'}`}
+              className={`h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 ${
+                sexo ? 'text-foreground' : 'text-muted-foreground'
+              }`}
               required
             >
               <option value="" disabled>
@@ -180,11 +209,7 @@ const NovoExame = () => {
               value={cpf}
               onChange={(e) => {
                 setCpf(formatCpf(e.target.value));
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.cpf;
-                  return next;
-                });
+                clearFieldError('cpf');
               }}
               required
             />
@@ -193,24 +218,17 @@ const NovoExame = () => {
             )}
           </Card>
         </div>
+
         <Comorbidades
-          onChange={(value: string) => {
+          value={comorbidades}
+          onChange={(value) => {
             setComorbidades(value);
-            setFieldErrors((prev) => {
-              const next = { ...prev };
-              delete next.comorbidades;
-              return next;
-            });
+            clearFieldError('comorbidades');
           }}
           error={fieldErrors.comorbidades}
-          onClearError={() => {
-            setFieldErrors((prev) => {
-              const next = { ...prev };
-              delete next.comorbidades;
-              return next;
-            });
-          }}
+          onClearError={() => clearFieldError('comorbidades')}
         />
+
         <Card className="p-4">
           <label htmlFor="descricao" className="text-sm font-semibold">
             Prontuário
@@ -223,13 +241,8 @@ const NovoExame = () => {
             value={descricao}
             onChange={(e) => {
               setDescricao(e.target.value);
-              setFieldErrors((prev) => {
-                const next = { ...prev };
-                delete next.descricao;
-                return next;
-              });
+              clearFieldError('descricao');
             }}
-            required
           />
           {fieldErrors.descricao && (
             <p className="text-xs text-destructive">{fieldErrors.descricao}</p>
@@ -242,7 +255,7 @@ const NovoExame = () => {
           type="submit"
           size="sm"
           disabled={createExamMutation.isPending}
-          className="self-center border-0 px-10 py-4 text-primary-foreground font-semibold hover:opacity-90"
+          className="self-center border-0 px-10 py-4 font-semibold text-primary-foreground hover:opacity-90"
         >
           {createExamMutation.isPending ? 'Salvando...' : 'Continuar'}
         </Button>
