@@ -9,8 +9,6 @@ import { ListaVazia } from './ListaVazia';
 import { FeedbackBuscando } from './FeedbackBuscando';
 import type { User } from '../types/user';
 
-type UserStatus = 'ATIVO' | 'INATIVO' | 'BLOQUEADO';
-
 
 interface TabelaUsersProps {
   users: User[];

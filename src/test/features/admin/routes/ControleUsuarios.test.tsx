@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ControleUsuarios from '@/features/admin/routes/ControleUsuarios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useGetAllUsers } from '@/features/admin/hooks/useGetAllUsers';
+import { useSearchMedicos } from '@/features/admin/hooks/useSearchMedicos';
 
-vi.mock('@/features/admin/hooks/useGetAllUsers');
+vi.mock('@/features/admin/hooks/useSearchMedicos');
 
 const mockTabelaUsers = vi.fn();
 const mockInfoCards = vi.fn();
@@ -38,7 +38,7 @@ vi.mock('@/features/admin/components/ModalNovoUser', () => ({
 
 describe('ControleUsuarios', () => {
   let queryClient: QueryClient;
-  const mockRefetch = vi.fn(); // Criamos o mock da função refetch
+  const mockRefetch = vi.fn();
 
   const renderWithClient = (ui: React.ReactElement) => {
     return render(
@@ -52,14 +52,20 @@ describe('ControleUsuarios', () => {
       defaultOptions: { queries: { retry: false } },
     });
 
-    // Injetamos o mockRefetch no retorno do hook
-    vi.mocked(useGetAllUsers).mockReturnValue({
-      data: [
-        { id: '1', status: 'ATIVO' },
-        { id: '2', status: 'INATIVO' },
-      ],
+    // Injetamos a estrutura reajustada refletindo apiResponse.data
+    vi.mocked(useSearchMedicos).mockReturnValue({
+      data: {
+        data: [
+          { id: '1', status: 'ATIVO' },
+          { id: '2', status: 'INATIVO' },
+        ],
+      },
       isLoading: false,
-      refetch: mockRefetch, // <--- Importante!
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+      isFetching: false,
+      isFetched: true,
     } as any);
   });
 
@@ -68,7 +74,7 @@ describe('ControleUsuarios', () => {
     expect(
       screen.getByText(/gerenciamento e controle de acesso/i)
     ).toBeInTheDocument();
-    expect(useGetAllUsers).toHaveBeenCalled();
+    expect(useSearchMedicos).toHaveBeenCalled();
   });
 
   it('deve passar os totais corretos para o InfoCards', async () => {
@@ -95,28 +101,27 @@ describe('ControleUsuarios', () => {
     const user = userEvent.setup();
     renderWithClient(<ControleUsuarios />);
 
-    // Abre o modal
     await user.click(screen.getByRole('button', { name: /novo usuário/i }));
-
-    // Clica no botão que dispara onUserCreated
     await user.click(
       screen.getByRole('button', { name: /confirmar criação/i })
     );
 
-    // Agora o refetch deve ter sido chamado
     expect(mockRefetch).toHaveBeenCalledTimes(1);
 
-    // E o modal deve sumir
     await waitFor(() => {
       expect(screen.queryByTestId('modal-novo-user')).not.toBeInTheDocument();
     });
   });
 
   it('deve exibir totais zerados quando não houver dados', async () => {
-    vi.mocked(useGetAllUsers).mockReturnValue({
-      data: [],
+    vi.mocked(useSearchMedicos).mockReturnValue({
+      data: { data: [] },
       isLoading: false,
+      isError: false,
+      error: null,
       refetch: mockRefetch,
+      isFetching: false,
+      isFetched: true,
     } as any);
 
     renderWithClient(<ControleUsuarios />);
