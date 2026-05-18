@@ -6,6 +6,7 @@ import { ImageUploadBox } from '../components/CardUpload';
 import { toast } from 'sonner';
 import { isValidExamId } from '@/utils/validators/exam';
 import { api } from '@/shared/api';
+import { parseApiError } from '@/shared/parseApiError';
 
 const UploadExame = () => {
   const { id } = useParams();
@@ -32,16 +33,18 @@ const UploadExame = () => {
 
     try {
       setIsUploading(true);
-      await api.post(`/api/exams/${id}/images`, form, {
+      const res = await api.post(`/api/exams/${id}/images`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      toast.success('Imagens enviadas para processamento!');
+
+      const successMessage = res?.data?.message || 'Imagens enviadas para processamento!';
+      toast.success(String(successMessage));
       setImageOD(null);
       setImageOE(null);
     } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string }>;
-      const message = axiosErr?.response?.data?.message || (err instanceof Error ? err.message : 'Erro ao enviar imagens');
-      toast.error(String(message));
+      const axiosErr = err as AxiosError<unknown>;
+      const parsed = parseApiError(axiosErr?.response?.data, 'Erro ao enviar imagens');
+      toast.error(String(parsed.message));
     } finally {
       setIsUploading(false);
     }
