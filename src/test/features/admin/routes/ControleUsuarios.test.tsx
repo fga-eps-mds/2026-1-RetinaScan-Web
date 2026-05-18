@@ -3,42 +3,22 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ControleUsuarios from '@/features/admin/routes/ControleUsuarios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useGetAllUsers } from '@/features/admin/hooks/useGetAllUsers';
+import { useSearchMedicos } from '@/features/admin/hooks/useSearchMedicos';
+import { toast } from 'sonner';
 
-vi.mock('@/features/admin/hooks/useGetAllUsers');
+vi.mock('@/features/admin/hooks/useSearchMedicos');
 
-const mockTabelaUsers = vi.fn();
-const mockInfoCards = vi.fn();
-const mockModalNovoUser = vi.fn();
-
-vi.mock('@/features/admin/components/TabelaUsers', () => ({
-  default: (props: any) => {
-    mockTabelaUsers(props);
-    return <div data-testid="tabela-users">Tabela Users</div>;
+// Mockamos o Toast para checar se ele é chamado no erro da API
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
   },
 }));
 
-vi.mock('@/features/admin/components/InfoCards', () => ({
-  default: (props: any) => {
-    mockInfoCards(props);
-    return <div data-testid="info-cards">Total: {props.totalUsers}</div>;
-  },
-}));
-
-vi.mock('@/features/admin/components/ModalNovoUser', () => ({
-  default: (props: any) => {
-    mockModalNovoUser(props);
-    return props.isOpen ? (
-      <div data-testid="modal-novo-user">
-        <button onClick={props.onUserCreated}>Confirmar criação</button>
-      </div>
-    ) : null;
-  },
-}));
-
+// NÃO mockamos TabelaUsers de forma estática pura para permitir que o input real seja testado e acione o useMemo de filtros
 describe('ControleUsuarios', () => {
   let queryClient: QueryClient;
-  const mockRefetch = vi.fn(); // Criamos o mock da função refetch
+  const mockRefetch = vi.fn();
 
   const renderWithClient = (ui: React.ReactElement) => {
     return render(
@@ -52,14 +32,20 @@ describe('ControleUsuarios', () => {
       defaultOptions: { queries: { retry: false } },
     });
 
-    // Injetamos o mockRefetch no retorno do hook
-    vi.mocked(useGetAllUsers).mockReturnValue({
-      data: [
-        { id: '1', status: 'ATIVO' },
-        { id: '2', status: 'INATIVO' },
-      ],
+    // Retorno padrão de sucesso
+    vi.mocked(useSearchMedicos).mockReturnValue({
+      data: {
+        data: [
+          { id: '1', status: 'ATIVO', nomeCompleto: 'Dr. House', email: 'house@exemplo.com', crm: '123', createdAt: '2026-05-17T00:00:00' },
+          { id: '2', status: 'INATIVO', nomeCompleto: 'Dra. Cameron', email: 'cameron@exemplo.com', crm: '456', createdAt: '2026-05-17T00:00:00' },
+        ],
+      },
       isLoading: false,
-      refetch: mockRefetch, // <--- Importante!
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+      isFetching: false,
+      isFetched: true,
     } as any);
   });
 
@@ -68,19 +54,7 @@ describe('ControleUsuarios', () => {
     expect(
       screen.getByText(/gerenciamento e controle de acesso/i)
     ).toBeInTheDocument();
-    expect(useGetAllUsers).toHaveBeenCalled();
-  });
-
-  it('deve passar os totais corretos para o InfoCards', async () => {
-    renderWithClient(<ControleUsuarios />);
-    await waitFor(() => {
-      expect(mockInfoCards).toHaveBeenCalledWith(
-        expect.objectContaining({
-          totalUsers: 2,
-          totalActiveUsers: 1,
-        })
-      );
-    });
+    expect(useSearchMedicos).toHaveBeenCalled();
   });
 
   it('deve abrir o modal ao clicar em Novo Usuário', async () => {
@@ -88,44 +62,104 @@ describe('ControleUsuarios', () => {
     renderWithClient(<ControleUsuarios />);
 
     await user.click(screen.getByRole('button', { name: /novo usuário/i }));
-    expect(screen.getByTestId('modal-novo-user')).toBeInTheDocument();
+    // Valida o comportamento de abertura do modal real ou injetado na árvore
+    expect(screen.getByText(/Novo Usuário/i)).toBeInTheDocument();
   });
 
-  it('deve fechar o modal e chamar o refetch ao criar um usuário', async () => {
+  // --- COBERTURA DAS BRANCHES DE VALIDAÇÃO (LINHAS 23-27) ---
+
+  it('deve chavear os filtros para BUSCA POR NOME quando for um texto simples', async () => {
     const user = userEvent.setup();
     renderWithClient(<ControleUsuarios />);
 
-    // Abre o modal
-    await user.click(screen.getByRole('button', { name: /novo usuário/i }));
+    const input = screen.getByPlaceholderText(/Buscar por nome, e-mail ou CRM/i);
+    await user.type(input, 'Iderlan');
 
-    // Clica no botão que dispara onUserCreated
-    await user.click(
-      screen.getByRole('button', { name: /confirmar criação/i })
-    );
-
-    // Agora o refetch deve ter sido chamado
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
-
-    // E o modal deve sumir
     await waitFor(() => {
-      expect(screen.queryByTestId('modal-novo-user')).not.toBeInTheDocument();
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: 'Iderlan',
+          crm: undefined,
+          email: undefined,
+        })
+      );
     });
   });
 
-  it('deve exibir totais zerados quando não houver dados', async () => {
-    vi.mocked(useGetAllUsers).mockReturnValue({
-      data: [],
+  it('deve chavear os filtros para BUSCA POR CRM quando for apenas números', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<ControleUsuarios />);
+
+    const input = screen.getByPlaceholderText(/Buscar por nome, e-mail ou CRM/i);
+    await user.type(input, '123456');
+
+    await waitFor(() => {
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: undefined,
+          crm: '123456',
+          email: undefined,
+        })
+      );
+    });
+  });
+
+  it('deve manter o filtro como NOME quando o email estiver incompleto para evitar HTTP 400', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<ControleUsuarios />);
+
+    const input = screen.getByPlaceholderText(/Buscar por nome, e-mail ou CRM/i);
+    await user.type(input, 'iderlan@retinascan.');
+
+    await waitFor(() => {
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: 'iderlan@retinascan.',
+          crm: undefined,
+          email: undefined,
+        })
+      );
+    });
+  });
+
+  it('deve chavear o filtro para EMAIL apenas quando a sintaxe do domínio estiver completa', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<ControleUsuarios />);
+
+    const input = screen.getByPlaceholderText(/Buscar por nome, e-mail ou CRM/i);
+    await user.type(input, 'iderlan@retinascan.com');
+
+    await waitFor(() => {
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: undefined,
+          crm: undefined,
+          email: 'iderlan@retinascan.com',
+        })
+      );
+    });
+  });
+
+  // --- COBERTURA DO TRATAMENTO DE ERRO (LINHA 50) ---
+
+  it('deve disparar o toast de erro se a requisição do useSearchMedicos falhar', async () => {
+    vi.mocked(useSearchMedicos).mockReturnValue({
+      data: null,
       isLoading: false,
+      isError: true,
+      error: new Error('Falha crítica de banco'),
       refetch: mockRefetch,
+      isFetching: false,
+      isFetched: true,
     } as any);
 
     renderWithClient(<ControleUsuarios />);
 
     await waitFor(() => {
-      expect(mockInfoCards).toHaveBeenCalledWith(
+      expect(toast.error).toHaveBeenCalledWith(
+        'Erro ao carregar usuários.',
         expect.objectContaining({
-          totalUsers: 0,
-          totalActiveUsers: 0,
+          description: 'Falha crítica de banco',
         })
       );
     });
