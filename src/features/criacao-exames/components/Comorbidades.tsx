@@ -20,7 +20,7 @@ export type ComorbidadesFormValue = {
 };
 
 type ComorbidadesProps = {
-  value: ComorbidadesFormValue;
+  value?: ComorbidadesFormValue;
   onChange: (value: ComorbidadesFormValue) => void;
   error?: string | null;
   onClearError?: () => void;
@@ -32,12 +32,29 @@ export function Comorbidades({
   error,
   onClearError,
 }: ComorbidadesProps) {
+  const currentValue = value ?? {
+    diabetes: false,
+    diabetesAnos: undefined,
+    diabetesUsoInsulina: false,
+    diabetesControlado: false,
+    hipertensao: false,
+    hipertensaoControlada: false,
+    altaMiopia: false,
+    glaucoma: false,
+    usoHidroxicloroquina: false,
+    uveite: false,
+    catarata: false,
+    outrasComorbidades: false,
+    outrasComorbidadesDescricao: undefined,
+    qualidadeTecnicaDificuldade: false,
+  };
+
   const update = <K extends keyof ComorbidadesFormValue>(
     field: K,
     fieldValue: ComorbidadesFormValue[K]
   ) => {
     onChange({
-      ...value,
+      ...currentValue,
       [field]: fieldValue,
     });
     onClearError?.();
@@ -51,19 +68,19 @@ export function Comorbidades({
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.diabetes}
+              checked={currentValue.diabetes}
               onCheckedChange={(checked) => {
                 const enabled = checked === true;
 
                 onChange({
-                  ...value,
+                  ...currentValue,
                   diabetes: enabled,
-                  diabetesAnos: enabled ? value.diabetesAnos : undefined,
+                  diabetesAnos: enabled ? currentValue.diabetesAnos : undefined,
                   diabetesUsoInsulina: enabled
-                    ? value.diabetesUsoInsulina
+                    ? currentValue.diabetesUsoInsulina
                     : false,
                   diabetesControlado: enabled
-                    ? value.diabetesControlado
+                    ? currentValue.diabetesControlado
                     : false,
                 });
                 onClearError?.();
@@ -72,7 +89,7 @@ export function Comorbidades({
             <span>Diabetes</span>
           </label>
 
-          {value.diabetes && (
+          {currentValue.diabetes && (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
                 <label htmlFor="diabetesAnos" className="text-xs font-medium">
@@ -83,7 +100,7 @@ export function Comorbidades({
                   type="number"
                   min={0}
                   placeholder="Ex: 10"
-                  value={value.diabetesAnos ?? ''}
+                  value={currentValue.diabetesAnos ?? ''}
                   onChange={(event) => {
                     const raw = event.target.value;
 
@@ -97,7 +114,7 @@ export function Comorbidades({
 
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
-                  checked={value.diabetesUsoInsulina}
+                  checked={currentValue.diabetesUsoInsulina}
                   onCheckedChange={(checked) =>
                     update('diabetesUsoInsulina', checked === true)
                   }
@@ -107,7 +124,7 @@ export function Comorbidades({
 
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
-                  checked={value.diabetesControlado}
+                  checked={currentValue.diabetesControlado}
                   onCheckedChange={(checked) =>
                     update('diabetesControlado', checked === true)
                   }
@@ -121,15 +138,15 @@ export function Comorbidades({
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.hipertensao}
+              checked={currentValue.hipertensao}
               onCheckedChange={(checked) => {
                 const enabled = checked === true;
 
                 onChange({
-                  ...value,
+                  ...currentValue,
                   hipertensao: enabled,
                   hipertensaoControlada: enabled
-                    ? value.hipertensaoControlada
+                    ? currentValue.hipertensaoControlada
                     : false,
                 });
                 onClearError?.();
@@ -138,10 +155,10 @@ export function Comorbidades({
             <span>Hipertensão</span>
           </label>
 
-          {value.hipertensao && (
+          {currentValue.hipertensao && (
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
-                checked={value.hipertensaoControlada}
+                checked={currentValue.hipertensaoControlada}
                 onCheckedChange={(checked) =>
                   update('hipertensaoControlada', checked === true)
                 }
@@ -154,7 +171,7 @@ export function Comorbidades({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.altaMiopia}
+              checked={currentValue.altaMiopia}
               onCheckedChange={(checked) =>
                 update('altaMiopia', checked === true)
               }
@@ -164,7 +181,7 @@ export function Comorbidades({
 
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.glaucoma}
+              checked={currentValue.glaucoma}
               onCheckedChange={(checked) =>
                 update('glaucoma', checked === true)
               }
@@ -174,7 +191,7 @@ export function Comorbidades({
 
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.usoHidroxicloroquina}
+              checked={currentValue.usoHidroxicloroquina}
               onCheckedChange={(checked) =>
                 update('usoHidroxicloroquina', checked === true)
               }
@@ -184,7 +201,7 @@ export function Comorbidades({
 
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.uveite}
+              checked={currentValue.uveite}
               onCheckedChange={(checked) => update('uveite', checked === true)}
             />
             <span>Uveíte</span>
@@ -192,7 +209,7 @@ export function Comorbidades({
 
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.catarata}
+              checked={currentValue.catarata}
               onCheckedChange={(checked) =>
                 update('catarata', checked === true)
               }
@@ -204,15 +221,15 @@ export function Comorbidades({
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.outrasComorbidades}
+              checked={currentValue.outrasComorbidades}
               onCheckedChange={(checked) => {
                 const enabled = checked === true;
 
                 onChange({
-                  ...value,
+                  ...currentValue,
                   outrasComorbidades: enabled,
                   outrasComorbidadesDescricao: enabled
-                    ? value.outrasComorbidadesDescricao
+                    ? currentValue.outrasComorbidadesDescricao
                     : undefined,
                 });
                 onClearError?.();
@@ -221,7 +238,7 @@ export function Comorbidades({
             <span>Outras</span>
           </label>
 
-          {value.outrasComorbidades && (
+          {currentValue.outrasComorbidades && (
             <div>
               <label
                 htmlFor="outrasComorbidadesDescricao"
@@ -231,11 +248,11 @@ export function Comorbidades({
               </label>
               <Input
                 id="outrasComorbidadesDescricao"
-                value={value.outrasComorbidadesDescricao ?? ''}
+                value={currentValue.outrasComorbidadesDescricao ?? ''}
                 onChange={(event) =>
                   update(
                     'outrasComorbidadesDescricao',
-                    event.target.value || undefined
+                    event.target.value.trim() ? event.target.value : undefined
                   )
                 }
                 placeholder="Ex: Degeneração macular"
@@ -252,7 +269,7 @@ export function Comorbidades({
 
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={value.qualidadeTecnicaDificuldade}
+              checked={currentValue.qualidadeTecnicaDificuldade}
               onCheckedChange={(checked) =>
                 update('qualidadeTecnicaDificuldade', checked === true)
               }
