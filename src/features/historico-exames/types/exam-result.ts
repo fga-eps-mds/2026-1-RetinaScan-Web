@@ -17,6 +17,15 @@ export type ExamResultAiResult = {
   url: string;
 };
 
+export type Comorbidades = {
+  diabetes: boolean;
+  hipertensao: boolean;
+  glaucoma: boolean;
+  degeneracaoMacular: boolean;
+  retinopatiaDiabetica: boolean;
+  outras: string[];
+};
+
 export type ExamResultExam = {
   id: string;
   idUsuario: string;
@@ -27,7 +36,7 @@ export type ExamResultExam = {
   dtHora: string;
   status: 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO' | 'ERRO_PROCESSAMENTO';
   olho?: 'AO' | 'OD' | 'OE' | null;
-  comorbidades?: string | null;
+  comorbidades?: Comorbidades;
   descricao?: string | null;
 };
 
