@@ -34,12 +34,14 @@ export type ExamResultImage = {
 
 export type ExamResultAiResult = {
   id: string;
-  idImagem: string;
+  lateralidadeOlho: LateralidadeOlho;
   predictedClass: number;
   predictedLabel: string;
   confidence: number;
-  probabilities: Record<string, number>;
-  lateralidadeOlho: LateralidadeOlho;
+  probabilities: {
+    normal: number;
+    abnormal: number;
+  };
   url: string;
 };
 
