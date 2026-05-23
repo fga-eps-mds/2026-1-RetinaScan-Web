@@ -4,16 +4,28 @@ import { CardImagens } from '../components/CardImagens';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, DownloadIcon, Share2 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router';
-import { getResultadoExameMock } from '../mocks/relatorioMock';
+import { useGetResultadoExame } from '../hooks/useGetResultadoExame';
 
-interface ResultadoExameProps {
-  examIdOverride?: string;
-}
-
-const ResultadoExame = ({ examIdOverride }: ResultadoExameProps) => {
+const ResultadoExame = () => {
   const { id } = useParams();
-  const exame = getResultadoExameMock(examIdOverride ?? id);
   const navigate = useNavigate();
+  const { data, isLoading, isError } = useGetResultadoExame(id);
+
+  if (isLoading) {
+    return (
+      <div className="w-full p-8">
+        <p className="text-sm text-muted-foreground">Carregando resultado do exame...</p>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="w-full p-8">
+        <p className="text-sm text-destructive">Não foi possível carregar o resultado do exame.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full p-8">
@@ -30,7 +42,7 @@ const ResultadoExame = ({ examIdOverride }: ResultadoExameProps) => {
             </button>
 
             <h2 className="text-4xl font-heading font-bold text-foreground sm:text-lg">
-              Exame {exame.idExame}
+              Exame {data.exam.id}
             </h2>
           </div>
           <p className="text-md text-muted-foreground">
@@ -52,10 +64,10 @@ const ResultadoExame = ({ examIdOverride }: ResultadoExameProps) => {
       </header>
 
       <div className="space-y-3">
-        <CardImagens />
+        <CardImagens imagens={data.imagens} />
         <div className="flex gap-6 grid-cols-1 lg:grid-cols-2">
-          <CardResultado resultado={exame} />
-          <CardDetalhes detalhes={exame} />
+          <CardResultado resultadosIa={data.resultadosIa} />
+          <CardDetalhes exame={data.exam} />
         </div>
       </div>
     </div>
