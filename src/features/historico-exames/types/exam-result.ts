@@ -1,6 +1,32 @@
+export type LateralidadeOlho = 'OD' | 'OE';
+export type Olho = 'AO' | 'OD' | 'OE' | null;
+export type Sexo = 'MASCULINO' | 'FEMININO' | 'OUTRO';
+export type ExamStatus =
+  | 'CRIADO'
+  | 'CONCLUIDO'
+  | 'EM_PROCESSAMENTO'
+  | 'ERRO_PROCESSAMENTO';
+
+export type Comorbidades = {
+  diabetes: boolean;
+  diabetesAnos: number | null;
+  diabetesUsoInsulina: boolean;
+  diabetesControlado: boolean;
+  hipertensao: boolean;
+  hipertensaoControlada: boolean;
+  altaMiopia: boolean;
+  glaucoma: boolean;
+  usoHidroxicloroquina: boolean;
+  uveite: boolean;
+  catarata: boolean;
+  outrasComorbidades: boolean;
+  outrasComorbidadesDescricao: string | null;
+  qualidadeTecnicaDificuldade: boolean;
+};
+
 export type ExamResultImage = {
   id: string;
-  lateralidadeOlho: 'OD' | 'OE';
+  lateralidadeOlho: LateralidadeOlho;
   qualidadeImg: string;
   caminhoImg: string;
   url: string;
@@ -13,31 +39,25 @@ export type ExamResultAiResult = {
   predictedLabel: string;
   confidence: number;
   probabilities: Record<string, number>;
-  lateralidadeOlho: 'OD' | 'OE';
+  lateralidadeOlho: LateralidadeOlho;
   url: string;
-};
-
-export type Comorbidades = {
-  diabetes: boolean;
-  hipertensao: boolean;
-  glaucoma: boolean;
-  degeneracaoMacular: boolean;
-  retinopatiaDiabetica: boolean;
-  outras: string[];
 };
 
 export type ExamResultExam = {
   id: string;
-  idUsuario: string;
   nomeCompleto: string;
   cpf: string;
-  sexo: 'MASCULINO' | 'FEMININO' | 'OUTRO';
+  sexo: Sexo;
   dtNascimento: string;
   dtHora: string;
-  status: 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO' | 'ERRO_PROCESSAMENTO';
-  olho?: 'AO' | 'OD' | 'OE' | null;
+  status: ExamStatus;
+  olho?: Olho;
   comorbidades?: Comorbidades;
   descricao?: string | null;
+  medico: {
+    id: string;
+    nomeCompleto: string;
+  };
 };
 
 export type ExamResultPayload = {

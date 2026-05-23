@@ -4,13 +4,13 @@ import { resolveImageUrl } from '@/utils/resolveImageUrl/resolveImageUrl';
 
 type GetResultadoExameResponse = {
   id: string;
-  status: string;
+  status: 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO' | 'ERRO_PROCESSAMENTO';
   nomeCompleto: string;
   cpf: string;
-  sexo: string;
+  sexo: 'MASCULINO' | 'FEMININO' | 'OUTRO';
   dtNascimento: string;
   dtHora: string;
-  olho: string;
+  olho: 'AO' | 'OD' | 'OE' | null;
   comorbidades?: {
     diabetes: boolean;
     diabetesAnos: number | null;
@@ -34,7 +34,7 @@ type GetResultadoExameResponse = {
   };
   imagens: {
     id: string;
-    lateralidadeOlho: string;
+    lateralidadeOlho: 'OD' | 'OE';
     url: string;
     qualidadeImg: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,42 +42,71 @@ type GetResultadoExameResponse = {
   }[];
 };
 
-export async function getResultadoExame(examId: string) {
+export async function getResultadoExame(
+  examId: string
+): Promise<ExamResultPayload> {
   const response = await api.get<GetResultadoExameResponse>(
     `/api/exams/${encodeURIComponent(examId)}`
   );
+
   const data = response.data;
 
   const exam = {
     id: data.id,
-    idUsuario: data.medico?.id ?? '',
     nomeCompleto: data.nomeCompleto,
     cpf: data.cpf,
     sexo: data.sexo,
     dtNascimento: data.dtNascimento,
-    dtHora:
-      typeof data.dtHora === 'string'
-        ? data.dtHora
-        : new Date(data.dtHora).toISOString(),
+    dtHora: data.dtHora,
     status: data.status,
-    olho: data.olho ?? null,
-    comorbidades: data.comorbidades ?? undefined,
-    descricao: data.descricao ?? null,
+    olho: data.olho,
+    comorbidades: data.comorbidades
+      ? {
+          diabetes: data.comorbidades.diabetes,
+          diabetesAnos: data.comorbidades.diabetesAnos,
+          diabetesUsoInsulina: data.comorbidades.diabetesUsoInsulina ?? false,
+          diabetesControlado: data.comorbidades.diabetesControlado ?? false,
+          hipertensao: data.comorbidades.hipertensao,
+          hipertensaoControlada:
+            data.comorbidades.hipertensaoControlada ?? false,
+          altaMiopia: data.comorbidades.altaMiopia,
+          glaucoma: data.comorbidades.glaucoma,
+          usoHidroxicloroquina: data.comorbidades.usoHidroxicloroquina ?? false,
+          uveite: data.comorbidades.uveite,
+          catarata: data.comorbidades.catarata,
+          outrasComorbidades: data.comorbidades.outrasComorbidades ?? false,
+          outrasComorbidadesDescricao:
+            data.comorbidades.outrasComorbidadesDescricao ?? null,
+          qualidadeTecnicaDificuldade:
+            data.comorbidades.qualidadeTecnicaDificuldade ?? false,
+        }
+      : undefined,
+    descricao: data.descricao,
+    medico: {
+      id: data.medico.id,
+      nomeCompleto: data.medico.nomeCompleto,
+    },
   };
 
   const imagens = await Promise.all(
-    (data.imagens ?? []).map(async (img) => ({
+    data.imagens.map(async (img) => ({
       id: img.id,
       lateralidadeOlho: img.lateralidadeOlho,
       qualidadeImg: img.qualidadeImg,
       caminhoImg: '',
-      url: await resolveImageUrl(img.url),
+      url: (await resolveImageUrl(img.url)) ?? '',
     }))
   );
 
   const resultadosIa = await Promise.all(
-    (data.imagens ?? [])
-      .filter((img) => img.resultadoIa)
+    data.imagens
+      .filter(
+        (
+          img
+        ): img is typeof img & {
+          resultadoIa: NonNullable<typeof img.resultadoIa>;
+        } => img.resultadoIa !== null
+      )
       .map(async (img) => ({
         id: img.resultadoIa.id,
         idImagem: img.id,
@@ -86,9 +115,9 @@ export async function getResultadoExame(examId: string) {
         confidence: img.resultadoIa.confidence,
         probabilities: img.resultadoIa.probabilities ?? {},
         lateralidadeOlho: img.lateralidadeOlho,
-        url: await resolveImageUrl(img.url),
+        url: (await resolveImageUrl(img.url)) ?? '',
       }))
   );
 
-  return { exam, imagens, resultadosIa } as ExamResultPayload;
+  return { exam, imagens, resultadosIa };
 }

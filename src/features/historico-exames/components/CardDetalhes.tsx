@@ -1,88 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
-import type { ResultadoExameMock } from '../mocks/relatorioMock';
-import { detalhesRelatorioMock } from '../mocks/relatorioMock';
 import type { ExamResultExam } from '../types/exam-result';
 
 interface CardDetalhesProps {
-  detalhes?: Partial<ResultadoExameMock>;
-  exame?: ExamResultExam;
+  exame: ExamResultExam;
 }
 
-export function CardDetalhes({
-  detalhes = detalhesRelatorioMock,
-  exame,
-}: CardDetalhesProps) {
-  if (!exame) {
-    return (
-      <Card className="w-full max-w-400 max-h-62 overflow-y-auto border-0.5 p-6">
-        <div className="mb-2 flex items-center gap-2 border-b border-border pb-2 font-semibold text-lg text-foreground">
-          <span>Detalhes da Análise</span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <div>
-              <label className="text-sm font-bold text-foreground">
-                ID da Análise
-              </label>
-              <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-                {detalhes.idExame}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-foreground">
-                ID do Paciente
-              </label>
-              <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-                {detalhes.idPaciente}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-bold text-foreground">
-                Data e hora
-              </label>
-              <p className="mt-1 flex items-center gap-2 rounded-md text-sm font-semibold text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                {detalhes.dataHora}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div>
-              <label className="text-sm font-bold text-foreground">
-                Nome do Paciente
-              </label>
-              <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-                {detalhes.nomePaciente}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-foreground">
-                Nome do Médico
-              </label>
-              <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-                {detalhes.nomeMedico}
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  const patientName = exame?.nomeCompleto ?? detalhes.nomePaciente;
-  const analysisId = exame?.id ?? detalhes.idExame;
-  const patientId = exame?.idUsuario ?? detalhes.idPaciente;
-  const dateTime = exame?.dtHora ?? detalhes.dataHora;
-  const cpf = exame?.cpf;
-  const birthDate = exame?.dtNascimento;
-  const status = exame?.status;
-  const eye = exame?.olho;
-
+export function CardDetalhes({ exame }: CardDetalhesProps) {
   return (
     <Card className="mx-auto w-full max-w-400 max-h-62 overflow-y-auto border-0.5 p-6">
       <div className="mb-2 flex items-center gap-2 border-b border-border pb-2 font-semibold text-lg text-foreground">
@@ -94,16 +18,16 @@ export function CardDetalhes({
           <div>
             <label className="text-sm font-bold text-foreground">ID do Exame</label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {analysisId}
+              {exame.id}
             </p>
           </div>
 
           <div>
             <label className="text-sm font-bold text-foreground">
-              ID do Paciente
+              Nome do Médico
             </label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {patientId}
+              {exame.medico.nomeCompleto}
             </p>
           </div>
           <div>
@@ -112,13 +36,13 @@ export function CardDetalhes({
             </label>
             <p className="mt-1 flex items-center gap-2 rounded-md text-sm font-semibold text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              {dateTime}
+              {new Date(exame.dtHora).toLocaleString()}
             </p>
           </div>
-                    <div>
+          <div>
             <label className="text-sm font-bold text-foreground">Olho</label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {eye ?? 'AO'}
+              {exame.olho ?? 'AO'}
             </p>
           </div>
         </div>
@@ -129,30 +53,28 @@ export function CardDetalhes({
               Nome do Paciente
             </label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {patientName}
+              {exame.nomeCompleto}
             </p>
           </div>
 
           <div>
             <label className="text-sm font-bold text-foreground">CPF</label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {cpf ?? detalhes.nomeMedico}
+              {exame.cpf}
             </p>
           </div>
 
           <div>
             <label className="text-sm font-bold text-foreground">Status</label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {status ?? '---'}
+              {exame.status}
             </p>
           </div>
-
-
 
           <div>
             <label className="text-sm font-bold text-foreground">Data de nascimento</label>
             <p className="mt-1 rounded-md text-sm font-semibold text-muted-foreground">
-              {birthDate ?? '---'}
+              {exame.dtNascimento}
             </p>
           </div>
         </div>
