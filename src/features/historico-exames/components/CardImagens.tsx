@@ -3,8 +3,32 @@ import { Badge } from '@/components/ui/badge';
 import { ScanEye } from 'lucide-react';
 import retinaExemplo1 from '@/assets/retinaExemplo1.png';
 import retinaExemplo2 from '@/assets/retinaExemplo2.png';
+import type { ExamResultImage } from '../types/exam-result';
 
-export function CardImagens() {
+type CardImagensProps = {
+  imagens?: ExamResultImage[];
+};
+
+const defaultImages: ExamResultImage[] = [
+  {
+    id: 'mock-od',
+    lateralidadeOlho: 'OD',
+    qualidadeImg: 'Normal',
+    caminhoImg: 'mock-od',
+    url: retinaExemplo1,
+  },
+  {
+    id: 'mock-oe',
+    lateralidadeOlho: 'OE',
+    qualidadeImg: 'Alterado',
+    caminhoImg: 'mock-oe',
+    url: retinaExemplo2,
+  },
+];
+
+export function CardImagens({ imagens = defaultImages }: CardImagensProps) {
+  const [od, oe] = imagens;
+
   return (
     <Card className="w-full max-w-full border-0.5 p-8">
       <div className="mb-6 flex items-center gap-2 border-b border-border pb-5 font-semibold text-lg text-foreground">
@@ -19,12 +43,14 @@ export function CardImagens() {
               <span>Olho direito (OD)</span>
             </div>
 
-            <Badge variant="affirmative">Normal</Badge>
+            <Badge variant={od?.qualidadeImg === 'Alterado' ? 'destructive' : 'affirmative'}>
+              {od?.qualidadeImg ?? 'Normal'}
+            </Badge>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-border bg-muted/20">
             <img
-              src={retinaExemplo1}
+              src={od?.url ?? retinaExemplo1}
               alt="Retinografia do olho direito"
               className="h-64 w-full object-cover md:h-64"
             />
@@ -40,12 +66,14 @@ export function CardImagens() {
               <span>Olho esquerdo (OE)</span>
             </div>
 
-            <Badge variant="destructive">Alterado</Badge>
+            <Badge variant={oe?.qualidadeImg === 'Alterado' ? 'destructive' : 'affirmative'}>
+              {oe?.qualidadeImg ?? 'Alterado'}
+            </Badge>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-border bg-muted/20">
             <img
-              src={retinaExemplo2}
+              src={oe?.url ?? retinaExemplo2}
               alt="Retinografia do olho esquerdo"
               className="h-64 w-full object-cover md:h-64"
             />
