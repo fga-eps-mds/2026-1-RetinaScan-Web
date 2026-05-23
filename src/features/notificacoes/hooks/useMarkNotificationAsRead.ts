@@ -6,7 +6,7 @@ export function useMarkNotificationAsRead() {
 
   return useMutation({
     mutationFn: markNotificationAsRead,
-    onSuccess: (_, notificationId) => {
+    onSuccess: async (_, notificationId) => {
       queryClient.setQueriesData(
         { queryKey: ['notifications'] },
         (
@@ -31,6 +31,10 @@ export function useMarkNotificationAsRead() {
           );
         }
       );
+
+      await queryClient.invalidateQueries({
+        queryKey: ['notifications'],
+      });
     },
   });
 }
