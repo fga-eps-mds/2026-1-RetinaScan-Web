@@ -1,4 +1,11 @@
-import { BellRing, Eye, FileText, ShieldCheck, Trash2 } from 'lucide-react';
+import {
+  BellRing,
+  CircleAlert,
+  Eye,
+  FileText,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Transition } from 'framer-motion';
@@ -8,7 +15,8 @@ import { cn } from '@/lib/utils';
 export type NotificationType =
   | 'avaliacao_ia_atualizada'
   | 'avaliacao_ia_revisada_por_especialista'
-  | 'status_solicitacao_cadastral_atualizado';
+  | 'status_solicitacao_cadastral_atualizado'
+  | 'avaliacao_ia_error';
 
 type NotificationCardProps = {
   id: string;
@@ -71,6 +79,19 @@ const notificationVariants: Record<NotificationType, NotificationVariant> = {
     unreadCardClassName:
       'border-amber-300/80 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10',
     unreadDotClassName: 'bg-amber-500',
+  },
+  avaliacao_ia_error: {
+    label: 'Erro na avaliação IA',
+    icon: CircleAlert,
+    iconClassName: 'h-5 w-5 text-rose-600 dark:text-rose-400',
+    iconWrapperClassName: 'bg-rose-100 dark:bg-rose-500/15',
+    tagClassName:
+      'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300',
+    cardClassName:
+      'border-rose-200/70 bg-gradient-to-r from-rose-50/80 to-card dark:border-rose-500/20 dark:from-rose-500/10 dark:to-card',
+    unreadCardClassName:
+      'border-rose-300/80 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10',
+    unreadDotClassName: 'bg-rose-500',
   },
 };
 
