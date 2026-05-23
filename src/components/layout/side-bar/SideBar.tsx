@@ -1,6 +1,7 @@
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
+import { useListNotifications } from '@/features/notificacoes/hooks/useListNotifications';
 import {
   LayoutDashboard,
   Eye,
@@ -51,6 +52,13 @@ const SideBar = () => {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const sessionUser = session?.user;
+
+  const { data: unreadNotifications = [] } = useListNotifications({
+    status: 'nao-lidas',
+    limit: 20,
+  });
+
+  const hasUnreadNotifications = unreadNotifications.length > 0;
 
   const userRole = sessionUser?.tipoPerfil;
 
@@ -111,19 +119,29 @@ const SideBar = () => {
       <nav className="flex-1 space-y-1 px-3 py-4">
         {visibleNavItems.map((item) => {
           const active = location.pathname === item.to;
+          const isNotificationsItem = item.to === '/notificacoes';
 
           return (
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
               }`}
             >
-              <item.icon className="h-4.5 w-4.5" />
-              {item.label}
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <item.icon className="h-4.5 w-4.5" />
+
+                  {isNotificationsItem && hasUnreadNotifications && (
+                    <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+                  )}
+                </div>
+
+                <span>{item.label}</span>
+              </div>
             </NavLink>
           );
         })}
@@ -132,7 +150,6 @@ const SideBar = () => {
       <div className="flex flex-col gap-4 space-y-1 border-t border-sidebar-border px-3 py-4">
         <div className="flex items-center gap-2">
           <Avatar>
-            {/* crossOrigin="anonymous" adicionado para não enviar os cookies gigantes do localhost */}
             <AvatarImage
               src={imageUrl}
               crossOrigin="anonymous"
@@ -155,7 +172,7 @@ const SideBar = () => {
           </div>
 
           {sessionUser?.tipoPerfil === 'MEDICO' && (
-            <div className="flex items-center justify-end ml-auto">
+            <div className="ml-auto flex items-center justify-end">
               <Button
                 variant="ghost"
                 size="icon"

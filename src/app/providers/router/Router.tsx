@@ -4,19 +4,29 @@ import { lazy, Suspense } from 'react';
 
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
-import Loading from '@/components/layout/loading/Loading';
-import UploadExame from '@/features/criacao-exames/routes/UploadExame';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
-const Exames = lazy(() => import('@/features/historico-exames/routes/ResultadoExame'));
-const NovoExame = lazy(() => import('@/features/criacao-exames/routes/NovoExame'));
+const Exames = lazy(
+  () => import('@/features/historico-exames/routes/ResultadoExame')
+);
+const NovoExame = lazy(
+  () => import('@/features/criacao-exames/routes/NovoExame')
+);
 const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
-const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/HistoricoExame'));
-const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
+const HistoricoExame = lazy(
+  () => import('@/features/historico-exames/routes/HistoricoExame')
+);
+const Notificacoes = lazy(
+  () => import('@/features/notificacoes/routes/Notificacoes')
+);
 const Login = lazy(() => import('@/features/auth/routes/Login'));
+const UploadExame = lazy(
+  () => import('@/features/criacao-exames/routes/UploadExame')
+);
+const Loading = lazy(() => import('@/components/layout/loading/Loading'));
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<Loading />}>
@@ -46,8 +56,8 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Exames)}</AppLayout>
-     </ProtectedRoute>
-     ),
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/exames/novo',
