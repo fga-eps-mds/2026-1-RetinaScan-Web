@@ -1,6 +1,6 @@
 <div align="center">
     <p align="center">
-    <img src="image-1.png" alt="Logo RetinaScan" width="450"/>
+    <img width="450" height="220" alt="image" src="https://github.com/user-attachments/assets/43b36c5a-8fd6-48f2-9926-2ab73e38dd58" />
     </p>
 
 # 2026.1 RetinaScan Web
