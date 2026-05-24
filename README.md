@@ -1,12 +1,16 @@
+<div align="center">
+    <p align="center">
+    <img src="image-1.png" alt="Logo RetinaScan" width="450"/>
+    </p>
+
 # 2026.1 RetinaScan Web
 
-<p align="center">
-  <img src="image-1.png" alt="Logo RetinaScan" width="450"/>
-</p>
 
 O **RetinaScan Web** é a interface web da plataforma RetinaScan, um sistema de triagem de retinografias utilizando Inteligência Artificial para auxiliar na identificação de possíveis alterações na retina.
 
 A aplicação permite que profissionais de saúde realizem o upload de imagens de retina, que são enviadas para um backend responsável por processar as imagens e gerar um pré-relatório automatizado com auxílio de IA.
+
+</div>
 
 ---
 
