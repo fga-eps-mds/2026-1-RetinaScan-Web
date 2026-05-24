@@ -157,7 +157,7 @@ const SolicitacaoCardAdmin = ({
                 <UserRound className="h-3.5 w-3.5" />
                 Nome
               </p>
-              <p className="break-words text-sm font-medium text-foreground">
+              <p className="wrap-break-word text-sm font-medium text-foreground">
                 {solicitacao.nomeCompleto}
               </p>
             </div>
