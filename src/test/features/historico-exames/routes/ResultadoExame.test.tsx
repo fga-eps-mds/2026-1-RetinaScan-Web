@@ -3,6 +3,28 @@ import { describe, expect, it, vi } from 'vitest';
 import ResultadoExame from '@/features/historico-exames/routes/ResultadoExame';
 import { MemoryRouter, Route, Routes } from 'react-router';
 
+vi.mock('@/features/historico-exames/hooks/useGetResultadoExame', () => ({
+  useGetResultadoExame: () => ({
+    data: {
+      exam: {
+        id: 'EX-2026-0036',
+        idUsuario: 'USR-001',
+        nomeCompleto: 'João da Silva',
+        cpf: '123.456.789-00',
+        sexo: 'MASCULINO',
+        dtNascimento: '1990-01-01',
+        dtHora: '2026-05-22T10:30:00Z',
+        status: 'CONCLUIDO',
+        olho: 'OD',
+      },
+      imagens: [],
+      resultadosIa: [],
+    },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 vi.mock('@/features/historico-exames/components/CardImagens', () => ({
   CardImagens: () => <div data-testid="card-imagens-mock" />,
 }));
