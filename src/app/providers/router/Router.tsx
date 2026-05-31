@@ -27,6 +27,9 @@ const UploadExame = lazy(
   () => import('@/features/criacao-exames/routes/UploadExame')
 );
 const Loading = lazy(() => import('@/components/layout/loading/Loading'));
+const PasswordReset = lazy(
+  () => import('@/features/auth/routes/PasswordReset')
+);
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<Loading />}>
@@ -43,6 +46,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
   {
     path: '/exames',
     element: (
@@ -102,5 +106,9 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: withSuspense(Login),
+  },
+  {
+    path: '/reset-password',
+    element: withSuspense(PasswordReset),
   },
 ]);
