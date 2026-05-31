@@ -7,6 +7,7 @@ import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
+import EsqueciMinhaSenhaModal from '../components/EsqueciMinhaSenhaModal';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
@@ -121,17 +122,16 @@ const Login = () => {
                   className="pl-9 bg-white"
                 />
                 <button
-                type="button"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {mostrarSenha ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {mostrarSenha ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
 
               <div className="flex items-center justify-between">
@@ -148,12 +148,14 @@ const Login = () => {
                     Lembrar de mim
                   </label>
                 </div>
-                <button
-                  type="button"
-                  className="text-xs text-[#1A63AB] font-semibold hover:underline"
-                >
-                  Esqueceu a senha?
-                </button>
+                <EsqueciMinhaSenhaModal>
+                  <button
+                    type="button"
+                    className="text-xs text-[#1A63AB] font-semibold hover:underline hover:cursor-pointer transition-all"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </EsqueciMinhaSenhaModal>
               </div>
             </div>
 
