@@ -16,12 +16,9 @@ const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
-const HistoricoExame = lazy(
-  () => import('@/features/historico-exames/routes/HistoricoExame')
-);
-const Notificacoes = lazy(
-  () => import('@/features/notificacoes/routes/Notificacoes')
-);
+const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/HistoricoExame'));
+const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
+const Logs = lazy(() => import('@/features/logs/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 const UploadExame = lazy(
   () => import('@/features/criacao-exames/routes/UploadExame')
@@ -100,6 +97,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
         <AppLayout>{withSuspense(Notificacoes)}</AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/logs',
+    element: (
+      <ProtectedRoute allowed_roles={['ADMIN']}>
+        <AppLayout>{withSuspense(Logs)}</AppLayout>
       </ProtectedRoute>
     ),
   },
