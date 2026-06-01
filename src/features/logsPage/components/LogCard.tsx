@@ -1,4 +1,3 @@
-
 import type { MouseEventHandler } from 'react';
 import { useLogStickerColor } from '../hooks/useLogStickerColor';
 import type { LogEntry } from '../types/log';
@@ -26,10 +25,7 @@ function formatLabel(value: string) {
     .join(' ');
 }
 
-export function LogCard({
-  log,
-  onClick,
-}: LogCardProps) {
+export function LogCard({ log, onClick }: LogCardProps) {
   const {
     action,
     category,
@@ -50,7 +46,7 @@ export function LogCard({
     <button
       type="button"
       onClick={onClick}
-      className="group w-full rounded-2xl border border-border/70 bg-white text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lg"
+      className="group w-full rounded-2xl border border-border/70 bg-white text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
       style={{ borderLeftColor: stickerColor, borderLeftWidth: '12px' }}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
@@ -68,14 +64,22 @@ export function LogCard({
 
           <div className="grid text-sm leading-6 text-foreground/90">
             <div>
-              <p className="font-medium text-foreground/85">Nome: {actorLabel}</p>
-              {actorEmail ? <p className="text-foreground/85">Email: {actorEmail}</p> : null}
+              <p className="font-medium text-foreground/85">
+                Nome: {actorLabel}
+              </p>
+              {actorEmail ? (
+                <p className="text-foreground/85">Email: {actorEmail}</p>
+              ) : null}
             </div>
 
             <div>
-              <p className="font-medium text-foreground/85">Destino: {targetLabel}</p>
+              <p className="font-medium text-foreground/85">
+                Destino: {targetLabel}
+              </p>
               <p className="text-foreground/85">
-                {targetEntityType ? formatLabel(targetEntityType) : 'Alvo do evento'}
+                {targetEntityType
+                  ? formatLabel(targetEntityType)
+                  : 'Alvo do evento'}
               </p>
             </div>
           </div>

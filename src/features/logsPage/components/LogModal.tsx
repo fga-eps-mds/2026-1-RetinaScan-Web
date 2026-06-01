@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { LogEntry } from '../types/log';
 
 type LogModalProps = {
@@ -36,8 +41,12 @@ function JsonBlock({ value }: { value: unknown }) {
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="rounded-xl border border-border/60 bg-background/60 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm text-foreground/90">{value ?? 'Não informado'}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 text-sm text-foreground/90">
+        {value ?? 'Não informado'}
+      </p>
     </div>
   );
 }
@@ -47,7 +56,9 @@ export default function LogModal({ isOpen, onClose, log }: LogModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[90vw] max-w-[90vw] max-h-[90vh] overflow-y-auto border border-border bg-card p-6 shadow-2xl sm:max-w-[90vw] sm:rounded-3xl xl:max-w-5xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Detalhamento do Log</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Detalhamento do Log
+          </DialogTitle>
         </DialogHeader>
 
         {log ? (
@@ -65,23 +76,35 @@ export default function LogModal({ isOpen, onClose, log }: LogModalProps) {
                 </span>
               </div>
 
-              <p className="text-sm leading-6 text-foreground/90">{log.description}</p>
+              <p className="text-sm leading-6 text-foreground/90">
+                {log.description}
+              </p>
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ator e destino</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Ator e destino
+              </h3>
               <div className="grid gap-3 md:grid-cols-2">
                 <DetailRow label="Nome do ator" value={log.actorName} />
                 <DetailRow label="Email do ator" value={log.actorEmail} />
                 <DetailRow label="ID do ator" value={log.actorUserId} />
-                <DetailRow label="Tipo do destino" value={log.targetEntityType} />
+                <DetailRow
+                  label="Tipo do destino"
+                  value={log.targetEntityType}
+                />
                 <DetailRow label="ID do destino" value={log.targetEntityId} />
-                <DetailRow label="Display do destino" value={log.targetDisplay} />
+                <DetailRow
+                  label="Display do destino"
+                  value={log.targetDisplay}
+                />
               </div>
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Rastreamento</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Rastreamento
+              </h3>
               <div className="grid gap-3 md:grid-cols-2">
                 <DetailRow label="IP" value={log.ipAddress} />
                 <DetailRow label="Request ID" value={log.requestId} />
@@ -90,12 +113,16 @@ export default function LogModal({ isOpen, onClose, log }: LogModalProps) {
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Metadata</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Metadata
+              </h3>
               <JsonBlock value={log.metadata} />
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Changes</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Changes
+              </h3>
               <JsonBlock value={log.changes} />
             </section>
           </div>
