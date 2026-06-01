@@ -15,6 +15,6 @@ export type GetLogsResult<T = any> = {
 };
 
 export async function getLogs(params: GetLogsParams): Promise<GetLogsResult> {
-  const res = await api.get('/logs', { params });
+  const res = await api.get('/api/logs', { params });
   return res.data as GetLogsResult;
 }
