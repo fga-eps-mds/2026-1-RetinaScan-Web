@@ -13,9 +13,11 @@ const NovoExame = () => {
     errors,
     clearFieldError,
     isPending,
+    isUploadingImagens,
     canProceedToForm,
     canSubmitFinal,
     handleImageChange,
+    handleUploadAndNext,
     handleCreateExam
   } = useNovoExame();
 
@@ -30,12 +32,13 @@ const NovoExame = () => {
           </p>
         </header>
 
-        {/* Orquestração dos Passos: Condiciona a renderização com base no estado `step` */}
+        {/* Orquestração dos Passos com o novo fluxo de processamento de imagens */}
         {step === 'UPLOAD' && (
           <UploadStep 
             canProceed={canProceedToForm}
+            isUploading={isUploadingImagens}
             onImageChange={handleImageChange}
-            onNext={() => setStep('FORM')}
+            onNext={handleUploadAndNext}
           />
         )}
 
