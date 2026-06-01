@@ -1,1 +1,1 @@
-export * from './routes/Logs';
+export { default } from './routes/Logs';

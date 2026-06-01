@@ -9,12 +9,12 @@ export type GetLogsParams = {
   pageSize?: number;
 };
 
-export type GetLogsResult<T = any> = {
+export type GetLogsResult<T = unknown> = {
   data: T[];
   total: number;
 };
 
-export async function getLogs(params: GetLogsParams): Promise<GetLogsResult> {
+export async function getLogs<T = unknown>(params: GetLogsParams): Promise<GetLogsResult<T>> {
   const res = await api.get('/api/logs', { params });
-  return res.data as GetLogsResult;
+  return res.data as GetLogsResult<T>;
 }
