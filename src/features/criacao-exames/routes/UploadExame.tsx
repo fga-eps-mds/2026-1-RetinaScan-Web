@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { AxiosError } from 'axios';
 import { useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { ImageUploadBox } from '../components/CardUpload';
+import { CardUpload } from '../components/CardUpload';
 import { toast } from 'sonner';
 import { isValidExamId } from '@/utils/validators/exam';
 import { api } from '@/shared/api';
@@ -59,12 +59,12 @@ const UploadExame = () => {
       </header>
 
       <div className="flex items-center justify-center gap-16 border-t border-border mt-8 pt-8">
-      <ImageUploadBox
+      <CardUpload
         label="Olho direito (OD)"
         side="OD"
         onImageChange={setImageOD}
       />
-        <ImageUploadBox
+        <CardUpload
           label="Olho esquerdo (OE)"
           side="OE"
           onImageChange={setImageOE}
