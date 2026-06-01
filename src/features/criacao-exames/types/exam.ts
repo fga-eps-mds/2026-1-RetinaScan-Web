@@ -25,4 +25,9 @@ export type CreateExamDTO = {
   dtHora: string;
   comorbidades: ComorbidadesDTO;
   descricao?: string;
+  
+  imagens: {
+    uploadId: string;
+    lateralidade: 'OD' | 'OE';
+  }[];
 };

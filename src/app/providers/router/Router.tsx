@@ -20,9 +20,6 @@ const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/Hi
 const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
 const Logs = lazy(() => import('@/features/logsPage/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
-const UploadExame = lazy(
-  () => import('@/features/criacao-exames/routes/UploadExame')
-);
 const Loading = lazy(() => import('@/components/layout/loading/Loading'));
 const PasswordReset = lazy(
   () => import('@/features/auth/routes/PasswordReset')
@@ -65,14 +62,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowed_roles={['MEDICO']}>
         <AppLayout>{withSuspense(NovoExame)}</AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/exames/upload/:id',
-    element: (
-      <ProtectedRoute allowed_roles={['MEDICO']}>
-        <AppLayout>{withSuspense(UploadExame)}</AppLayout>
       </ProtectedRoute>
     ),
   },
