@@ -18,7 +18,7 @@ const ControleUsuarios = lazy(
 );
 const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/HistoricoExame'));
 const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
-const Logs = lazy(() => import('@/features/logs/routes/Logs'));
+const Logs = lazy(() => import('@/features/logsPage/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 const UploadExame = lazy(
   () => import('@/features/criacao-exames/routes/UploadExame')
