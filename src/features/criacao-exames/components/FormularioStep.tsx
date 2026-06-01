@@ -49,7 +49,7 @@ interface FormularioStepProps {
   
   // Handlers de navegação e submissão
   onBack: () => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void; // Tipagem corrigida aqui!
 }
 
 export function FormularioStep({
@@ -59,14 +59,13 @@ export function FormularioStep({
     // O evento onSubmit é repassado para o pai, que faz o e.preventDefault() e a chamada à API
     <form className="flex flex-col gap-6" onSubmit={onSubmit}>
       
-      {/* Alerta Condicional: Exibido apenas no Cenário B (Upload de Imagens JPEG/PNG).
-          Informa o usuário sobre a natureza manual do preenchimento. */}
-      {!isDicom && (
-        <div className="bg-yellow-500/10 border border-yellow-500/50 p-4 rounded-md text-sm text-yellow-600 mb-2">
-          Arquivo de imagem tradicional detectado. Os metadados não são obrigatórios e não serão enviados automaticamente. Preencha apenas se desejar armazenar no prontuário local.
+      {/* Alerta Condicional: Exibido apenas no Cenário A (Upload de Imagens DICOM).
+          Reforça a necessidade de revisão médica dos dados extraídos. */}
+      {isDicom && (
+        <div className="bg-blue-500/10 border border-blue-500/50 p-4 rounded-md text-sm text-blue-600 mb-2 font-medium">
+          Metadados extraídos automaticamente. Por favor, revise os dados do paciente com atenção e edite-os se necessário antes de confirmar.
         </div>
       )}
-
       {/* Grid responsivo para alinhar os inputs em 2 colunas em telas maiores */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card className="p-4">
@@ -165,7 +164,7 @@ export function FormularioStep({
           disabled={isPending || !canSubmit}
           className="px-10 py-4 font-semibold text-primary-foreground"
         >
-          {isPending ? 'Salvando...' : 'Salvar Exame Definitivo'}
+          {isPending ? 'Salvando...' : 'Salvar Exame'}
         </Button>
       </div>
     </form>

@@ -7,7 +7,6 @@ import { useExamForm } from './useExamForm';
 import { useExamUpload } from './useExamUpload';
 import type { SexoExame } from '../types/exam';
 
-
 import { api } from '@/shared/api'; 
 
 export const useNovoExame = () => {
@@ -47,8 +46,8 @@ export const useNovoExame = () => {
 
       const { metadados, imagens } = response.data;
 
-      // Mapeamento dos IDs retornados pelo backend
-      setUploadedIds(imagens.map((img: any) => ({ 
+      // CORREÇÃO 1: Tipagem explícita em vez de 'any'
+      setUploadedIds(imagens.map((img: { uploadId: string; lateralidade: string }) => ({ 
         uploadId: img.uploadId, 
         lateralidade: img.lateralidade as 'OD' | 'OE'
       })));
@@ -67,9 +66,10 @@ export const useNovoExame = () => {
       }
 
       setStep('FORM'); 
-    } catch (err: any) {
-      // Captura mensagem específica de validação do Backend
-      const serverMessage = err.response?.data?.fields?.[0]?.message;
+    } catch (err: unknown) {
+      // CORREÇÃO 2: Uso de 'unknown' com Type Casting para acessar o erro da API
+      const apiError = err as { response?: { data?: { fields?: Array<{ message: string }> } } };
+      const serverMessage = apiError.response?.data?.fields?.[0]?.message;
       const displayMessage = serverMessage || 'Erro ao processar as imagens. Tente novamente.';
       
       console.error('Erro no upload:', err);
