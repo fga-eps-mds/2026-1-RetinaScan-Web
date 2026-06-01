@@ -25,7 +25,6 @@ vi.mock('@/features/logsPage/components/LogModal', () => ({
 }));
 
 describe('LogsList', () => {
-
   const mockLogs = [
     {
       id: '1',
@@ -77,21 +76,32 @@ describe('LogsList', () => {
     } as any);
   });
 
-  it('deve renderizar os filtros, paginação e abrir o modal ao clicar no card', async () => {
+  it('deve renderizar filtros, paginação e abrir o modal ao clicar no card', async () => {
     render(<LogsList />);
 
-    expect(screen.getByPlaceholderText(/buscar usuário ou email/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/filtrar ação/i)).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /ordenar por ação/i })).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/buscar por usuário ou email/i)
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByText(/todas as ações/i)).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('checkbox', { name: /ordenar por ação/i })
+    ).toBeInTheDocument();
 
     expect(screen.getByText('Solicitação aprovada')).toBeInTheDocument();
     expect(screen.getByText('Solicitação rejeitada')).toBeInTheDocument();
     expect(screen.getByText(/página 1 de 1/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Solicitação aprovada' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Solicitação aprovada' })
+    );
 
     await waitFor(() => {
-      expect(screen.getByText('MODAL::Solicitação aprovada')).toBeInTheDocument();
+      expect(
+        screen.getByText('MODAL::Solicitação aprovada')
+      ).toBeInTheDocument();
     });
   });
 
@@ -102,11 +112,14 @@ describe('LogsList', () => {
       expect.objectContaining({
         page: 1,
         pageSize: 20,
-      }),
+        action: undefined,
+        startDate: undefined,
+        endDate: undefined,
+      })
     );
   });
 
-  it('deve mostrar estados de loading e erro', () => {
+  it('deve mostrar estado de loading', () => {
     vi.mocked(useGetLogs).mockReturnValueOnce({
       data: undefined,
       isLoading: true,
@@ -114,9 +127,12 @@ describe('LogsList', () => {
       isFetching: false,
     } as any);
 
-    const { rerender } = render(<LogsList />);
-    expect(screen.getByText(/carregando logs/i)).toBeInTheDocument();
+    render(<LogsList />);
 
+    expect(screen.getByText(/carregando logs/i)).toBeInTheDocument();
+  });
+
+  it('deve mostrar estado de erro', () => {
     vi.mocked(useGetLogs).mockReturnValueOnce({
       data: undefined,
       isLoading: false,
@@ -124,7 +140,7 @@ describe('LogsList', () => {
       isFetching: false,
     } as any);
 
-    rerender(<LogsList />);
+    render(<LogsList />);
 
     expect(screen.getByText(/erro ao carregar logs/i)).toBeInTheDocument();
   });
