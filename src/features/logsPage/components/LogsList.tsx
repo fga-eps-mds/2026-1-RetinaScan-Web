@@ -3,6 +3,8 @@ import { LogCard } from './LogCard';
 import { useGetLogs } from '../hooks/useGetLogs';
 import type { GetLogsResult } from '../api/getLogs';
 import { useDebouncedValue } from '@/features/historico-exames/hooks/useDebounce';
+import LogModal from './LogModal';
+import type { LogEntry } from '../types/log';
 
 export function LogsList() {
   const [page, setPage] = useState(1);
@@ -13,6 +15,7 @@ export function LogsList() {
   const [customEnd, setCustomEnd] = useState<string>('');
   const [searchText, setSearchText] = useState('');
   const [sortByAction, setSortByAction] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
   let startDate: string | undefined;
   let endDate: string | undefined;
@@ -38,7 +41,7 @@ export function LogsList() {
     endDate,
   });
 
-  const logs = (data as GetLogsResult | undefined)?.data ?? [];
+  const logs = (data as GetLogsResult<LogEntry> | undefined)?.data ?? [];
   const total = (data as GetLogsResult | undefined)?.total ?? 0;
 
   const debouncedSearch = useDebouncedValue(searchText, 300);
@@ -66,15 +69,7 @@ export function LogsList() {
     <div className="space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2">
-            <input
-              placeholder="Filtrar ação (ex: APPROVE)"
-              className="rounded-md border px-3 py-2 text-sm"
-              value={actionFilter}
-              onChange={(e) => {
-                setActionFilter(e.target.value);
-                setPage(1);
-              }}
-            />
+            
 
             <div className="flex items-center gap-2">
               <button
@@ -101,9 +96,18 @@ export function LogsList() {
           <div className="flex items-center gap-2">
             <input
               placeholder="Buscar usuário ou email"
-              className="rounded-md border px-3 py-2 text-sm"
+              className="rounded-md border px-3 py-2 text-sm bg-white"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+            />
+            <input
+              placeholder="Filtrar ação (ex: APPROVE)"
+              className="rounded-md border px-3 py-2 text-sm bg-white"
+              value={actionFilter}
+              onChange={(e) => {
+                setActionFilter(e.target.value);
+                setPage(1);
+              }}
             />
 
             <label className="flex items-center gap-2 text-sm">
@@ -130,15 +134,6 @@ export function LogsList() {
             <button
               className="rounded-md border px-3 py-2 text-sm"
               onClick={() => {
-                // apply custom range
-                setPage(1);
-              }}
-            >
-              Aplicar
-            </button>
-            <button
-              className="rounded-md border px-3 py-2 text-sm"
-              onClick={() => {
                 setDatePreset('');
                 setCustomStart('');
                 setCustomEnd('');
@@ -155,20 +150,16 @@ export function LogsList() {
         ) : isError ? (
           <div className="p-6 text-center text-sm text-destructive">Erro ao carregar logs.</div>
         ) : (
-          visibleLogs.map((n: any) => (
+          visibleLogs.map((n: LogEntry) => (
             <LogCard
               key={n.id}
-              action={n.action}
-              category={n.category}
-              description={n.description}
-              actorName={n.actorName}
-              actorEmail={n.actorEmail}
-              targetEntityType={n.targetEntityType}
-              targetDisplay={n.targetDisplay}
-              createdAt={n.createdAt}
+              log={n}
+              onClick={() => setSelectedLog(n)}
             />
           ))
         )}
+
+        <LogModal isOpen={Boolean(selectedLog)} onClose={() => setSelectedLog(null)} log={selectedLog} />
 
         <div className="flex items-center justify-between border-t border-border/60 px-3 py-4">
         <div className="text-sm text-muted-foreground">

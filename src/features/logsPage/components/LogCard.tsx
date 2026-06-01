@@ -1,15 +1,11 @@
 
+import type { MouseEventHandler } from 'react';
 import { useLogStickerColor } from '../hooks/useLogStickerColor';
+import type { LogEntry } from '../types/log';
 
 type LogCardProps = {
-  action: string;
-  category: string;
-  description: string;
-  actorName?: string | null;
-  actorEmail?: string | null;
-  targetEntityType?: string | null;
-  targetDisplay?: string | null;
-  createdAt: Date | string;
+  log: LogEntry;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
 function formatTimestamp(value: Date | string) {
@@ -31,15 +27,19 @@ function formatLabel(value: string) {
 }
 
 export function LogCard({
-  action,
-  category,
-  description,
-  actorName,
-  actorEmail,
-  targetEntityType,
-  targetDisplay,
-  createdAt,
+  log,
+  onClick,
 }: LogCardProps) {
+  const {
+    action,
+    category,
+    description,
+    actorName,
+    actorEmail,
+    targetEntityType,
+    targetDisplay,
+    createdAt,
+  } = log;
   const actorLabel = actorName ?? actorEmail ?? 'Usuário não identificado';
   const targetLabel =
     targetDisplay ?? targetEntityType ?? 'Sem destino informado';
@@ -47,14 +47,16 @@ export function LogCard({
   const stickerColor = getStickerColor(action, category);
 
   return (
-    <article
-      className="group rounded-2xl border border-border/70 bg-white shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lg"
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full rounded-2xl border border-border/70 bg-white text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lg"
       style={{ borderLeftColor: stickerColor, borderLeftWidth: '12px' }}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-foreground/5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/80">
+            <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
               {formatLabel(action)}
             </span>
             <span className="rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -66,12 +68,12 @@ export function LogCard({
 
           <div className="grid text-sm leading-6 text-foreground/90">
             <div>
-              <p className="font-medium text-foreground/85">{actorLabel}</p>
-              {actorEmail ? <p className="text-foreground/85">{actorEmail}</p> : null}
+              <p className="font-medium text-foreground/85">Nome: {actorLabel}</p>
+              {actorEmail ? <p className="text-foreground/85">Email: {actorEmail}</p> : null}
             </div>
 
             <div>
-              <p className="font-medium text-foreground/85">{targetLabel}</p>
+              <p className="font-medium text-foreground/85">Destino: {targetLabel}</p>
               <p className="text-foreground/85">
                 {targetEntityType ? formatLabel(targetEntityType) : 'Alvo do evento'}
               </p>
@@ -79,10 +81,10 @@ export function LogCard({
           </div>
         </div>
 
-        <div className="shrink-0 rounded-full bg-foreground/5 px-3 py-2 text-xs font-medium text-muted-foreground">
+        <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
           {formatTimestamp(createdAt)}
         </div>
       </div>
-    </article>
+    </button>
   );
 }
