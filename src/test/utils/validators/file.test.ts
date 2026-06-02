@@ -52,7 +52,8 @@ describe('File Validators', () => {
 
     it('deve retornar erro para formato inválido', () => {
       const invalidType = new File([''], 'test.txt', { type: 'text/plain' });
-      expect(validateFile(invalidType)).toBe("Formato inválido. Use apenas .jpg, .jpeg ou .png.");
+      // Atualizado para refletir a nova validação que aceita DICOM
+      expect(validateFile(invalidType)).toBe("Formato inválido. Use apenas .jpg, .jpeg, .png ou .dcm.");
     });
 
     it('deve retornar erro para tamanho excedido', () => {

@@ -1,174 +1,83 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import NovoExame from '@/features/criacao-exames/routes/NovoExame';
-import { useCreateExam } from '@/features/criacao-exames/hooks/useCreateExam';
-import { toast } from 'sonner';
-import { MemoryRouter } from 'react-router';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import NovoExame from '@/features/criacao-exames/routes/NovoExame'; 
+import { useNovoExame } from '@/features/criacao-exames/hooks/useNovoExame';
 
-const mocks = vi.hoisted(() => ({
-  mutateAsync: vi.fn(),
-  navigate: vi.fn(),
-}));
+// Mantemos APENAS o mock do Hook (Cérebro). 
+// Removemos os mocks dos componentes filhos, deixando o React renderizar a UI real.
+vi.mock('@/features/criacao-exames/hooks/useNovoExame');
 
-vi.mock('@/features/criacao-exames/hooks/useCreateExam', () => ({
-  useCreateExam: vi.fn(),
-}));
+describe('NovoExame Orquestrador', () => {
+  const mockUseNovoExame = vi.mocked(useNovoExame);
 
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router');
-
-  return {
-    ...actual,
-    useNavigate: () => mocks.navigate,
-  };
-});
-
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
-const fillBaseForm = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.type(
-    screen.getByPlaceholderText('Digite o nome completo do paciente'),
-    'Maria da Silva'
-  );
-
-  fireEvent.change(screen.getByLabelText('Data de nascimento'), {
-    target: { value: '1990-01-15' },
-  });
-  await user.selectOptions(screen.getByLabelText('Sexo'), 'FEMININO');
-  await user.type(screen.getByPlaceholderText('000.000.000-00'), '12345678901');
-
-  await user.click(screen.getByRole('checkbox', { name: 'Diabetes' }));
-  await user.type(screen.getByLabelText('Quantos anos'), '12');
-  await user.click(screen.getByRole('checkbox', { name: 'Uso de insulina' }));
-
-  await user.click(screen.getByRole('checkbox', { name: 'Alta miopia' }));
-  await user.click(screen.getByRole('checkbox', { name: 'Sim' }));
-
-  await user.type(
-    screen.getByPlaceholderText(/motivo do exame/i),
-    'Paciente com visão turva'
-  );
-};
-
-describe('NovoExame', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    vi.mocked(useCreateExam).mockReturnValue({
-      mutateAsync: mocks.mutateAsync,
-      isPending: false,
-    } as any);
-  });
-
-  it('envia o formulário com payload correto e redireciona no sucesso', async () => {
-    const user = userEvent.setup();
-
-    mocks.mutateAsync.mockResolvedValue({ id: 'exam-1' });
-
-    render(
-      <MemoryRouter>
-        <NovoExame />
-      </MemoryRouter>
-    );
-
-    await fillBaseForm(user);
-    await user.click(screen.getByRole('button', { name: 'Continuar' }));
-
-    await waitFor(() => {
-      expect(mocks.mutateAsync).toHaveBeenCalledTimes(1);
-    });
-
-    const payload = mocks.mutateAsync.mock.calls[0][0];
-
-    expect(payload).toEqual({
-      nomeCompleto: 'Maria da Silva',
-      cpf: '12345678901',
-      sexo: 'FEMININO',
-      dtNascimento: '1990-01-15',
-      dtHora: expect.any(String),
-      comorbidades: expect.objectContaining({
-        diabetes: true,
-        diabetesAnos: 12,
-        diabetesUsoInsulina: true,
-        altaMiopia: true,
-        qualidadeTecnicaDificuldade: true,
-      }),
-      descricao: 'Paciente com visão turva',
-    });
-    expect(new Date(payload.dtHora).toString()).not.toBe('Invalid Date');
-
-    expect(toast.success).toHaveBeenCalledWith(
-      'Exame criado com sucesso. Redirecionando para upload...'
-    );
-    expect(mocks.navigate).toHaveBeenCalledWith('/exames/upload/exam-1');
-  });
-
-  it('mostra erro quando a API falha', async () => {
-    const user = userEvent.setup();
-
-    mocks.mutateAsync.mockRejectedValue({
-      response: {
-        data: {
-          message: 'Erro ao criar exame.',
-          errors: {
-            cpf: ['CPF inválido.'],
-          },
-        },
+    
+    // Retorno padrão do hook (Cenário Inicial - Etapa UPLOAD)
+    mockUseNovoExame.mockReturnValue({
+      step: 'UPLOAD',
+      setStep: vi.fn(),
+      isDicom: false,
+      formData: {
+        nomeCompleto: '', 
+        dataNascimento: '', 
+        sexo: '' as any, 
+        cpf: '', 
+        comorbidades: {
+          diabetes: false, diabetesUsoInsulina: false, diabetesControlado: false,
+          hipertensao: false, hipertensaoControlada: false, altaMiopia: false,
+          glaucoma: false, usoHidroxicloroquina: false, uveite: false, catarata: false,
+          outrasComorbidades: false, qualidadeTecnicaDificuldade: false,
+        } as any, 
+        descricao: ''
       },
+      setters: {
+        setNomeCompleto: vi.fn(), setDataNascimento: vi.fn(), setSexo: vi.fn(), 
+        setCpf: vi.fn(), setComorbidades: vi.fn(), setDescricao: vi.fn()
+      },
+      errors: { global: null, fields: {} },
+      clearFieldError: vi.fn(),
+      isPending: false,
+      isUploadingImagens: false,
+      canProceedToForm: false,
+      canSubmitFinal: false,
+      handleImageChange: vi.fn(),
+      handleUploadAndNext: vi.fn(),
+      handleCreateExam: vi.fn(),
     });
-
-    render(
-      <MemoryRouter>
-        <NovoExame />
-      </MemoryRouter>
-    );
-
-    await fillBaseForm(user);
-    await user.click(screen.getByRole('button', { name: 'Continuar' }));
-
-    expect(await screen.findAllByText('CPF inválido.')).toHaveLength(2);
-    expect(toast.error).toHaveBeenCalledWith('CPF inválido.');
-    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
-  it('desabilita o botão quando a mutation está pendente', () => {
-    vi.mocked(useCreateExam).mockReturnValue({
-      mutateAsync: mocks.mutateAsync,
-      isPending: true,
-    } as any);
-
-    render(
-      <MemoryRouter>
-        <NovoExame />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByRole('button', { name: 'Salvando...' })).toBeDisabled();
+  it('deve renderizar a etapa de UPLOAD e o subtítulo correto no estado inicial', () => {
+    render(<NovoExame />);
+    
+    // Valida Header
+    expect(screen.getByText('Novo Exame')).toBeDefined();
+    expect(screen.getByText('Inicie fazendo o upload das imagens da retina.')).toBeDefined();
+    
+    // Valida que o UploadStep REAL foi renderizado (procurando um texto exclusivo dele)
+    expect(screen.getByText('Olho Direito (OD)')).toBeDefined();
+    
+    // Garante que o Formulário NÃO está na tela
+    expect(screen.queryByLabelText('Nome do Paciente')).toBeNull();
   });
 
-  it('navega para upload page com exam id após criar exame com sucesso', async () => {
-    const user = userEvent.setup();
-    const examId = '550e8400-e29b-41d4-a716-446655440000';
-
-    mocks.mutateAsync.mockResolvedValue({ id: examId });
-
-    render(
-      <MemoryRouter>
-        <NovoExame />
-      </MemoryRouter>
-    );
-
-    await fillBaseForm(user);
-    await user.click(screen.getByRole('button', { name: 'Continuar' }));
-
-    await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith(`/exames/upload/${examId}`);
+  it('deve renderizar a etapa de FORM e o subtítulo correto quando step for alterado', () => {
+    // Simula o hook avançando o state da tela para 'FORM'
+    mockUseNovoExame.mockReturnValue({
+      ...mockUseNovoExame(),
+      step: 'FORM'
     });
+
+    render(<NovoExame />);
+    
+    // Valida Header
+    expect(screen.getByText('Novo Exame')).toBeDefined();
+    expect(screen.getByText('Revise e complete os dados do paciente (opcional).')).toBeDefined();
+    
+    // Valida que o FormularioStep REAL foi renderizado (procurando o input de Nome)
+    expect(screen.getByLabelText('Nome do Paciente')).toBeDefined();
+    
+    // Garante que o componente de Upload NÃO está mais na tela
+    expect(screen.queryByText('Olho Direito (OD)')).toBeNull();
   });
 });

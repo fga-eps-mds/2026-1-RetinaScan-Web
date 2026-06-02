@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Login from '@/features/auth/routes/Login';
 
 const mocks = vi.hoisted(() => ({
@@ -48,13 +49,34 @@ vi.mock('@/components/ui/checkbox', () => ({
   ),
 }));
 
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+}
+
+function renderWithQueryClient(ui: React.ReactNode) {
+  const queryClient = createTestQueryClient();
+
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  );
+}
+
 describe('Login', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renderiza os campos e botão de login', () => {
-    render(<Login />);
+    renderWithQueryClient(<Login />);
 
     expect(screen.getByText(/entrar na plataforma/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/seu@email.com/i)).toBeInTheDocument();
@@ -68,7 +90,7 @@ describe('Login', () => {
     const user = userEvent.setup();
     mocks.signInEmail.mockResolvedValue({ error: null });
 
-    render(<Login />);
+    renderWithQueryClient(<Login />);
 
     await user.type(
       screen.getByPlaceholderText(/seu@email.com/i),
@@ -94,7 +116,7 @@ describe('Login', () => {
       error: { message: 'Credenciais inválidas' },
     });
 
-    render(<Login />);
+    renderWithQueryClient(<Login />);
 
     await user.type(
       screen.getByPlaceholderText(/seu@email.com/i),
@@ -117,7 +139,7 @@ describe('Login', () => {
     const user = userEvent.setup();
     mocks.signInEmail.mockRejectedValue(new Error('network'));
 
-    render(<Login />);
+    renderWithQueryClient(<Login />);
 
     await user.type(
       screen.getByPlaceholderText(/seu@email.com/i),

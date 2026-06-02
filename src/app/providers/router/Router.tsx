@@ -16,17 +16,14 @@ const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
-const HistoricoExame = lazy(
-  () => import('@/features/historico-exames/routes/HistoricoExame')
-);
-const Notificacoes = lazy(
-  () => import('@/features/notificacoes/routes/Notificacoes')
-);
+const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/HistoricoExame'));
+const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
+const Logs = lazy(() => import('@/features/logsPage/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
-const UploadExame = lazy(
-  () => import('@/features/criacao-exames/routes/UploadExame')
-);
 const Loading = lazy(() => import('@/components/layout/loading/Loading'));
+const PasswordReset = lazy(
+  () => import('@/features/auth/routes/PasswordReset')
+);
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<Loading />}>
@@ -43,6 +40,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
   {
     path: '/exames',
     element: (
@@ -64,14 +62,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowed_roles={['MEDICO']}>
         <AppLayout>{withSuspense(NovoExame)}</AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/exames/upload/:id',
-    element: (
-      <ProtectedRoute allowed_roles={['MEDICO']}>
-        <AppLayout>{withSuspense(UploadExame)}</AppLayout>
       </ProtectedRoute>
     ),
   },
@@ -100,7 +90,19 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/logs',
+    element: (
+      <ProtectedRoute allowed_roles={['ADMIN']}>
+        <AppLayout>{withSuspense(Logs)}</AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/login',
     element: withSuspense(Login),
+  },
+  {
+    path: '/reset-password',
+    element: withSuspense(PasswordReset),
   },
 ]);
