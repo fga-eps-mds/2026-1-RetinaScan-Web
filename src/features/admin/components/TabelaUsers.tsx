@@ -9,12 +9,11 @@ import { ListaVazia } from './ListaVazia';
 import { FeedbackBuscando } from './FeedbackBuscando';
 import type { User } from '../types/user';
 
-
 interface TabelaUsersProps {
   users: User[];
   isLoading: boolean;
   isError: boolean;
-  error: unknown; // Adicionado aqui para bater com o ControleUsuarios
+  error: unknown; 
   isFetching: boolean;
   isFetched: boolean;
   isTyping: boolean;
@@ -29,7 +28,7 @@ const TabelaUsers = ({
   isFetching,
   isFetched,
   isTyping,
-  busca = '', // Valor padrão inicializado para evitar o erro do .trim()
+  busca = '',
   onBuscaChange,
 }: TabelaUsersProps) => {
 
@@ -63,7 +62,8 @@ const TabelaUsers = ({
             <TableHead className="font-semibold">Nome</TableHead>
             <TableHead className="font-semibold">E-mail</TableHead>
             <TableHead className="font-semibold">CRM</TableHead>
-            <TableHead className="font-semibold">Cadastro</TableHead>
+            <TableHead className="font-semibold text-center">Perfil</TableHead>
+            <TableHead className="font-semibold text-center">Cadastro</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Ações</TableHead>
           </TableRow>
@@ -71,11 +71,11 @@ const TabelaUsers = ({
 
         <TableBody>
           {isFirstLoad && (
-            <TableRow><TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">Carregando...</TableCell></TableRow>
+            <TableRow><TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">Carregando...</TableCell></TableRow>
           )}
 
           {!isFirstLoad && isError && (
-            <TableRow><TableCell colSpan={7} className="py-12 text-center text-sm text-destructive font-medium">Erro ao carregar médicos cadastrados.</TableCell></TableRow>
+            <TableRow><TableCell colSpan={8} className="py-12 text-center text-sm text-destructive font-medium">Erro ao carregar médicos cadastrados.</TableCell></TableRow>
           )}
 
           {mostrarListaVazia && <ListaVazia temFiltroAtivo={temFiltroAtivo} />}
@@ -86,6 +86,17 @@ const TabelaUsers = ({
               <TableCell className="text-center text-md text-muted-foreground">{user.nomeCompleto}</TableCell>
               <TableCell className="text-center text-md text-muted-foreground">{user.email}</TableCell>
               <TableCell className="text-center text-md text-muted-foreground">{user.crm ?? '-'}</TableCell>
+              <TableCell className="text-center">
+                {user.tipoPerfil === 'ESPECIALISTA' ? (
+                  <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md text-md whitespace-nowrap">
+                    Especialista
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="px-3 py-1 rounded-md text-md whitespace-nowrap">
+                    Médico
+                  </Badge>
+                )}
+              </TableCell>
               <TableCell className="text-center text-md text-muted-foreground py-7">
                 {new Intl.DateTimeFormat('pt-BR').format(new Date(user.createdAt))}
               </TableCell>
