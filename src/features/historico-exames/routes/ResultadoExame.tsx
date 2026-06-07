@@ -2,10 +2,11 @@ import { CardDetalhes } from '../components/CardDetalhes';
 import { CardResultado } from '../components/CardResultado';
 import { CardImagens } from '../components/CardImagens';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, DownloadIcon, LoaderCircle, Share2 } from 'lucide-react';
+import { ArrowLeft, DownloadIcon, LoaderCircle, Share2} from 'lucide-react';
 import { useParams, useNavigate } from 'react-router';
 import { useGetResultadoExame } from '../hooks/useGetResultadoExame';
 import { CardComorbidades } from '../components/CardComorbidades';
+import { CardLaudo } from '../components/CardLaudo';
 
 const ResultadoExame = () => {
   const { id } = useParams();
@@ -89,12 +90,17 @@ const ResultadoExame = () => {
             <CardResultado payload={data} />
           </div>
 
+
           <div className="h-full">
             <CardDetalhes exame={data.exam} />
           </div>
 
           <div className="h-full">
             <CardComorbidades comorbidades={data.exam.comorbidades} />
+          </div>
+
+                    <div className="lg:col-span-2">
+            <CardLaudo />
           </div>
         </div>
       </div>
