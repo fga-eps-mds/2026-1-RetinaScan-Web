@@ -16,8 +16,12 @@ const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
-const HistoricoExame  = lazy(() => import('@/features/historico-exames/routes/HistoricoExame'));
-const Notificacoes = lazy(() => import('@/features/notificacoes/routes/Notificacoes'));
+const HistoricoExame = lazy(
+  () => import('@/features/historico-exames/routes/HistoricoExame')
+);
+const Notificacoes = lazy(
+  () => import('@/features/notificacoes/routes/Notificacoes')
+);
 const Logs = lazy(() => import('@/features/logsPage/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
 const Loading = lazy(() => import('@/components/layout/loading/Loading'));
@@ -35,7 +39,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO', 'ESPECIALISTA']}>
         <AppLayout>{withSuspense(Home)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -44,7 +48,7 @@ export const router = createBrowserRouter([
   {
     path: '/exames',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO', 'ESPECIALISTA']}>
         <AppLayout>{withSuspense(HistoricoExame)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -52,7 +56,7 @@ export const router = createBrowserRouter([
   {
     path: '/exames/:id',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO', 'ESPECIALISTA']}>
         <AppLayout>{withSuspense(Exames)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -68,7 +72,7 @@ export const router = createBrowserRouter([
   {
     path: '/fila',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO', 'ESPECIALISTA']}>
         <AppLayout>{withSuspense(Fila)}</AppLayout>
       </ProtectedRoute>
     ),
@@ -84,7 +88,7 @@ export const router = createBrowserRouter([
   {
     path: '/notificacoes',
     element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO']}>
+      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO', 'ESPECIALISTA']}>
         <AppLayout>{withSuspense(Notificacoes)}</AppLayout>
       </ProtectedRoute>
     ),
