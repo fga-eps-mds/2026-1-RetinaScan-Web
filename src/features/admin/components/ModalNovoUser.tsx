@@ -1,5 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +55,9 @@ const ModalNovoUser = ({
   const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [tipoPerfil, setTipoPerfil] = useState<'MEDICO' | 'ESPECIALISTA'>(
+    'MEDICO'
+  );
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -60,6 +71,7 @@ const ModalNovoUser = ({
     setBirthDate('');
     setPassword('');
     setConfirmPassword('');
+    setTipoPerfil('MEDICO');
     setError(null);
     setFieldErrors({});
   };
@@ -91,7 +103,7 @@ const ModalNovoUser = ({
         crm: crm.toUpperCase(),
         dtNascimento: birthDate,
         senha: password,
-        tipoPerfil: 'MEDICO',
+        tipoPerfil,
       });
 
       toast.success('Usuário cadastrado com sucesso.');
@@ -99,7 +111,6 @@ const ModalNovoUser = ({
       resetForm();
       onUserCreated?.();
       onClose();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const { message, fieldErrors } = parseApiError(err?.response?.data);
 
@@ -160,6 +171,7 @@ const ModalNovoUser = ({
               required
             />
           </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-semibold">CPF</label>
@@ -237,6 +249,24 @@ const ModalNovoUser = ({
                   {fieldErrors.confirmPassword}
                 </p>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Perfil do Usuário</label>
+              <Select
+                value={tipoPerfil}
+                onValueChange={(value: 'MEDICO' | 'ESPECIALISTA') => setTipoPerfil(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o perfil" />
+                </SelectTrigger>
+                <SelectContent position="popper" sideOffset={4}>
+                  <SelectItem value="MEDICO">Médico</SelectItem>
+                  <SelectItem value="ESPECIALISTA">Médico Especialista</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
