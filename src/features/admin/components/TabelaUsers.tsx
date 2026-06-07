@@ -4,6 +4,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+// Importação do Select adicionada
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { ListaVazia } from './ListaVazia'; 
 import { FeedbackBuscando } from './FeedbackBuscando';
@@ -19,6 +21,9 @@ interface TabelaUsersProps {
   isTyping: boolean;
   busca: string;
   onBuscaChange: (value: string) => void;
+  // Novas props adicionadas aqui
+  filtroPerfil: string;
+  onFiltroPerfilChange: (value: string) => void; 
 }
 
 const TabelaUsers = ({
@@ -30,10 +35,12 @@ const TabelaUsers = ({
   isTyping,
   busca = '',
   onBuscaChange,
+  filtroPerfil,
+  onFiltroPerfilChange,
 }: TabelaUsersProps) => {
 
   const isFirstLoad = !isFetched && isLoading;
-  const temFiltroAtivo = Boolean(busca.trim());
+  const temFiltroAtivo = Boolean(busca.trim()) || filtroPerfil !== 'TODOS';
   const mostrarLoadingGeral = isTyping || (!isFirstLoad && isFetching);
   const mostrarListaVazia = !isFirstLoad && !isError && !mostrarLoadingGeral && users.length === 0;
 
@@ -41,15 +48,32 @@ const TabelaUsers = ({
     <div className="overflow-hidden rounded-xl p-8 border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 p-6">
         <h1 className="text-xl font-heading font-bold text-gray-900">Usuários Cadastrados</h1>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar por nome, e-mail ou CRM"
-            value={busca}
-            onChange={(e) => onBuscaChange(e.target.value)}
-            className="w-full pl-9 md:w-80 border-slate-200 h-12 pr-10"
-          />
+        
+        {/* Nova div que agrupa o Select e o Input */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          
+          <Select value={filtroPerfil} onValueChange={onFiltroPerfilChange}>
+            <SelectTrigger className="w-45 h-12 border-slate-200">
+              <SelectValue placeholder="Filtrar por Perfil" />
+            </SelectTrigger>
+            <SelectContent position="popper" sideOffset={4}>
+              <SelectItem value="TODOS">Todos os Perfis</SelectItem>
+              <SelectItem value="MEDICO">Apenas Médicos</SelectItem>
+              <SelectItem value="ESPECIALISTA">Apenas Especialistas</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="relative flex-1 md:flex-none">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por nome, e-mail ou CRM"
+              value={busca}
+              onChange={(e) => onBuscaChange(e.target.value)}
+              className="w-full pl-9 md:w-80 border-slate-200 h-12 pr-10"
+            />
+          </div>
+          
         </div>
       </div>
 

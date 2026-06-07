@@ -11,26 +11,36 @@ import { toast } from 'sonner';
 const ControleUsuarios = () => {
   const [openModalNovoUser, setOpenModalNovoUser] = useState(false);
   const [busca, setBusca] = useState('');
+  // 1. Novo estado para o filtro de perfil
+  const [filtroPerfil, setFiltroPerfil] = useState<string>('TODOS'); 
 
   const buscaDebounced = useDebouncedValue(busca, 400);
 
   // Mapeia os parâmetros da API sanitizando inputs parciais para evitar HTTP 400
   const filters = useMemo(() => {
     const valorLimpado = buscaDebounced.trim();
+    
+    // Preparando o objeto base do perfil
+    const perfilValue = filtroPerfil === 'TODOS' ? undefined : (filtroPerfil as 'MEDICO' | 'ESPECIALISTA');
 
-    if (!valorLimpado) return {};
+    if (!valorLimpado) {
+      return { tipoPerfil: perfilValue };
+    }
 
     const isNumeric = /^\d+$/.test(valorLimpado);
     // Regex estrita para garantir domínio completo antes de chavear para query de email
     const isCompleteEmail = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,8}$/.test(
       valorLimpado
     );
+    
     return {
       nome: !isNumeric && !isCompleteEmail ? valorLimpado : undefined,
       crm: isNumeric ? valorLimpado : undefined,
       email: isCompleteEmail ? valorLimpado : undefined,
+      // 2. Enviando o perfil junto com a busca
+      tipoPerfil: perfilValue, 
     };
-  }, [buscaDebounced]);
+  }, [buscaDebounced, filtroPerfil]); // 3. Adicionando o filtroPerfil nas dependências
 
   // Hook do TanStack Query para sincronização de estado assíncrono com cache
   const {
@@ -97,6 +107,9 @@ const ControleUsuarios = () => {
           isTyping={isTyping}
           busca={busca}
           onBuscaChange={(value: string) => setBusca(value)}
+          // 4. Passando o estado e a função para a Tabela renderizar o Select
+          filtroPerfil={filtroPerfil}
+          onFiltroPerfilChange={setFiltroPerfil} 
         />
 
         <ModalNovoUser
