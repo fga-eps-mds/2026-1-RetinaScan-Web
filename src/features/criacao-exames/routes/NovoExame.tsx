@@ -32,7 +32,7 @@ const NovoExame = () => {
           </p>
         </header>
 
-        {/* Orquestração dos Passos com o novo fluxo de processamento de imagens */}
+        {/* novo fluxo de processamento de imagens */}
         {step === 'UPLOAD' && (
           <UploadStep 
             canProceed={canProceedToForm}

@@ -4,6 +4,7 @@ export type SearchMedicosParams = {
   nome?: string;
   crm?: string;
   email?: string;
+  tipoPerfil?: 'MEDICO' | 'ESPECIALISTA';
 };
 
 export async function searchMedicos(params: SearchMedicosParams) {
