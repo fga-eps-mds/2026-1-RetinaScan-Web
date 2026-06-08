@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CardDetalhes } from '../components/CardDetalhes';
 import { CardResultado } from '../components/CardResultado';
 import { CardImagens } from '../components/CardImagens';
@@ -141,7 +141,7 @@ const ResultadoExame = () => {
     specialistReport?.specialistId != null &&
     specialistReport.specialistId === session?.user?.id;
 
-  // CORREÇÃO: reportCreatedAt inicializado de forma segura dentro do useMemo para evitar re-renders
+  // CORREÇÃO: Alinhando a dependência com o objeto especialista inferido pelo React Compiler
   const reportEditDeadline = useMemo(() => {
     const createdAtDate = specialistReport?.createdAt
       ? new Date(specialistReport.createdAt)
@@ -150,7 +150,7 @@ const ResultadoExame = () => {
     return createdAtDate
       ? new Date(createdAtDate.getTime() + REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000)
       : null;
-  }, [specialistReport?.createdAt]);
+  }, [specialistReport]);
 
   const isWithinEditWindow =
     !hasSpecialistReport || !reportEditDeadline || new Date() <= reportEditDeadline;
@@ -169,7 +169,7 @@ const ResultadoExame = () => {
     });
   }, [hasSpecialistReport, reportEditDeadline]);
 
-  // CORREÇÃO PRINCIPAL: O estado inicial do laudo é alimentado diretamente a partir da query, removendo o useEffect cascata
+  // CORREÇÃO PRINCIPAL: Sincronização limpa computada na montagem. O useEffect que alterava estado foi removido.
   const [laudo, setLaudo] = useState<LaudoValue>(() => {
     if (!specialistReport) {
       return { json: null, html: '', texto: '', resultadoIaValido: null };
@@ -189,28 +189,6 @@ const ResultadoExame = () => {
       resultadoIaValido: specialistReport.resultadoIaValido ?? null,
     };
   });
-
-  // Atualiza o estado caso a query mude ou seja feito o refetch após salvar
-  useEffect(() => {
-    if (!specialistReport) {
-      setLaudo({ json: null, html: '', texto: '', resultadoIaValido: null });
-      return;
-    }
-    setLaudo({
-      json: (() => {
-        try {
-          return typeof specialistReport.conteudo === 'string'
-            ? JSON.parse(specialistReport.conteudo)
-            : specialistReport.conteudo;
-        } catch {
-          return null;
-        }
-      })(),
-      html: specialistReport.html ?? '',
-      texto: specialistReport.texto ?? '',
-      resultadoIaValido: specialistReport.resultadoIaValido ?? null,
-    });
-  }, [specialistReport]);
 
   const { lockState } = useExamLock({
     examId: id,
@@ -249,7 +227,7 @@ const ResultadoExame = () => {
 
     if (hasSpecialistReport) {
       await updateReport(payload);
-      toast.success('Laudo updated');
+      toast.success('Laudo atualizado com sucesso!');
       return;
     }
 
@@ -336,7 +314,7 @@ const ResultadoExame = () => {
           </div>
 
           <div className="h-full">
-            <CardDetalhes exame={data.exam} />
+            <CardDetalhes examen={data.exam} />
           </div>
 
           <div className="h-full">
@@ -362,7 +340,9 @@ const ResultadoExame = () => {
                     editorNome={editorNome}
                   />
 
+                  {/* A key abaixo força a reinicialização síncrona do laudo se o id do laudo mudar, dispensando o useEffect de setState */}
                   <CardLaudo
+                    key={specialistReport?.id ?? 'novo-laudo'}
                     mode={hasSpecialistReport ? 'edit' : 'create'}
                     value={laudo}
                     onChange={setLaudo}
