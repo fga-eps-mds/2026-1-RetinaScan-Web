@@ -53,7 +53,9 @@ export function useExamLock({
     const releaseLock = () => {
       if (!isEditor) return;
       const url = `${import.meta.env.VITE_API_URL}/api/report/${examId}/lock`;
-      void fetch(url, {
+      
+      // CORREÇÃO SONAR: Removido operador 'void' em favor da chamada direta
+      fetch(url, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId }),
@@ -105,7 +107,7 @@ export function useExamLock({
       }
     };
 
-    void acquire();
+    acquire();
 
     // Garante release ao fechar aba/janela
     window.addEventListener('beforeunload', releaseLock);
@@ -121,7 +123,8 @@ export function useExamLock({
 
       // Navegação SPA: componente desmonta, faz release normal via axios
       if (isEditor) {
-        void api.delete(`/api/report/${examId}/lock`, { data: { sessionId } });
+        
+        api.delete(`/api/report/${examId}/lock`, { data: { sessionId } });
       }
 
       isEditor = false;
