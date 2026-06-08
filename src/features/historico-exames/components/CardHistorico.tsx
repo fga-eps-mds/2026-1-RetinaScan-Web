@@ -41,6 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge'; // Injetado
+import { authClient } from '@/lib/auth-client'; // Injetado
+import { useExamEditingLocks } from '../hooks/useExamEditingLocks'; // Injetado
 
 interface CardHistoricoProps {
   page?: number;
@@ -64,6 +67,10 @@ export function CardHistorico({
   const navigate = useNavigate();
   const [filtroStatus, setFiltroStatus] = useState<ExamStatusFilter>('all');
   const [busca, setBusca] = useState('');
+
+  // Identifica a sessão e se o usuário é ESPECIALISTA
+  const { data: session } = authClient.useSession();
+  const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';
 
   const buscaDebounced = useDebouncedValue(busca, 400);
 
@@ -108,8 +115,15 @@ export function CardHistorico({
     isError,
     isFetching,
     isFetched,
-    refetch,
+    refetch: refetchExames,
   } = useGetExams(params);
+
+  // Mapeia os IDs dos exames em exibição para verificar os locks coletivamente
+  const examIds = useMemo(() => exames.map((e) => e.id), [exames]);
+
+  // Hook que faz pooling das travas de edição ativas
+  const { data: editingLocks, refetch: refetchEditingLocks } =
+    useExamEditingLocks(examIds, isEspecialista);
 
   const { data: pagination, isFetching: isFetchingPagination } =
     useExamsPagination(params);
@@ -134,8 +148,13 @@ export function CardHistorico({
     !showBackgroundUpdating &&
     !hasData;
 
-  const handleRefresh = () => {
-    refetch();
+  // Atualiza as listagens normais e as atualizações de locks concorrentes em paralelo
+  const handleRefresh = async () => {
+    if (isEspecialista) {
+      await Promise.all([refetchExames(), refetchEditingLocks()]);
+      return;
+    }
+    await refetchExames();
   };
 
   const handlePreviousPage = () => {
@@ -338,6 +357,11 @@ export function CardHistorico({
                       ? Number(exame.scoreIA)
                       : null;
 
+                  // Extrai informações do lock concorrente para o respectivo exame da linha
+                  const lockInfo = editingLocks?.[exame.id];
+                  const isBeingEdited = lockInfo?.isBeingEdited ?? false;
+                  const editorNome = lockInfo?.editor?.nome ?? null;
+
                   return (
                     <TableRow
                       key={exame.id}
@@ -360,7 +384,30 @@ export function CardHistorico({
                       </TableCell>
 
                       <TableCell className="py-7 text-center text-md text-muted-foreground">
-                        {exame.id}
+                        <div className="flex items-center justify-center gap-2">
+                          <span>{exame.id}</span>
+
+                          {/* Renderiza a Tag "Em edição" dinâmica com Tooltip explicativo */}
+                          {isEspecialista && isBeingEdited && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Badge
+                                    variant="outline"
+                                    className="border-amber-300 bg-amber-50 text-amber-700"
+                                  >
+                                    Em edição
+                                  </Badge>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="border bg-white text-muted-foreground">
+                                {editorNome
+                                  ? `Em edição por ${editorNome}`
+                                  : 'Sendo editado por outro especialista'}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-center text-md font-medium text-muted-foreground">
