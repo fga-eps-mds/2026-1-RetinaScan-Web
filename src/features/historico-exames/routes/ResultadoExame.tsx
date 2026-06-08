@@ -21,11 +21,11 @@ const REPORT_EDIT_WINDOW_DAYS = Number(
 );
 
 interface HeaderBadgesProps {
-  canEditReport: boolean;
-  isEditor: boolean;
-  isBlocked: boolean;
-  editorNome: string | null;
-  hasSpecialistReport: boolean;
+  readonly canEditReport: boolean;
+  readonly isEditor: boolean;
+  readonly isBlocked: boolean;
+  readonly editorNome: string | null;
+  readonly hasSpecialistReport: boolean;
 }
 
 function HeaderBadges({
@@ -52,11 +52,11 @@ function HeaderBadges({
 }
 
 interface ReportInfoBannersProps {
-  hasSpecialistReport: boolean;
-  specialistReportName: string | null;
-  canEditExistingReport: boolean;
-  editWindowLabel: string | null;
-  isEditWindowExpired: boolean;
+  readonly hasSpecialistReport: boolean;
+  readonly specialistReportName: string | null;
+  readonly canEditExistingReport: boolean;
+  readonly editWindowLabel: string | null;
+  readonly isEditWindowExpired: boolean;
 }
 
 function ReportInfoBanners({
@@ -90,10 +90,10 @@ function ReportInfoBanners({
 }
 
 interface LockStatusBannersProps {
-  isLockLoading: boolean;
-  isBlocked: boolean;
-  isEditor: boolean;
-  editorNome: string | null;
+  readonly isLockLoading: boolean;
+  readonly isBlocked: boolean;
+  readonly isEditor: boolean;
+  readonly editorNome: string | null;
 }
 
 function LockStatusBanners({
@@ -314,7 +314,7 @@ const ResultadoExame = () => {
           </div>
 
           <div className="h-full">
-            <CardDetalhes examen={data.exam} />
+            <CardDetalhes exame={data.exam} />
           </div>
 
           <div className="h-full">
