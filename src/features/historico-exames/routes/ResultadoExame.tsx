@@ -20,7 +20,6 @@ const REPORT_EDIT_WINDOW_DAYS = Number(
   import.meta.env.VITE_SPECIALIST_REPORT_EDIT_WINDOW_DAYS ?? 0
 );
 
-/* Subcomponente isolado para reduzir Complexidade Cognitiva e simplificar Badges */
 interface HeaderBadgesProps {
   canEditReport: boolean;
   isEditor: boolean;
@@ -52,7 +51,6 @@ function HeaderBadges({
   return null;
 }
 
-/* Subcomponente isolado para mitigar a regra de ternários aninhados nas mensagens do Laudo */
 interface ReportInfoBannersProps {
   hasSpecialistReport: boolean;
   specialistReportName: string | null;
@@ -91,7 +89,6 @@ function ReportInfoBanners({
   );
 }
 
-/* Subcomponente isolado para as mensagens de estado da trava de concorrência */
 interface LockStatusBannersProps {
   isLockLoading: boolean;
   isBlocked: boolean;
@@ -136,13 +133,6 @@ const ResultadoExame = () => {
   const { data, isLoading, isError, isFetching, refetch } = useGetResultadoExame(id);
   const { data: session, isPending: isSessionPending } = authClient.useSession();
 
-  const [laudo, setLaudo] = useState<LaudoValue>({
-    json: null,
-    html: '',
-    texto: '',
-    resultadoIaValido: null,
-  });
-
   const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';
   const specialistReport = data?.exam.laudoEspecialista ?? null;
   const hasSpecialistReport = Boolean(specialistReport);
@@ -151,15 +141,16 @@ const ResultadoExame = () => {
     specialistReport?.specialistId != null &&
     specialistReport.specialistId === session?.user?.id;
 
-  const reportCreatedAt = specialistReport?.createdAt
-    ? new Date(specialistReport.createdAt)
-    : null;
-
+  // CORREÇÃO: reportCreatedAt inicializado de forma segura dentro do useMemo para evitar re-renders
   const reportEditDeadline = useMemo(() => {
-    return reportCreatedAt
-      ? new Date(reportCreatedAt.getTime() + REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+    const createdAtDate = specialistReport?.createdAt
+      ? new Date(specialistReport.createdAt)
       : null;
-  }, [reportCreatedAt]);
+
+    return createdAtDate
+      ? new Date(createdAtDate.getTime() + REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+      : null;
+  }, [specialistReport?.createdAt]);
 
   const isWithinEditWindow =
     !hasSpecialistReport || !reportEditDeadline || new Date() <= reportEditDeadline;
@@ -177,6 +168,49 @@ const ResultadoExame = () => {
       timeStyle: 'short',
     });
   }, [hasSpecialistReport, reportEditDeadline]);
+
+  // CORREÇÃO PRINCIPAL: O estado inicial do laudo é alimentado diretamente a partir da query, removendo o useEffect cascata
+  const [laudo, setLaudo] = useState<LaudoValue>(() => {
+    if (!specialistReport) {
+      return { json: null, html: '', texto: '', resultadoIaValido: null };
+    }
+    return {
+      json: (() => {
+        try {
+          return typeof specialistReport.conteudo === 'string'
+            ? JSON.parse(specialistReport.conteudo)
+            : specialistReport.conteudo;
+        } catch {
+          return null;
+        }
+      })(),
+      html: specialistReport.html ?? '',
+      texto: specialistReport.texto ?? '',
+      resultadoIaValido: specialistReport.resultadoIaValido ?? null,
+    };
+  });
+
+  // Atualiza o estado caso a query mude ou seja feito o refetch após salvar
+  useEffect(() => {
+    if (!specialistReport) {
+      setLaudo({ json: null, html: '', texto: '', resultadoIaValido: null });
+      return;
+    }
+    setLaudo({
+      json: (() => {
+        try {
+          return typeof specialistReport.conteudo === 'string'
+            ? JSON.parse(specialistReport.conteudo)
+            : specialistReport.conteudo;
+        } catch {
+          return null;
+        }
+      })(),
+      html: specialistReport.html ?? '',
+      texto: specialistReport.texto ?? '',
+      resultadoIaValido: specialistReport.resultadoIaValido ?? null,
+    });
+  }, [specialistReport]);
 
   const { lockState } = useExamLock({
     examId: id,
@@ -196,34 +230,11 @@ const ResultadoExame = () => {
   const shouldShowReadonlyCard = hasSpecialistReport && !canEditReport;
   const isCardDisabled = isBlocked || isLockLoading || isSavingReport;
 
-  // CORREÇÃO SONAR DA LINHA 330: Removido ternário aninhado em favor de uma constante síncrona e limpa
   const cardPlaceholder = useMemo(() => {
     if (isLockLoading) return 'Verificando disponibilidade...';
     if (isBlocked) return `Aguardando ${editorNome ?? 'outro especialista'} finalizar a edição`;
     return hasSpecialistReport ? 'Edite o laudo do especialista...' : 'Digite o laudo do especialista...';
   }, [isLockLoading, isBlocked, editorNome, hasSpecialistReport]);
-
-  useEffect(() => {
-    if (!specialistReport) {
-      setLaudo({ json: null, html: '', texto: '', resultadoIaValido: null });
-      return;
-    }
-
-    setLaudo({
-      json: (() => {
-        try {
-          return typeof specialistReport.conteudo === 'string'
-            ? JSON.parse(specialistReport.conteudo)
-            : specialistReport.conteudo;
-        } catch {
-          return null;
-        }
-      })(),
-      html: specialistReport.html ?? '',
-      texto: specialistReport.texto ?? '',
-      resultadoIaValido: specialistReport.resultadoIaValido ?? null,
-    });
-  }, [specialistReport]);
 
   const handleSubmitLaudo = async (value: LaudoValue) => {
     if (!id || value.resultadoIaValido === null || !canEditReport) return;
@@ -238,7 +249,7 @@ const ResultadoExame = () => {
 
     if (hasSpecialistReport) {
       await updateReport(payload);
-      toast.success('Laudo atualizado com sucesso!');
+      toast.success('Laudo updated');
       return;
     }
 
