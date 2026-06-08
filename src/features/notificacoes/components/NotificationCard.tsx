@@ -1,5 +1,6 @@
 import {
   BellRing,
+  Brain,
   CircleAlert,
   Eye,
   FileText,
@@ -16,7 +17,9 @@ export type NotificationType =
   | 'avaliacao_ia_atualizada'
   | 'avaliacao_ia_revisada_por_especialista'
   | 'status_solicitacao_cadastral_atualizado'
-  | 'avaliacao_ia_error';
+  | 'avaliacao_ia_error'
+  | 'laudo_especialista_criado'
+  | 'laudo_especialista_atualizado';
 
 type NotificationCardProps = {
   id: string;
@@ -92,6 +95,32 @@ const notificationVariants: Record<NotificationType, NotificationVariant> = {
     unreadCardClassName:
       'border-rose-300/80 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10',
     unreadDotClassName: 'bg-rose-500',
+  },
+  laudo_especialista_criado: {
+    label: 'Laudo especialista',
+    icon: Brain,
+    iconClassName: 'h-5 w-5 text-violet-600 dark:text-violet-400',
+    iconWrapperClassName: 'bg-violet-100 dark:bg-violet-500/15',
+    tagClassName:
+      'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-300',
+    cardClassName:
+      'border-violet-200/70 bg-gradient-to-r from-violet-50/80 to-card dark:border-violet-500/20 dark:from-violet-500/10 dark:to-card',
+    unreadCardClassName:
+      'border-violet-300/80 bg-violet-50 dark:border-violet-500/30 dark:bg-violet-500/10',
+    unreadDotClassName: 'bg-violet-500',
+  },
+  laudo_especialista_atualizado: {
+    label: 'Laudo Especialista atualizado',
+    icon: Brain,
+    iconClassName: 'h-5 w-5 text-violet-600 dark:text-violet-400',
+    iconWrapperClassName: 'bg-violet-100 dark:bg-violet-500/15',
+    tagClassName:
+      'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-300',
+    cardClassName:
+      'border-violet-200/70 bg-gradient-to-r from-violet-50/80 to-card dark:border-violet-500/20 dark:from-violet-500/10 dark:to-card',
+    unreadCardClassName:
+      'border-violet-300/80 bg-violet-50 dark:border-violet-500/30 dark:bg-violet-500/10',
+    unreadDotClassName: 'bg-violet-500',
   },
 };
 

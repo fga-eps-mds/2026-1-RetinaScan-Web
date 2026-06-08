@@ -40,6 +40,21 @@ type GetResultadoExameResponse = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resultadoIa: any;
   }[];
+  laudoEspecialista: {
+    id: string;
+    examId: string;
+    specialistId: string;
+    specialist: {
+      id: string;
+      nomeCompleto: string;
+    };
+    texto: string;
+    html: string;
+    conteudo: string;
+    resultadoIaValido: boolean;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
 };
 
 export async function getResultadoExame(
@@ -86,6 +101,23 @@ export async function getResultadoExame(
       id: data.medico.id,
       nomeCompleto: data.medico.nomeCompleto,
     },
+    laudoEspecialista: data.laudoEspecialista
+      ? {
+          id: data.laudoEspecialista.id,
+          examId: data.laudoEspecialista.examId,
+          specialistId: data.laudoEspecialista.specialistId,
+          specialist: {
+            id: data.laudoEspecialista.specialist.id,
+            nomeCompleto: data.laudoEspecialista.specialist.nomeCompleto,
+          },
+          texto: data.laudoEspecialista.texto,
+          html: data.laudoEspecialista.html,
+          conteudo: data.laudoEspecialista.conteudo,
+          resultadoIaValido: data.laudoEspecialista.resultadoIaValido,
+          createdAt: new Date(data.laudoEspecialista.createdAt),
+          updatedAt: new Date(data.laudoEspecialista.updatedAt),
+        }
+      : null,
   };
 
   const imagens = await Promise.all(

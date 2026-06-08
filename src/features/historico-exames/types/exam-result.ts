@@ -60,6 +60,23 @@ export type ExamResultExam = {
     id: string;
     nomeCompleto: string;
   };
+  laudoEspecialista: LaudoEspecialista | null;
+};
+
+export type LaudoEspecialista = {
+  id: string;
+  examId: string;
+  specialistId: string;
+  specialist: {
+    id: string;
+    nomeCompleto: string;
+  };
+  texto: string;
+  html: string;
+  conteudo: string;
+  resultadoIaValido: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type ExamResultPayload = {

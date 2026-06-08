@@ -20,7 +20,7 @@ const navItems = [
     to: '/',
     icon: LayoutDashboard,
     label: 'Dashboard',
-    allowed_roles: ['ADMIN', 'MEDICO'],
+    allowed_roles: ['ADMIN', 'MEDICO', 'ESPECIALISTA'],
   },
   {
     to: '/exames/novo',
@@ -32,7 +32,7 @@ const navItems = [
     to: '/exames',
     icon: Eye,
     label: 'Exames',
-    allowed_roles: ['ADMIN', 'MEDICO'],
+    allowed_roles: ['ADMIN', 'MEDICO', 'ESPECIALISTA'],
   },
   {
     to: '/admin/controle-usuarios',
@@ -44,7 +44,7 @@ const navItems = [
     to: '/notificacoes',
     icon: BellRing,
     label: 'Notificações',
-    allowed_roles: ['ADMIN', 'MEDICO'],
+    allowed_roles: ['ADMIN', 'MEDICO', 'ESPECIALISTA'],
   },
   {
     to: '/logs',
@@ -178,7 +178,7 @@ const SideBar = () => {
             </p>
           </div>
 
-          {sessionUser?.tipoPerfil === 'MEDICO' && (
+          {['MEDICO', 'ESPECIALISTA'].includes(userRole ?? '') && (
             <div className="ml-auto flex items-center justify-end">
               <Button
                 variant="ghost"
