@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import { CardLaudo } from '../components/CardLaudo';
+import { CardLaudo } from '../../../../features/historico-exames/components/CardLaudo';
 
 describe('CardLaudo', () => {
   it('renders action buttons and placeholder', async () => {
