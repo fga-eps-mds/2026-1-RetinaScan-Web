@@ -1,77 +1,131 @@
 // src/test/features/historico-exames/components/ResultadoExame.test.tsx
 import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import ResultadoExame from '@/features/historico-exames/routes/ResultadoExame';
+import * as useGetResultadoExameHook from '@/features/historico-exames/hooks/useGetResultadoExame';
 
-// Mock react-router
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router');
-  return {
-    ...actual,
-    useParams: () => ({ id: '1' }),
-  };
-});
-
-// CORREÇÃO: Usando o caminho absoluto do alias (@/) para garantir que o Vitest ache o hook e injete o mock
+// 1. Mock do hook de busca de dados
 vi.mock('@/features/historico-exames/hooks/useGetResultadoExame', () => ({
-  useGetResultadoExame: (id: string) => ({
-    data: {
-      exam: { 
-        id: id, 
-        comorbidades: [],
-        medico: {
-          nomeCompleto: 'Dr. Silva Sauro',
-        },
-        paciente: {
-          nomeCompleto: 'Paciente Teste da Silva',
-        }
-      },
-      imagens: [],
-    },
-    isLoading: false,
-    isError: false,
-    isFetching: false,
-  }),
+  useGetResultadoExame: vi.fn(),
 }));
 
-// Mocks complementares neutros para os subcomponentes internos de Lock
+// 2. Mocks dos subcomponentes estruturais para isolar o teste
+vi.mock('@/features/historico-exames/components/CardImagens', () => ({
+  CardImagens: () => <div data-testid="card-imagens-mock" />,
+  default: () => <div data-testid="card-imagens-mock" />,
+}));
+
+vi.mock('@/features/historico-exames/components/CardResultado', () => ({
+  CardResultado: () => <div data-testid="card-resultado-mock" />,
+  default: () => <div data-testid="card-resultado-mock" />,
+}));
+
+vi.mock('@/features/historico-exames/components/CardDetalhes', () => ({
+  CardDetalhes: () => <div data-testid="card-detalhes-mock" />,
+  default: () => <div data-testid="card-detalhes-mock" />,
+}));
+
+vi.mock('@/features/historico-exames/components/CardComorbidades', () => ({
+  CardComorbidades: () => <div data-testid="card-comorbidades-mock" />,
+  default: () => <div data-testid="card-comorbidades-mock" />,
+}));
+
+vi.mock('@/features/historico-exames/components/CardLaudo', () => ({
+  CardLaudo: () => <div data-testid="card-laudo-mock" />,
+  default: () => <div data-testid="card-laudo-mock" />,
+}));
+
+vi.mock('@/features/historico-exames/components/CardLaudoVisualizacao', () => ({
+  CardLaudoVisualizacao: () => <div data-testid="card-laudo-visualizacao-mock" />,
+  default: () => <div data-testid="card-laudo-visualizacao-mock" />,
+}));
+
+// 3. Mocks de infraestrutura (Lock e Auth)
 vi.mock('@/features/historico-exames/hooks/useExamLock', () => ({
   useExamLock: () => ({
     lockState: { status: 'editor' },
-    sessionId: 'mocked-session-id',
+    sessionId: 'mocked-session',
   }),
 }));
 
-vi.mock('@/features/historico-exames/hooks/useExamEditingLocks', () => ({
-  useExamEditingLocks: () => ({
-    data: {},
-    isLoading: false,
-  }),
-}));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-    mutations: { retry: false },
+vi.mock('@/lib/auth-client', () => ({
+  authClient: {
+    useSession: () => ({
+      data: { user: { id: 'usr-sp', tipoPerfil: 'ESPECIALISTA' } },
+      isPending: false,
+    }),
   },
-});
+}));
 
 describe('ResultadoExame', () => {
-  it('renderiza o cabeçalho, as ações principais e os cards da tela', () => {
-    render(
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+  });
+
+  const renderComponent = () => {
+    return render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ResultadoExame />
+        <MemoryRouter initialEntries={['/exames/EX-2026-0036']}>
+          <Routes>
+            <Route path="/exames/:id" element={<ResultadoExame />} />
+          </Routes>
         </MemoryRouter>
       </QueryClientProvider>
     );
+  };
 
-    // Agora o ID e as informações complementares renderizam sem ficar travado em loading
-    expect(screen.getByText(/Exame 1/i)).toBeInTheDocument();
+  it('deve renderizar o cabeçalho, as ações principais e os cards no estado de sucesso', async () => {
+    vi.mocked(useGetResultadoExameHook.useGetResultadoExame).mockReturnValue({
+      data: {
+        exam: {
+          id: 'EX-2026-0036',
+          status: 'CONCLUIDO',
+          laudoEspecialista: null, // Simula cenário sem laudo pré-existente
+        },
+        imagens: [],
+      },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    } as any);
+
+    renderComponent();
+
+    // Validações do cabeçalho e botões
+    expect(screen.getByRole('heading', { name: /exame ex-2026-0036/i })).toBeInTheDocument();
+    expect(screen.getByText('Detalhes e resultado do exame')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /baixar laudo/i })).toBeInTheDocument();
     
-    // Verifica a existência do botão principal de ação
-    expect(screen.getByText('Baixar Laudo')).toBeInTheDocument();
+    // Valida se as ramificações dos novos subcomponentes foram executadas
+    expect(screen.getByTestId('card-imagens-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('card-resultado-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('card-detalhes-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('card-comorbidades-mock')).toBeInTheDocument();
+    
+    // Valida a badge e o card de criação de laudo ativo (ramificação do Especialista)
+    expect(screen.getByText('Editando agora')).toBeInTheDocument();
+    expect(screen.getByTestId('card-laudo-mock')).toBeInTheDocument();
+  });
+
+  it('deve exibir feedback de erro caso a query falhe', () => {
+    vi.mocked(useGetResultadoExameHook.useGetResultadoExame).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: true,
+      isFetching: false,
+      refetch: vi.fn(),
+    } as any);
+
+    renderComponent();
+
+    expect(screen.getByText(/não foi possível carregar o resultado do exame/i)).toBeInTheDocument();
   });
 });
