@@ -44,12 +44,11 @@ export function CardLaudoVisualizacao({
         return generateHTML(jsonContent, [StarterKit]);
       }
     } catch {
-      // noop
+      // ignore
     }
 
-    if (html) return html;
-    if (texto) return `<p>${texto}</p>`;
-
+    if (html?.trim()) return html;
+    if (texto?.trim()) return `<p>${texto.replace(/\n/g, '<br/>')}</p>`;
     return '<p>Laudo não disponível.</p>';
   }, [conteudo, html, texto]);
 

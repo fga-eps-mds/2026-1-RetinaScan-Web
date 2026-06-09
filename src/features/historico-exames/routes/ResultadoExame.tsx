@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CardDetalhes } from '../components/CardDetalhes';
 import { CardResultado } from '../components/CardResultado';
 import { CardImagens } from '../components/CardImagens';
@@ -36,17 +36,31 @@ function HeaderBadges({
   hasSpecialistReport,
 }: HeaderBadgesProps) {
   if (canEditReport && isEditor) {
-    return <Badge variant="secondary" className="ml-2">Editando agora</Badge>;
+    return (
+      <Badge variant="secondary" className="ml-2">
+        Editando agora
+      </Badge>
+    );
   }
   if (canEditReport && isBlocked) {
     return (
-      <Badge variant="outline" className="ml-2 border-amber-300 bg-amber-50 text-amber-700">
+      <Badge
+        variant="outline"
+        className="ml-2 border-amber-300 bg-amber-50 text-amber-700"
+      >
         Em edição por {editorNome ?? 'outro especialista'}
       </Badge>
     );
   }
   if (hasSpecialistReport && !canEditReport) {
-    return <Badge variant="outline" className="ml-2 border-slate-300 bg-slate-50 text-slate-700">Laudo disponível</Badge>;
+    return (
+      <Badge
+        variant="outline"
+        className="ml-2 border-slate-300 bg-slate-50 text-slate-700"
+      >
+        Laudo disponível
+      </Badge>
+    );
   }
   return null;
 }
@@ -130,8 +144,10 @@ function LockStatusBanners({
 const ResultadoExame = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, isError, isFetching, refetch } = useGetResultadoExame(id);
-  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const { data, isLoading, isError, isFetching, refetch } =
+    useGetResultadoExame(id);
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
 
   const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';
   const specialistReport = data?.exam.laudoEspecialista ?? null;
@@ -148,17 +164,27 @@ const ResultadoExame = () => {
       : null;
 
     return createdAtDate
-      ? new Date(createdAtDate.getTime() + REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+      ? new Date(
+          createdAtDate.getTime() +
+            REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000
+        )
       : null;
   }, [specialistReport]);
 
   const isWithinEditWindow =
-    !hasSpecialistReport || !reportEditDeadline || new Date() <= reportEditDeadline;
+    !hasSpecialistReport ||
+    !reportEditDeadline ||
+    new Date() <= reportEditDeadline;
 
   const canCreateReport = isEspecialista && !hasSpecialistReport;
-  const canEditExistingReport = isEspecialista && hasSpecialistReport && isReportOwner && isWithinEditWindow;
+  const canEditExistingReport =
+    isEspecialista &&
+    hasSpecialistReport &&
+    isReportOwner &&
+    isWithinEditWindow;
   const canEditReport = canCreateReport || canEditExistingReport;
-  const isEditWindowExpired = hasSpecialistReport && isReportOwner && !isWithinEditWindow;
+  const isEditWindowExpired =
+    hasSpecialistReport && isReportOwner && !isWithinEditWindow;
 
   const editWindowLabel = useMemo(() => {
     if (!hasSpecialistReport || !reportEditDeadline) return null;
@@ -169,17 +195,38 @@ const ResultadoExame = () => {
     });
   }, [hasSpecialistReport, reportEditDeadline]);
 
-  // CORREÇÃO PRINCIPAL: Sincronização limpa computada na montagem. O useEffect que alterava estado foi removido.
-  const [laudo, setLaudo] = useState<LaudoValue>(() => {
+  const [laudo, setLaudo] = useState<LaudoValue>({
+    json: null,
+    html: '',
+    texto: '',
+    resultadoIaValido: null,
+  });
+
+  // Guarda o id do último laudo sincronizado para não sobrescrever edições locais
+  // em refetches que retornem o mesmo laudo.
+  const syncedReportIdRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    // Ainda sem dados — aguarda.
+    if (specialistReport === undefined) return;
+
+    // Laudo já foi sincronizado com este id; não sobrescreve edições locais.
+    if (syncedReportIdRef.current === (specialistReport?.id ?? null)) return;
+
+    syncedReportIdRef.current = specialistReport?.id ?? null;
+
     if (!specialistReport) {
-      return { json: null, html: '', texto: '', resultadoIaValido: null };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLaudo({ json: null, html: '', texto: '', resultadoIaValido: null });
+      return;
     }
-    return {
+
+    setLaudo({
       json: (() => {
         try {
           return typeof specialistReport.conteudo === 'string'
             ? JSON.parse(specialistReport.conteudo)
-            : specialistReport.conteudo;
+            : (specialistReport.conteudo ?? null);
         } catch {
           return null;
         }
@@ -187,8 +234,9 @@ const ResultadoExame = () => {
       html: specialistReport.html ?? '',
       texto: specialistReport.texto ?? '',
       resultadoIaValido: specialistReport.resultadoIaValido ?? null,
-    };
-  });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [specialistReport?.id]);
 
   const { lockState } = useExamLock({
     examId: id,
@@ -198,10 +246,13 @@ const ResultadoExame = () => {
   const isLockLoading = lockState.status === 'loading';
   const isEditor = lockState.status === 'editor';
   const isBlocked = lockState.status === 'blocked';
-  const editorNome = lockState.status === 'blocked' ? lockState.editorNome : null;
+  const editorNome =
+    lockState.status === 'blocked' ? lockState.editorNome : null;
 
-  const { mutateAsync: createReport, isPending: isCreatingReport } = useCreateSpecialistReport();
-  const { mutateAsync: updateReport, isPending: isUpdatingReport } = useUpdateSpecialistReport();
+  const { mutateAsync: createReport, isPending: isCreatingReport } =
+    useCreateSpecialistReport();
+  const { mutateAsync: updateReport, isPending: isUpdatingReport } =
+    useUpdateSpecialistReport();
 
   const isSavingReport = isCreatingReport || isUpdatingReport;
   const shouldShowEditableCard = canEditReport;
@@ -210,8 +261,11 @@ const ResultadoExame = () => {
 
   const cardPlaceholder = useMemo(() => {
     if (isLockLoading) return 'Verificando disponibilidade...';
-    if (isBlocked) return `Aguardando ${editorNome ?? 'outro especialista'} finalizar a edição`;
-    return hasSpecialistReport ? 'Edite o laudo do especialista...' : 'Digite o laudo do especialista...';
+    if (isBlocked)
+      return `Aguardando ${editorNome ?? 'outro especialista'} finalizar a edição`;
+    return hasSpecialistReport
+      ? 'Edite o laudo do especialista...'
+      : 'Digite o laudo do especialista...';
   }, [isLockLoading, isBlocked, editorNome, hasSpecialistReport]);
 
   const handleSubmitLaudo = async (value: LaudoValue) => {
@@ -250,7 +304,9 @@ const ResultadoExame = () => {
   if (isError || !data) {
     return (
       <div className="h-screen w-full overflow-y-auto p-8">
-        <p className="text-sm text-destructive">Não foi possível carregar o resultado do exame.</p>
+        <p className="text-sm text-destructive">
+          Não foi possível carregar o resultado do exame.
+        </p>
       </div>
     );
   }
@@ -282,7 +338,9 @@ const ResultadoExame = () => {
             />
           </div>
 
-          <p className="text-md text-muted-foreground">Detalhes e resultado do exame</p>
+          <p className="text-md text-muted-foreground">
+            Detalhes e resultado do exame
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-3 lg:justify-end">
@@ -291,7 +349,11 @@ const ResultadoExame = () => {
             Baixar Laudo
           </Button>
 
-          <Button type="button" variant="outline" className="gap-2 p-4 font-semibold">
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2 p-4 font-semibold"
+          >
             <Share2 className="h-4 w-4" />
             Compartilhar
           </Button>
@@ -321,49 +383,55 @@ const ResultadoExame = () => {
             <CardComorbidades comorbidades={data.exam.comorbidades} />
           </div>
 
-          {(isEspecialista || hasSpecialistReport) && data.exam.status === 'CONCLUIDO' && (
-            <div className="lg:col-span-2 space-y-4">
-              <ReportInfoBanners
-                hasSpecialistReport={hasSpecialistReport}
-                specialistReportName={specialistReport?.specialist?.nomeCompleto ?? null}
-                canEditExistingReport={canEditExistingReport}
-                editWindowLabel={editWindowLabel}
-                isEditWindowExpired={isEditWindowExpired}
-              />
-
-              {shouldShowEditableCard && (
-                <>
-                  <LockStatusBanners
-                    isLockLoading={isLockLoading}
-                    isBlocked={isBlocked}
-                    isEditor={isEditor}
-                    editorNome={editorNome}
-                  />
-
-                  {/* A key abaixo força a reinicialização síncrona do laudo se o id do laudo mudar, dispensando o useEffect de setState */}
-                  <CardLaudo
-                    key={specialistReport?.id ?? 'novo-laudo'}
-                    mode={hasSpecialistReport ? 'edit' : 'create'}
-                    value={laudo}
-                    onChange={setLaudo}
-                    onSubmit={handleSubmitLaudo}
-                    disabled={isCardDisabled}
-                    placeholder={cardPlaceholder}
-                  />
-                </>
-              )}
-
-              {shouldShowReadonlyCard && (
-                <CardLaudoVisualizacao
-                  especialistaNome={specialistReport?.specialist?.nomeCompleto}
-                  resultadoIaValido={specialistReport?.resultadoIaValido ?? null}
-                  html={specialistReport?.html}
-                  texto={specialistReport?.texto}
-                  conteudo={specialistReport?.conteudo}
+          {(isEspecialista || hasSpecialistReport) &&
+            data.exam.status === 'CONCLUIDO' && (
+              <div className="lg:col-span-2 space-y-4">
+                <ReportInfoBanners
+                  hasSpecialistReport={hasSpecialistReport}
+                  specialistReportName={
+                    specialistReport?.specialist?.nomeCompleto ?? null
+                  }
+                  canEditExistingReport={canEditExistingReport}
+                  editWindowLabel={editWindowLabel}
+                  isEditWindowExpired={isEditWindowExpired}
                 />
-              )}
-            </div>
-          )}
+
+                {shouldShowEditableCard && (
+                  <>
+                    <LockStatusBanners
+                      isLockLoading={isLockLoading}
+                      isBlocked={isBlocked}
+                      isEditor={isEditor}
+                      editorNome={editorNome}
+                    />
+
+                    <CardLaudo
+                      key={specialistReport?.id ?? 'novo-laudo'}
+                      mode={hasSpecialistReport ? 'edit' : 'create'}
+                      value={laudo}
+                      onChange={setLaudo}
+                      onSubmit={handleSubmitLaudo}
+                      disabled={isCardDisabled}
+                      placeholder={cardPlaceholder}
+                    />
+                  </>
+                )}
+
+                {shouldShowReadonlyCard && (
+                  <CardLaudoVisualizacao
+                    especialistaNome={
+                      specialistReport?.specialist?.nomeCompleto
+                    }
+                    resultadoIaValido={
+                      specialistReport?.resultadoIaValido ?? null
+                    }
+                    html={specialistReport?.html}
+                    texto={specialistReport?.texto}
+                    conteudo={specialistReport?.conteudo}
+                  />
+                )}
+              </div>
+            )}
         </div>
       </div>
     </div>
