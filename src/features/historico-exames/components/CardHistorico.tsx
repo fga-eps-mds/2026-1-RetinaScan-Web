@@ -58,7 +58,7 @@ export function CardHistorico() {
   const [filtroStatus, setFiltroStatus] = useState<ExamStatusFilter>('all');
   const [busca, setBusca] = useState('');
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 10;
 
   const { data: session } = authClient.useSession();
   const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';

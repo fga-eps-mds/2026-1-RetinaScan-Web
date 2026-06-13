@@ -17,7 +17,7 @@ export async function getExams(params: ExamsParams) {
   }
   if (params.status) searchParams.set('status', params.status);
   if (params.page) searchParams.set('page', params.page.toString());
-  searchParams.set('pageSize', '10');
+  if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
 
   const response = await api.get(`/api/exams?${searchParams.toString()}`);
 
