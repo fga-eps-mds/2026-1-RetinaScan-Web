@@ -18,6 +18,7 @@ import {
 } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import '@/features/historico-exames/styles/editor-style.css';
+import { LAUDO_TEMPLATE_HTML } from '@/utils/templates/laudo_template';
 
 export type LaudoValue = {
   json: JSONContent | null;
@@ -50,7 +51,12 @@ export function CardLaudo({
   onChange,
   onSubmit,
 }: CardLaudoProps) {
-  const initialValue = useMemo(() => value ?? EMPTY_VALUE, [value]);
+  const initialValue = useMemo(() => {
+    if (mode === 'edit') return value ?? EMPTY_VALUE;
+    if (value?.json || value?.html) return value;
+    return { ...EMPTY_VALUE, html: LAUDO_TEMPLATE_HTML };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const lastSyncedContentRef = useRef<string | null>(null);
 
   const [resultadoIaValido, setResultadoIaValido] = useState<boolean | null>(
@@ -60,14 +66,8 @@ export function CardLaudo({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
+        bulletList: { keepMarks: true, keepAttributes: false },
+        orderedList: { keepMarks: true, keepAttributes: false },
       }),
     ],
     content: initialValue.json ?? initialValue.html ?? '<p></p>',
@@ -112,37 +112,34 @@ export function CardLaudo({
   useEffect(() => {
     if (!editor) return;
 
+    // No modo create sem value externo, não sobrescreve o template
+    if (mode === 'create' && !value?.json && !value?.html) return;
+
     const incomingSerialized = value?.json
       ? JSON.stringify(value.json)
       : (value?.html ?? '<p></p>');
 
-    if (lastSyncedContentRef.current === incomingSerialized) {
-      return;
-    }
+    if (lastSyncedContentRef.current === incomingSerialized) return;
 
     if (value?.json) {
       const current = JSON.stringify(editor.getJSON());
-
       if (current !== incomingSerialized) {
         editor.commands.setContent(value.json, { emitUpdate: false });
       }
-
       lastSyncedContentRef.current = incomingSerialized;
       return;
     }
 
     if (typeof value?.html === 'string') {
       const currentHtml = editor.getHTML();
-
       if (currentHtml !== value.html) {
         editor.commands.setContent(value.html || '<p></p>', {
           emitUpdate: false,
         });
       }
-
       lastSyncedContentRef.current = incomingSerialized;
     }
-  }, [editor, value?.json, value?.html]);
+  }, [editor, value?.json, value?.html, mode]);
 
   const getCurrentValue = (
     nextResultadoIaValido = resultadoIaValido
