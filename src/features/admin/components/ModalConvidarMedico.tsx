@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Loader2, Mail, Send } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { FileSpreadsheet, Loader2, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import { useEnviarConvite } from '../hooks/useEnviarConvite';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,61 +13,94 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { parseArquivo } from '@/utils/files/parseArquivo';
 
 export default function ModalConvidarMedico() {
   const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Limpa o formulário e fecha o modal apenas após sucesso na mutação
-  const { mutate, isPending } = useEnviarConvite(() => {
-    setIsOpen(false);
-    setEmail('');
-  });
+  const { mutateAsync, isPending } = useEnviarConvite();
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
+  const limparArquivo = () => {
+    setFile(null);
+
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email.trim()) return;
 
-    // Estrutura de lote exigida pela API /api/inscricoes/convites
-    mutate({
-      convites: [{
-        email: email.trim(),
-        nome: "Médico Convidado", // Valor padrão conforme regra de negócio atual
-        tipoPerfil: 'MEDICO',
-      }]
-    });
+    if (!file) return;
+
+    try {
+      const convites = await parseArquivo(file);
+
+      if (!convites.length) {
+        throw new Error('Nenhuma linha válida encontrada no arquivo.');
+      }
+
+      await mutateAsync({ convites });
+
+      setIsOpen(false);
+      limparArquivo();
+    } catch (error) {
+      toast.error('Erro ao processar/enviar arquivo.', {
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Erro ao processar o arquivo.',
+      });
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+
+        if (!open) {
+          limparArquivo();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="secondary" className="gap-2 font-medium shadow-sm">
-          <Mail className="h-4 w-4" />
-          Convidar Médico
+          <FileSpreadsheet className="h-4 w-4" />
+          Enviar convites
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Enviar convite de cadastro</DialogTitle>
+          <DialogTitle>Enviar convites</DialogTitle>
           <DialogDescription>
-            Enviaremos um e-mail com um link seguro para o médico preencher seus
-            dados. O link expira em 7 dias.
+            Envie um arquivo Excel ou CSV com as colunas Nome, Email e Tipo de
+            Perfil.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail do médico</Label>
+            <Label htmlFor="arquivo-convites">Arquivo</Label>
             <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="exemplo@medico.com"
-              required
+              ref={inputRef}
+              id="arquivo-convites"
+              type="file"
+              accept=".xlsx,.xls,.csv"
               disabled={isPending}
+              onChange={(e) => {
+                const selectedFile = e.target.files?.[0] ?? null;
+                setFile(selectedFile);
+              }}
             />
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            Formatos aceitos: .xlsx, .xls e .csv
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -79,8 +112,8 @@ export default function ModalConvidarMedico() {
             >
               Cancelar
             </Button>
-            {/* O estado disabled evita submissões múltiplas durante o loading */}
-            <Button type="submit" disabled={isPending || !email}>
+
+            <Button type="submit" disabled={isPending || !file}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -89,7 +122,7 @@ export default function ModalConvidarMedico() {
               ) : (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Enviar convite
+                  Enviar convites
                 </>
               )}
             </Button>

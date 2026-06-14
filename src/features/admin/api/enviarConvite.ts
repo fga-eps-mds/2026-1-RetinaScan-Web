@@ -1,6 +1,5 @@
 import { api } from '@/shared/api';
 
-// Define o contrato de dados esperado pelo endpoint POST /api/inscricoes/convites
 export interface EnviarConvitePayload {
   convites: Array<{
     email: string;
@@ -9,12 +8,25 @@ export interface EnviarConvitePayload {
   }>;
 }
 
-/**
- * Dispara convites em lote. 
- * Nota: O backend valida duplicidade de e-mail antes do processamento.
- */
-export const enviarConvite = async (data: EnviarConvitePayload) => {
-  // Chamada direta conforme documentação da API de inscrições
-  const response = await api.post('/api/inscricoes/convites', data);
+export interface EnviarConviteDetalhe {
+  email: string;
+  status: 'enviado' | 'ignorado';
+  motivo?: string;
+}
+
+export interface EnviarConviteResponse {
+  enviados: number;
+  ignorados: number;
+  detalhes: EnviarConviteDetalhe[];
+}
+
+export const enviarConvite = async (
+  data: EnviarConvitePayload
+): Promise<EnviarConviteResponse> => {
+  const response = await api.post<EnviarConviteResponse>(
+    '/api/inscricoes/convites',
+    data
+  );
+
   return response.data;
 };
