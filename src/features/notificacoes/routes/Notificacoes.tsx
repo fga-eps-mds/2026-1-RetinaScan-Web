@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SolicitacoesMedico from '../components/SolicitacoesMedico';
 import SolicitacoesAdmin from '../components/SolicitacoesAdmin';
+import CadastrosAdmin from '../components/CadastrosAdmin';
 import { useSession } from '@/lib/auth-client';
 import type { NotificationStatusFilter } from '../api/listMyNotifications';
 import { useListNotifications } from '../hooks/useListNotifications';
@@ -88,6 +89,11 @@ export default function NotificationsPage() {
         <TabsList className="w-fit shrink-0">
           <TabsTrigger value="alertas">Alertas</TabsTrigger>
           <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
+          
+          {/* NOVA ABA PARA ADMIN */}
+          {userTipoPerfil === 'ADMIN' && (
+            <TabsTrigger value="cadastros">Inscrições</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent
@@ -199,6 +205,29 @@ export default function NotificationsPage() {
             </div>
           </div>
         </TabsContent>
+
+        {/* NOVO CONTEÚDO DA ABA DE CADASTROS */}
+        {userTipoPerfil === 'ADMIN' && (
+          <TabsContent
+            value="cadastros"
+            className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden"
+          >
+            <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6">
+              <header className="shrink-0 text-center">
+                <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
+                  Novas Inscrições
+                </h2>
+                <p className="text-md text-muted-foreground">
+                  Avalie as informações de médicos convidados e aprove o acesso.
+                </p>
+              </header>
+
+              <div className="flex-1 overflow-y-auto pr-2 scrollbar-transparent">
+                <CadastrosAdmin />
+              </div>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
