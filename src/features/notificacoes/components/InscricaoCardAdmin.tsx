@@ -8,9 +8,14 @@ type InscricaoCardAdminProps = {
   inscricao: InscricaoPendente;
 };
 
+/**
+ * Card administrativo para exibição e processamento de solicitações de inscrição.
+ * Gerencia a comunicação com o hook de avaliação e a exibição condicional de ações.
+ */
 export const InscricaoCardAdmin = ({ inscricao }: InscricaoCardAdminProps) => {
   const avaliarMutation = useAvaliarInscricao();
 
+  // Executa mutação de aprovação e gerencia feedbacks de UI
   const handleAccept = async () => {
     try {
       await avaliarMutation.mutateAsync({ id: String(inscricao.id), payload: { decisao: 'APROVADA' } });
@@ -20,6 +25,7 @@ export const InscricaoCardAdmin = ({ inscricao }: InscricaoCardAdminProps) => {
     }
   };
 
+  // Executa mutação de rejeição com motivo obrigatório
   const handleReject = async (motivo: string) => {
     try {
       await avaliarMutation.mutateAsync({ id: String(inscricao.id), payload: { decisao: 'REJEITADA', motivoRejeicao: motivo } });
@@ -35,7 +41,9 @@ export const InscricaoCardAdmin = ({ inscricao }: InscricaoCardAdminProps) => {
       title="Nova solicitação de cadastro"
       icon={UserPlus}
       status={inscricao.status}
+      // O layout habilita botões de ação apenas se o status for PENDENTE
       isPendingStatus={inscricao.status === 'PENDENTE'}
+      // Estados de carregamento vinculados à mutação global
       isAccepting={avaliarMutation.isPending && avaliarMutation.variables?.payload?.decisao === 'APROVADA'}
       isRejecting={avaliarMutation.isPending && avaliarMutation.variables?.payload?.decisao === 'REJEITADA'}
       onAccept={handleAccept}
@@ -47,7 +55,7 @@ export const InscricaoCardAdmin = ({ inscricao }: InscricaoCardAdminProps) => {
         acceptDesc: 'Ao aprovar, o usuário será criado efetivamente no sistema.',
       }}
     >
-      {/* OS DADOS ESPECÍFICOS DE INSCRIÇÃO ENTRAM AQUI */}
+      {/* Exibição dos dados do médico (Read-only) */}
       <div className="rounded-xl border bg-muted/30 p-4">
         <div className="mb-3 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -83,6 +91,16 @@ export const InscricaoCardAdmin = ({ inscricao }: InscricaoCardAdminProps) => {
           <p className="text-sm font-medium">{inscricao.crm || 'Não informado'}</p>
         </div>
       </div>
+
+      {/* Feedback visual para cards aguardando preenchimento externo */}
+      {inscricao.status === 'CONVITE_ENVIADO' && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+          <Mail className="h-4 w-4 shrink-0" />
+          <p>
+            Este médico foi convidado, mas ainda não completou o preenchimento dos dados.
+          </p>
+        </div>
+      )}
     </ActionCardLayout>
   );
 };

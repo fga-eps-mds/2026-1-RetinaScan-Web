@@ -4,6 +4,7 @@ import { useGetInscricoesPendentes } from '../hooks/useGetInscricoesPendentes';
 import { InscricaoCardAdmin } from './InscricaoCardAdmin';
 
 const CadastrosAdmin = () => {
+  // O hook gerencia o cache e o estado da requisição via react-query
   const {
     data: inscricoes = [],
     isPending,
@@ -11,6 +12,7 @@ const CadastrosAdmin = () => {
     error,
   } = useGetInscricoesPendentes();
 
+  // Estado de carregamento inicial
   if (isPending) {
     return (
       <div className="flex min-h-60 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
@@ -20,6 +22,7 @@ const CadastrosAdmin = () => {
     );
   }
 
+  // Tratamento de falhas na requisição (ex: rede ou erro de servidor)
   if (isError) {
     return (
       <Card className="border-destructive/20 bg-destructive/5">
@@ -35,6 +38,7 @@ const CadastrosAdmin = () => {
     );
   }
 
+  // Estado de lista vazia (UX: feedback visual de ausência de dados)
   if (inscricoes.length === 0) {
     return (
       <Card className="border-dashed border-border/80 bg-muted/20">
@@ -55,11 +59,12 @@ const CadastrosAdmin = () => {
     );
   }
 
+  // Renderização principal: lista de cards
   return (
     <div className="flex flex-col gap-4">
       {inscricoes.map((inscricao) => (
         <InscricaoCardAdmin
-          key={inscricao.id}
+          key={inscricao.id} // Chave única vital para a re-renderização eficiente do React
           inscricao={inscricao}
         />
       ))}

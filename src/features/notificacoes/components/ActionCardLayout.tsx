@@ -13,6 +13,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { getStatusBadge } from './GetStatusBadge';
 
+/**
+ * Layout reutilizável para cards de aprovação/rejeição.
+ * Centraliza a lógica de confirmação (AlertDialog) e estados de carregamento.
+ */
 type ActionCardLayoutProps = {
   id: string;
   title: string;
@@ -21,13 +25,11 @@ type ActionCardLayoutProps = {
   isPendingStatus: boolean;
   motivoRejeicaoSalvo?: string | null;
   
-  // Handlers e Loading
   isAccepting: boolean;
   isRejecting: boolean;
   onAccept: () => void;
   onReject: (motivo: string) => void;
 
-  // Textos customizados
   labels: {
     rejectTitle: string;
     rejectDesc: string;
@@ -35,7 +37,6 @@ type ActionCardLayoutProps = {
     acceptDesc: string;
   };
   
-  // O "recheio" do card (os dados específicos)
   children: React.ReactNode;
 };
 
@@ -44,6 +45,8 @@ export const ActionCardLayout = ({
   isAccepting, isRejecting, onAccept, onReject, labels, children,
 }: ActionCardLayoutProps) => {
   const [motivoRejeicao, setMotivoRejeicao] = useState('');
+  
+  // Bloqueia o botão de recusar se não houver texto
   const canReject = motivoRejeicao.trim().length > 0;
 
   const handleRejectClick = () => {
@@ -61,13 +64,13 @@ export const ActionCardLayout = ({
           </CardTitle>
           <CardDescription className="break-all">ID da solicitação: {id}</CardDescription>
         </div>
-            <div>{getStatusBadge(status as 'PENDENTE' | 'APROVADA' | 'REJEITADA')}</div>
-        </CardHeader>
+        <div>{getStatusBadge(status as 'PENDENTE' | 'APROVADA' | 'REJEITADA')}</div>
+      </CardHeader>
 
       <CardContent className="space-y-4">
         {children}
 
-        {/* Motivo Rejeição Exibição (Se já foi rejeitado antes) */}
+        {/* Exibe feedback de rejeições anteriores, se houver */}
         {motivoRejeicaoSalvo && (
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-destructive">Motivo da rejeição</p>
@@ -75,7 +78,7 @@ export const ActionCardLayout = ({
           </div>
         )}
 
-        {/* Input de Rejeição (Se estiver pendente) */}
+        {/* Campo de input condicional: visível apenas enquanto a inscrição está pendente */}
         {isPendingStatus && (
           <div className="space-y-2 rounded-lg border border-border/60 bg-background p-4">
             <Label htmlFor={`motivo-${id}`}>Motivo da rejeição</Label>
@@ -89,7 +92,7 @@ export const ActionCardLayout = ({
         )}
       </CardContent>
 
-      {/* Footer com Ações */}
+      {/* Footer condicional: botões de ação só aparecem em status pendente */}
       {isPendingStatus && (
         <CardFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <AlertDialog>
