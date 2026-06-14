@@ -9,7 +9,7 @@ interface MedicoBusca {
 
 interface SharePayload {
   email: string;
-  expiraEm: string | null; // caso tenha acesso permanente, expiraEm=null
+  expiraEm: string | null;
 }
 
 interface ShareResponse {
@@ -25,32 +25,32 @@ interface ShareResponse {
     linkAcesso: string;
   };
 }
-const USAR_MOCK_PARA_TESTE = true; // Toggle para alternar entre mock e API real
 
-// Busca por Nome, CRM ou E-mail
+// 🔘 MUDE PARA 'true' PARA TESTAR O FRONT-END COM O MOCK DO WHATSAPP
+const USAR_MOCK_PARA_TESTE = true;
+
+// 🔘 SE SELECIONAR 'true', VAI SIMULAR O ERRO 409 (CONFLITO). SE 'false', SIMULA SUCESSO.
+const SIMULAR_ERRO_CONFLITO = false;
+
 export function useSearchMedicos(searchTerm: string, enabled: boolean) {
   return useQuery<MedicoBusca[]>({
     queryKey: ['medicos-search', searchTerm],
     queryFn: async () => {
       if (!searchTerm) return [];
 
-      // Fluxo de simulação/mock para testes locais no Front-end
       if (USAR_MOCK_PARA_TESTE) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         return [
           {
-            id: "medico-teste-123",
-            nomeCompleto: "Dr. João Silva (Médico de Teste)",
+            id: "a1b2c3d4-mock",
+            nomeCompleto: "Dr. João Silva",
             email: "medico.solicitante@hospital.com",
-            crm: "667755/DF"
+            crm: "12345"
           }
         ];
       }
 
-      // Fluxo Oficial: Chamada real para a API integrada ao Banco de Dados
-      const response = await fetch(
-        `/api/medicos/search?tipoPerfil=MEDICO&q=${encodeURIComponent(searchTerm)}`
-      );
+      const response = await fetch(`/api/medicos/search?tipoPerfil=MEDICO&q=${encodeURIComponent(searchTerm)}`);
       if (!response.ok) throw new Error('Erro ao buscar médicos');
       return response.json();
     },
@@ -58,25 +58,35 @@ export function useSearchMedicos(searchTerm: string, enabled: boolean) {
   });
 }
 
-// Geração do Link de Compartilhamento Controlado
 export function useGenerateShareLink(examId: string | undefined) {
   return useMutation<ShareResponse, Error, SharePayload>({
     mutationFn: async (payload) => {
-      // Se estiver apenas testando visualmente, pode simular a resposta aqui também
+      
       if (USAR_MOCK_PARA_TESTE) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Simulação do Erro 409 Conflict enviado no WhatsApp
+        if (SIMULAR_ERRO_CONFLITO) {
+          throw new Error("Este exame já está compartilhado com o Dr. João Silva e o acesso ainda está ativo.");
+        }
+
+        // Simulação do Caso de Sucesso enviado no WhatsApp
         return {
           message: "Exame compartilhado com sucesso.",
           data: {
-            idCompartilhamento: "mock-id-123",
+            idCompartilhamento: "f7b2c9a1-8d3e-4b5c-9f1a-2d3e4f5a6b7c",
             exameId: examId ?? "12345",
-            medicoDestino: { id: "medico-teste-123", crm: "667755/DF" },
+            medicoDestino: {
+              id: "a1b2c3d4-...",
+              crm: "12345"
+            },
             expiraEm: payload.expiraEm,
-            linkAcesso: `https://app.retinascan.dev/exames/${examId}`
+            linkAcesso: `https://app.retinascan.dev/exames/${examId ?? '12345'}`
           }
         };
       }
 
+      // Chamada real à API quando estiver online
       const response = await fetch(`/api/exames/${examId}/compartilhamentos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
