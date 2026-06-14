@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCreateSpecialistReport } from '../hooks/useCreateSpecialistReport';
 import { toast } from 'sonner';
 import { useUpdateSpecialistReport } from '../hooks/useUpdateSpecialistReport';
+import { ModalCompartilhar } from '../components/ModalCompartilhar';
 
 const REPORT_EDIT_WINDOW_DAYS = Number(
   import.meta.env.VITE_SPECIALIST_REPORT_EDIT_WINDOW_DAYS ?? 0
@@ -144,6 +145,9 @@ function LockStatusBanners({
 const ResultadoExame = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
   const { data, isLoading, isError, isFetching, refetch } =
     useGetResultadoExame(id);
   const { data: session, isPending: isSessionPending } =
@@ -157,7 +161,6 @@ const ResultadoExame = () => {
     specialistReport?.specialistId != null &&
     specialistReport.specialistId === session?.user?.id;
 
-  // CORREÇÃO: Alinhando a dependência com o objeto especialista inferido pelo React Compiler
   const reportEditDeadline = useMemo(() => {
     const createdAtDate = specialistReport?.createdAt
       ? new Date(specialistReport.createdAt)
@@ -353,6 +356,7 @@ const ResultadoExame = () => {
             type="button"
             variant="outline"
             className="gap-2 p-4 font-semibold"
+            onClick={() => setIsShareModalOpen(true)}
           >
             <Share2 className="h-4 w-4" />
             Compartilhar
@@ -434,6 +438,14 @@ const ResultadoExame = () => {
             )}
         </div>
       </div>
+
+      {id && (
+        <ModalCompartilhar
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          examId={id}
+        />
+      )}
     </div>
   );
 };
