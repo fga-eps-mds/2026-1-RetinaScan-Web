@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCreateSpecialistReport } from '../hooks/useCreateSpecialistReport';
 import { toast } from 'sonner';
 import { useUpdateSpecialistReport } from '../hooks/useUpdateSpecialistReport';
+import { useDownloadLaudo } from '../hooks/useDownloadLaudo';
 
 const REPORT_EDIT_WINDOW_DAYS = Number(
   import.meta.env.VITE_SPECIALIST_REPORT_EDIT_WINDOW_DAYS ?? 0
@@ -144,6 +145,7 @@ function LockStatusBanners({
 const ResultadoExame = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { handleDownload, isDownloading } = useDownloadLaudo();
   const { data, isLoading, isError, isFetching, refetch } =
     useGetResultadoExame(id);
   const { data: session, isPending: isSessionPending } =
@@ -344,11 +346,26 @@ const ResultadoExame = () => {
         </div>
 
         <div className="flex flex-wrap gap-3 lg:justify-end">
-          <Button type="button" className="gap-2 p-4 font-semibold">
-            <DownloadIcon className="h-4 w-4" />
-            Baixar Laudo
-          </Button>
-
+          <Button 
+          type="button" 
+          className="gap-2 p-4 font-semibold"
+          disabled={!hasSpecialistReport || isDownloading}
+          onClick={() => {
+            if (id) handleDownload(id, `laudo_exame_${id}.pdf`);
+          }}
+          >
+            {isDownloading ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                Baixando...
+              </>
+            ) : (
+              <>
+                <DownloadIcon className="h-4 w-4" />
+                Baixar Laudo
+              </>
+            )}
+        </Button>
           <Button
             type="button"
             variant="outline"
