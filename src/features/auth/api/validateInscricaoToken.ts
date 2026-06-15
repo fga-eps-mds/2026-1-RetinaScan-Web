@@ -13,21 +13,21 @@ type ApiErrorResponse = {
 };
 
 export async function validateInscricaoToken(
-  token: string,
+  token: string
 ): Promise<ValidateInscricaoTokenResponse> {
   try {
     const { data } = await api.get<ValidateInscricaoTokenResponse>(
-      `/api/inscricoes/convites/${encodeURIComponent(token)}`,
+      `/api/inscricoes/convites/${encodeURIComponent(token)}`
     );
 
     return data;
   } catch (error: unknown) {
     if (axios.isAxiosError<ApiErrorResponse>(error)) {
       throw new Error(
-        error.response?.data?.message || 'Link inválido ou expirado.',
+        error.response?.data?.message || 'Link inválido ou expirado.'
       );
     }
 
-    throw new Error('Erro de rede ou servidor');
+    throw new Error('Erro de rede ou servidor.');
   }
 }

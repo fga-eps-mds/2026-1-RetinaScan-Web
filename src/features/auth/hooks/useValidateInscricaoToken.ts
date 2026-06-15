@@ -6,5 +6,6 @@ export function useValidateInscricaoToken(token: string) {
     queryKey: ['inscricao-token', token],
     queryFn: () => validateInscricaoToken(token),
     enabled: Boolean(token),
+    retry: false,
   });
 }

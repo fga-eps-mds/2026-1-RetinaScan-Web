@@ -1,9 +1,7 @@
-import  ModalNovaInscricao  from "../components/ModalNovaInscricao";
-
+import ModalNovaInscricao from '../components/ModalNovaInscricao';
 
 const Inscricao = () => {
-		<ModalNovaInscricao />
-	
+  return <ModalNovaInscricao />;
 };
 
 export default Inscricao;

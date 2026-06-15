@@ -8,37 +8,19 @@ import {
   EyeOff,
   ShieldCheck,
 } from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { parseApiError } from '@/shared/parseApiError';
-import { useCreateUser } from '../hooks/useCreateUser';
-import { useValidateInscricaoToken } from '../hooks/useValidateInscricaoToken';
-
-type ModalNovaInscricaoParams = {
-  token?: string;
-};
+import { useSubmitInscricao } from '../hooks/useSelfCreateUser';
 
 const ModalNovaInscricao = () => {
   const [searchParams] = useSearchParams();
-  const { token } = searchParams.get('token') as ModalNovaInscricaoParams;
-  const normalizedToken = token?.trim() || '';
+  const token = searchParams.get('token') ?? '';
+  const normalizedToken = token.trim();
 
-  const validationQuery = useValidateInscricaoToken(normalizedToken);
+  const submitInscricaoMutation = useSubmitInscricao();
 
-  const inviteLabel = useMemo(() => {
-    if (!validationQuery.data) return '';
-
-    const profile = validationQuery.data.tipoPerfil
-      ? validationQuery.data.tipoPerfil === 'MEDICO'
-        ? 'Médico'
-        : 'Especialista'
-      : 'Convite para inscrição';
-
-    return profile;
-  }, [validationQuery.data]);
-
-  const [tipoPerfil, setTipoPerfil] = useState(inviteLabel);
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [cpf, setCpf] = useState('');
   const [crm, setCrm] = useState('');
@@ -51,19 +33,17 @@ const ModalNovaInscricao = () => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (validationQuery.data?.nomeCompleto && !nomeCompleto) {
-      setNomeCompleto(validationQuery.data.nomeCompleto);
-    }
-  }, [nomeCompleto, validationQuery.data]);
-
   const passwordMismatch =
-    senha && confirmacaoSenha && senha !== confirmacaoSenha;
+    Boolean(senha) && Boolean(confirmacaoSenha) && senha !== confirmacaoSenha;
 
-  const validationErrorMessage =
-    validationQuery.error instanceof Error
-      ? validationQuery.error.message
-      : 'Link inválido ou expirado.';
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -86,19 +66,20 @@ const ModalNovaInscricao = () => {
     }
 
     try {
-      await useCreateUser().mutateAsync({
-        nomeCompleto,
+      await submitInscricaoMutation.mutateAsync({
+        token: normalizedToken,
+        nomeCompleto: nomeCompleto.trim(),
         cpf: cpf.replace(/\D/g, ''),
-        crm: crm.toUpperCase(),
+        crm: crm.trim().toUpperCase(),
         dtNascimento,
         senha,
-        tipoPerfil: validationQuery.data?.tipoPerfil || 'MEDICO', // Usa o tipo de perfil do convite
-        email: validationQuery.data?.email || '', // Usa o email do convite
       });
+
       setSuccess(true);
       toast.success('Sua inscrição foi recebida com sucesso.');
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: unknown } };
+
       const parsed = parseApiError(
         apiError?.response?.data,
         'Não foi possível concluir a inscrição.'
@@ -110,7 +91,7 @@ const ModalNovaInscricao = () => {
     }
   };
 
-  if (!normalizedToken || validationQuery.isError) {
+  if (!normalizedToken) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#EFF6FF] px-6">
         <div className="space-y-5 text-center">
@@ -123,9 +104,8 @@ const ModalNovaInscricao = () => {
               Link de inscrição inválido
             </h1>
             <p className="text-sm text-muted-foreground">
-              {normalizedToken
-                ? validationErrorMessage
-                : 'O link recebido não contém o token necessário para abrir o formulário.'}
+              O link recebido não contém o token necessário para abrir o
+              formulário.
             </p>
           </div>
 
@@ -138,18 +118,6 @@ const ModalNovaInscricao = () => {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (validationQuery.isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#EFF6FF] px-6">
-        <div className="w-full max-w-md rounded-3xl border border-[#1A63AB]/10 bg-white p-6 text-center shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-muted-foreground">
-            Validando seu convite...
-          </p>
         </div>
       </div>
     );
@@ -209,11 +177,7 @@ const ModalNovaInscricao = () => {
               value={nomeCompleto}
               onChange={(e) => {
                 setNomeCompleto(e.target.value);
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.nomeCompleto;
-                  return next;
-                });
+                clearFieldError('nomeCompleto');
               }}
               className="bg-white"
               required
@@ -233,11 +197,7 @@ const ModalNovaInscricao = () => {
               value={cpf}
               onChange={(e) => {
                 setCpf(formatCpf(e.target.value));
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.cpf;
-                  return next;
-                });
+                clearFieldError('cpf');
               }}
               className="bg-white"
               required
@@ -257,11 +217,7 @@ const ModalNovaInscricao = () => {
               value={crm}
               onChange={(e) => {
                 setCrm(formatCrm(e.target.value));
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.crm;
-                  return next;
-                });
+                clearFieldError('crm');
               }}
               className="bg-white"
               required
@@ -280,10 +236,18 @@ const ModalNovaInscricao = () => {
             <Input
               type="date"
               value={dtNascimento}
-              onChange={(e) => setDtNascimento(e.target.value)}
+              onChange={(e) => {
+                setDtNascimento(e.target.value);
+                clearFieldError('dtNascimento');
+              }}
               className="bg-white"
               required
             />
+            {fieldErrors.dtNascimento && (
+              <p className="text-xs font-medium text-[#E7000B]">
+                {fieldErrors.dtNascimento}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -302,6 +266,7 @@ const ModalNovaInscricao = () => {
                       delete next.senha;
                       return next;
                     });
+                    setError(null);
                   }}
                   placeholder="Digite sua senha"
                   className="bg-white pr-10"
@@ -342,6 +307,7 @@ const ModalNovaInscricao = () => {
                       delete next.senha;
                       return next;
                     });
+                    setError(null);
                   }}
                   placeholder="Repita sua senha"
                   className="bg-white pr-10"
@@ -379,10 +345,12 @@ const ModalNovaInscricao = () => {
 
           <Button
             type="submit"
-            disabled={useCreateUser().isPending}
+            disabled={submitInscricaoMutation.isPending}
             className="h-11 w-full gap-2 bg-[#1A63AB] font-semibold text-white transition-all hover:bg-[#1A63AB]/90"
           >
-            {useCreateUser().isPending ? 'Enviando...' : 'Finalizar inscrição'}
+            {submitInscricaoMutation.isPending
+              ? 'Enviando...'
+              : 'Finalizar inscrição'}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </form>

@@ -1,8 +1,20 @@
-import { Clock3, CircleCheckBig, CircleX } from 'lucide-react';
-
+import {
+  Clock3,
+  CircleCheckBig,
+  CircleX,
+  Mail,
+  OctagonAlert,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-export function getStatusBadge(status: 'PENDENTE' | 'APROVADA' | 'REJEITADA') {
+export type InscricaoStatus =
+  | 'PENDENTE'
+  | 'APROVADA'
+  | 'REJEITADA'
+  | 'CONVITE_ENVIADO'
+  | 'EXPIRADA';
+
+export function getStatusBadge(status: InscricaoStatus) {
   switch (status) {
     case 'PENDENTE':
       return (
@@ -31,7 +43,26 @@ export function getStatusBadge(status: 'PENDENTE' | 'APROVADA' | 'REJEITADA') {
         </Badge>
       );
 
-    default:
-      return <Badge variant="outline">{status}</Badge>;
+    case 'CONVITE_ENVIADO':
+      return (
+        <Badge
+          variant="outline"
+          className="flex items-center gap-1 border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-50"
+        >
+          <Mail className="h-3.5 w-3.5" />
+          Convite enviado
+        </Badge>
+      );
+
+    case 'EXPIRADA':
+      return (
+        <Badge
+          variant="outline"
+          className="flex items-center gap-1 border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-50"
+        >
+          <OctagonAlert className="h-3.5 w-3.5" />
+          Expirada
+        </Badge>
+      );
   }
 }

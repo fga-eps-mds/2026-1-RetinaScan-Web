@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react';
 
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
+import Inscricao from '@/features/auth/routes/Inscricao';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
 const Exames = lazy(
@@ -24,7 +25,6 @@ const Notificacoes = lazy(
 );
 const Logs = lazy(() => import('@/features/logsPage/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
-const Inscricao = lazy(() => import('@/features/auth/routes/Inscricao'));
 const Loading = lazy(() => import('@/components/layout/loading/Loading'));
 const PasswordReset = lazy(
   () => import('@/features/auth/routes/PasswordReset')
@@ -106,7 +106,7 @@ export const router = createBrowserRouter([
     path: '/login',
     element: withSuspense(Login),
   },
-    {
+  {
     path: '/inscricao',
     element: withSuspense(Inscricao),
   },
