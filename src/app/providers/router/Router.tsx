@@ -24,6 +24,7 @@ const Notificacoes = lazy(
 );
 const Logs = lazy(() => import('@/features/logsPage/routes/Logs'));
 const Login = lazy(() => import('@/features/auth/routes/Login'));
+const Inscricao = lazy(() => import('@/features/auth/routes/Inscricao'));
 const Loading = lazy(() => import('@/components/layout/loading/Loading'));
 const PasswordReset = lazy(
   () => import('@/features/auth/routes/PasswordReset')
@@ -104,6 +105,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: withSuspense(Login),
+  },
+    {
+    path: '/inscricao',
+    element: withSuspense(Inscricao),
   },
   {
     path: '/reset-password',
