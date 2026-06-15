@@ -13,7 +13,6 @@ const Exames = lazy(
 const NovoExame = lazy(
   () => import('@/features/criacao-exames/routes/NovoExame')
 );
-const Fila = lazy(() => import('@/features/fila/routes/Fila'));
 const ControleUsuarios = lazy(
   () => import('@/features/admin/routes/ControleUsuarios')
 );
@@ -70,14 +69,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  {
-    path: '/fila',
-    element: (
-      <ProtectedRoute allowed_roles={['ADMIN', 'MEDICO', 'ESPECIALISTA']}>
-        <AppLayout>{withSuspense(Fila)}</AppLayout>
-      </ProtectedRoute>
-    ),
-  },
+
   {
     path: '/admin/controle-usuarios',
     element: (

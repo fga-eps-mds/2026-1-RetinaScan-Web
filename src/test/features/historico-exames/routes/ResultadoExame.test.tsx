@@ -98,7 +98,9 @@ describe('ResultadoExame', () => {
     // Validações Textuais do Cabeçalho
     expect(screen.getByRole('heading', { name: /ex-2026-0036/i })).toBeInTheDocument();
     expect(screen.getByText('Detalhes e resultado do exame')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /baixar laudo/i })).toBeInTheDocument();
+    
+    // ATUALIZADO: O texto do botão agora é "Baixar Relatório"
+    expect(screen.getByRole('button', { name: /baixar relatório/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /compartilhar/i })).toBeInTheDocument();
     
     // Verifica se a badge de "Editando agora" apareceu (baseado no mock de 'isEditor')
