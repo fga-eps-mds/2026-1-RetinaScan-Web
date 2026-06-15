@@ -6,6 +6,10 @@ export type ParsedApiError = {
 type ErrorBody = {
   message?: string;
   errors?: Record<string, string[] | undefined>;
+  fields?: Array<{
+    path?: Array<string | number>;
+    message?: string;
+  }>;
 };
 
 export const parseApiError = (
@@ -26,6 +30,15 @@ export const parseApiError = (
     for (const [field, messages] of Object.entries(body.errors)) {
       if (messages?.length) {
         fieldErrors[field] = messages[0];
+      }
+    }
+  }
+
+  if (body.fields) {
+    for (const field of body.fields) {
+      const fieldName = field.path?.[0];
+      if (typeof fieldName === 'string' && field.message && !fieldErrors[fieldName]) {
+        fieldErrors[fieldName] = field.message;
       }
     }
   }
