@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { getInscricoesPendentes } from '../api/getInscricoesPendentes';
+import type { InscricaoStatus } from '../api/getInscricoesPendentes';
 
-/**
- * Hook que gerencia a listagem de inscrições.
- * A queryKey 'todas' garante que o React Query invalide e atualize os dados 
- * corretamente sempre que houver mutações relacionadas a inscrições.
- */
-export const useGetInscricoesPendentes = () => {
+export type InscricaoStatusFilter = InscricaoStatus | 'TODAS';
+
+export const useGetInscricoesPendentes = (
+  status: InscricaoStatusFilter = 'PENDENTE'
+) => {
   return useQuery({
-    queryKey: ['inscricoes', 'todas'], 
-    queryFn: () => getInscricoesPendentes(), 
+    queryKey: ['inscricoes', 'todas', status],
+    queryFn: () => getInscricoesPendentes(status),
   });
 };

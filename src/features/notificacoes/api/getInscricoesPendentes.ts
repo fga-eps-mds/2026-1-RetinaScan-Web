@@ -1,31 +1,43 @@
 import { api } from '@/shared/api';
 
-/**
- * Estados possíveis no ciclo de vida de uma inscrição médica.
- */
-export type InscricaoStatus = 'CONVITE_ENVIADO' | 'PENDENTE' | 'APROVADA' | 'REJEITADA' | 'EXPIRADA';
+export type InscricaoStatus =
+  | 'CONVITE_ENVIADO'
+  | 'PENDENTE'
+  | 'APROVADA'
+  | 'REJEITADA'
+  | 'EXPIRADA';
+
+export type InscricaoStatusFilter = InscricaoStatus | 'TODAS';
 
 export interface InscricaoPendente {
   id: string;
   email: string;
-  nomeCompleto: string;
-  cpf: string;
-  crm: string;
-  dtNascimento: string;
+  token: string;
+  tokenExpiresAt: string;
   status: InscricaoStatus;
-  submittedAt: string;
+  invitedBy: string;
+  nomeCompleto: string | null;
+  tipoPerfil: 'MEDICO' | 'ESPECIALISTA' | null;
+  cpf: string | null;
+  crm: string | null;
+  dtNascimento: string | null;
+  submittedAt: string | null;
+  motivoRejeicao: string | null;
+  analisadoPor: string | null;
+  analisadoEm: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-/**
- * Busca inscrições filtradas por status.
- * Atualmente configurado para listar apenas convites disparados ('CONVITE_ENVIADO').
- */
-export const getInscricoesPendentes = async (): Promise<InscricaoPendente[]> => {
-  const response = await api.get<{ data: InscricaoPendente[] }>('/api/inscricoes', {
-    // Filtro aplicado no backend para restringir o retorno
-    params: { status: 'CONVITE_ENVIADO' }, 
-  });
+export const getInscricoesPendentes = async (
+  status: InscricaoStatusFilter = 'PENDENTE'
+): Promise<InscricaoPendente[]> => {
+  const response = await api.get<{ data: InscricaoPendente[] }>(
+    '/api/inscricoes',
+    {
+      params: status === 'TODAS' ? undefined : { status },
+    }
+  );
+
   return response.data.data;
 };

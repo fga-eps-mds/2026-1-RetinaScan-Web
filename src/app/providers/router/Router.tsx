@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react';
 
 import AppLayout from '../../../components/layout/AppLayout';
 import { ProtectedRoute } from './protected-route/ProtectedRoute';
+import Inscricao from '@/features/auth/routes/Inscricao';
 
 const Home = lazy(() => import('@/features/home/routes/Home'));
 const Exames = lazy(
@@ -104,6 +105,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: withSuspense(Login),
+  },
+  {
+    path: '/inscricao',
+    element: withSuspense(Inscricao),
   },
   {
     path: '/reset-password',
