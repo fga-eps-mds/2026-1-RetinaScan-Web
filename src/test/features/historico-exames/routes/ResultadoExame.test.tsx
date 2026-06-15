@@ -58,6 +58,14 @@ vi.mock('@/features/historico-exames/hooks/useExamEditingLocks', () => ({
   }),
 }));
 
+// 4. Mock do novo hook de download
+vi.mock('@/features/historico-exames/hooks/useDownloadLaudo', () => ({
+  useDownloadLaudo: () => ({
+    handleDownload: vi.fn(),
+    isDownloading: false,
+  }),
+}));
+
 // Instanciação do cliente de teste isolado
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,7 +89,9 @@ describe('ResultadoExame', () => {
     // Validações textuais e de acessibilidade (Ajustado regex para bater com o título)
     expect(screen.getByRole('heading', { name: /ex-2026-0036/i })).toBeInTheDocument();
     expect(screen.getByText('Detalhes e resultado do exame')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /baixar laudo/i })).toBeInTheDocument();
+    
+    // ATUALIZADO: O texto do botão agora é "Baixar Relatório"
+    expect(screen.getByRole('button', { name: /baixar relatório/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /compartilhar/i })).toBeInTheDocument();
     
     // Validações dos mocks injetados

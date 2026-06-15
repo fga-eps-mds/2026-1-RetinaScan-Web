@@ -15,10 +15,17 @@ import { Badge } from '@/components/ui/badge';
 import { useCreateSpecialistReport } from '../hooks/useCreateSpecialistReport';
 import { toast } from 'sonner';
 import { useUpdateSpecialistReport } from '../hooks/useUpdateSpecialistReport';
+import { useDownloadLaudo } from '../hooks/useDownloadLaudo';
 
+// Define a janela de tempo (em dias) que um laudo pode ser editado após a criação.
 const REPORT_EDIT_WINDOW_DAYS = Number(
   import.meta.env.VITE_SPECIALIST_REPORT_EDIT_WINDOW_DAYS ?? 0
 );
+
+// ============================================================================
+// COMPONENTES DE APRESENTAÇÃO (Helpers)
+// Isolam a lógica visual dos banners e badges para não poluir o render principal.
+// ============================================================================
 
 interface HeaderBadgesProps {
   readonly canEditReport: boolean;
@@ -141,14 +148,25 @@ function LockStatusBanners({
   return null;
 }
 
+// ============================================================================
+// COMPONENTE PRINCIPAL
+// ============================================================================
+
 const ResultadoExame = () => {
+  // Hooks de roteamento
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, isError, isFetching, refetch } =
-    useGetResultadoExame(id);
-  const { data: session, isPending: isSessionPending } =
-    authClient.useSession();
+  
+  // Hooks de funcionalidades
+  const { handleDownload, isDownloading } = useDownloadLaudo();
+  
+  // Queries de dados da API e Sessão
+  const { data, isLoading, isError, isFetching, refetch } = useGetResultadoExame(id);
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
 
+  // --------------------------------------------------------------------------
+  // DERIVAÇÃO DE ESTADOS E PERMISSÕES
+  // --------------------------------------------------------------------------
   const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';
   const specialistReport = data?.exam.laudoEspecialista ?? null;
   const hasSpecialistReport = Boolean(specialistReport);
@@ -157,7 +175,7 @@ const ResultadoExame = () => {
     specialistReport?.specialistId != null &&
     specialistReport.specialistId === session?.user?.id;
 
-  // CORREÇÃO: Alinhando a dependência com o objeto especialista inferido pelo React Compiler
+  // Calcula o prazo máximo para edição somando os dias permitidos à data de criação
   const reportEditDeadline = useMemo(() => {
     const createdAtDate = specialistReport?.createdAt
       ? new Date(specialistReport.createdAt)
@@ -176,6 +194,7 @@ const ResultadoExame = () => {
     !reportEditDeadline ||
     new Date() <= reportEditDeadline;
 
+  // Regras de negócio de edição do laudo
   const canCreateReport = isEspecialista && !hasSpecialistReport;
   const canEditExistingReport =
     isEspecialista &&
@@ -186,6 +205,7 @@ const ResultadoExame = () => {
   const isEditWindowExpired =
     hasSpecialistReport && isReportOwner && !isWithinEditWindow;
 
+  // Formatação amigável do prazo para exibição na UI
   const editWindowLabel = useMemo(() => {
     if (!hasSpecialistReport || !reportEditDeadline) return null;
 
@@ -195,6 +215,9 @@ const ResultadoExame = () => {
     });
   }, [hasSpecialistReport, reportEditDeadline]);
 
+  // --------------------------------------------------------------------------
+  // GERENCIAMENTO DE ESTADO DO EDITOR
+  // --------------------------------------------------------------------------
   const [laudo, setLaudo] = useState<LaudoValue>({
     json: null,
     html: '',
@@ -203,7 +226,7 @@ const ResultadoExame = () => {
   });
 
   // Guarda o id do último laudo sincronizado para não sobrescrever edições locais
-  // em refetches que retornem o mesmo laudo.
+  // em refetches que retornem o mesmo laudo. Evita loop e perda de dados do usuário.
   const syncedReportIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -215,12 +238,14 @@ const ResultadoExame = () => {
 
     syncedReportIdRef.current = specialistReport?.id ?? null;
 
+    // Reseta o formulário se não houver laudo
     if (!specialistReport) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLaudo({ json: null, html: '', texto: '', resultadoIaValido: null });
       return;
     }
 
+    // Popula o estado com os dados recebidos do backend
     setLaudo({
       json: (() => {
         try {
@@ -238,6 +263,11 @@ const ResultadoExame = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialistReport?.id]);
 
+  // --------------------------------------------------------------------------
+  // GERENCIAMENTO DE CONCORRÊNCIA (LOCKS) E MUTAÇÕES
+  // --------------------------------------------------------------------------
+  
+  // Hook responsável por impedir que dois especialistas editem o mesmo exame simultaneamente
   const { lockState } = useExamLock({
     examId: id,
     enabled: !isSessionPending && Boolean(id && canEditReport),
@@ -249,16 +279,17 @@ const ResultadoExame = () => {
   const editorNome =
     lockState.status === 'blocked' ? lockState.editorNome : null;
 
-  const { mutateAsync: createReport, isPending: isCreatingReport } =
-    useCreateSpecialistReport();
-  const { mutateAsync: updateReport, isPending: isUpdatingReport } =
-    useUpdateSpecialistReport();
+  // Mutations da API
+  const { mutateAsync: createReport, isPending: isCreatingReport } = useCreateSpecialistReport();
+  const { mutateAsync: updateReport, isPending: isUpdatingReport } = useUpdateSpecialistReport();
 
+  // Variáveis derivadas para controle de UI
   const isSavingReport = isCreatingReport || isUpdatingReport;
   const shouldShowEditableCard = canEditReport;
   const shouldShowReadonlyCard = hasSpecialistReport && !canEditReport;
   const isCardDisabled = isBlocked || isLockLoading || isSavingReport;
 
+  // Mensagem dinâmica para o input do editor baseada no estado atual
   const cardPlaceholder = useMemo(() => {
     if (isLockLoading) return 'Verificando disponibilidade...';
     if (isBlocked)
@@ -268,6 +299,7 @@ const ResultadoExame = () => {
       : 'Digite o laudo do especialista...';
   }, [isLockLoading, isBlocked, editorNome, hasSpecialistReport]);
 
+  // Handler de submissão do editor
   const handleSubmitLaudo = async (value: LaudoValue) => {
     if (!id || value.resultadoIaValido === null || !canEditReport) return;
 
@@ -290,6 +322,11 @@ const ResultadoExame = () => {
     toast.success('Laudo criado com sucesso!');
   };
 
+  // --------------------------------------------------------------------------
+  // RENDERIZAÇÃO DA PÁGINA
+  // --------------------------------------------------------------------------
+
+  // Tela de Loading inicial
   if (isLoading) {
     return (
       <div className="h-screen w-full overflow-y-auto p-8">
@@ -301,6 +338,7 @@ const ResultadoExame = () => {
     );
   }
 
+  // Tratamento de falha na requisição
   if (isError || !data) {
     return (
       <div className="h-screen w-full overflow-y-auto p-8">
@@ -313,6 +351,7 @@ const ResultadoExame = () => {
 
   return (
     <div className="h-screen w-full overflow-y-auto p-8">
+      {/* Cabeçalho e Ações Principais */}
       <header className="mb-6 flex flex-col gap-4 border-b border-border pb-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="text-left">
           <div className="flex items-center gap-3">
@@ -344,11 +383,26 @@ const ResultadoExame = () => {
         </div>
 
         <div className="flex flex-wrap gap-3 lg:justify-end">
-          <Button type="button" className="gap-2 p-4 font-semibold">
-            <DownloadIcon className="h-4 w-4" />
-            Baixar Laudo
+          <Button
+            type="button"
+            className="gap-2 p-4 font-semibold min-w-40"
+            disabled={isDownloading}
+            onClick={() => {
+              if (id) handleDownload(id, `relatorio-exame-${id}.pdf`);
+            }}
+          >
+            {isDownloading ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                Baixando...
+              </>
+            ) : (
+              <>
+                <DownloadIcon className="h-4 w-4" />
+                Baixar Relatório
+              </>
+            )}
           </Button>
-
           <Button
             type="button"
             variant="outline"
@@ -360,6 +414,7 @@ const ResultadoExame = () => {
         </div>
       </header>
 
+      {/* Indicador de revalidação de dados em background (Refetching) */}
       {isFetching && (
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -367,6 +422,7 @@ const ResultadoExame = () => {
         </div>
       )}
 
+      {/* Grid de Conteúdo Principal */}
       <div className="space-y-3 pb-6">
         <CardImagens imagens={data.imagens} />
 
@@ -383,6 +439,7 @@ const ResultadoExame = () => {
             <CardComorbidades comorbidades={data.exam.comorbidades} />
           </div>
 
+          {/* Seção de Laudo: Exibida apenas para Especialistas ou se já houver laudo */}
           {(isEspecialista || hasSpecialistReport) &&
             data.exam.status === 'CONCLUIDO' && (
               <div className="lg:col-span-2 space-y-4">
