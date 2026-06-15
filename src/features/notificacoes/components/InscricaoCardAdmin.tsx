@@ -20,18 +20,23 @@ export const InscricaoCardAdmin = ({ inscricao }: InscricaoCardAdminProps) => {
     try {
       await avaliarMutation.mutateAsync({ id: String(inscricao.id), payload: { decisao: 'APROVADA' } });
       toast.success('Inscrição aprovada com sucesso.');
-    } catch (error: any) {
-      toast.error('Erro ao aprovar inscrição.', { description: error?.response?.data?.mensagem || 'Tente novamente.' });
+    } catch (error) {
+      const err = error as { response?: { data?: { mensagem?: string } } };
+      toast.error('Erro ao aprovar inscrição.', { 
+        description: err.response?.data?.mensagem || 'Tente novamente.' 
+      });
     }
   };
-
   // Executa mutação de rejeição com motivo obrigatório
   const handleReject = async (motivo: string) => {
     try {
       await avaliarMutation.mutateAsync({ id: String(inscricao.id), payload: { decisao: 'REJEITADA', motivoRejeicao: motivo } });
       toast.success('Inscrição recusada com sucesso.');
-    } catch (error: any) {
-      toast.error('Erro ao recusar inscrição.', { description: error?.response?.data?.mensagem || 'Tente novamente.' });
+    } catch (error) {
+      const err = error as { response?: { data?: { mensagem?: string } } };
+      toast.error('Erro ao recusar inscrição.', { 
+        description: err.response?.data?.mensagem || 'Tente novamente.' 
+      });
     }
   };
 
