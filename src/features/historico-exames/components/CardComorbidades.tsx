@@ -193,7 +193,7 @@ export function CardComorbidades({ comorbidades }: CardComorbidadesProps) {
               <p className="text-xs font-semibold text-foreground">
                 Outras comorbidades
               </p>
-              <p className="mt-0.5 break-words text-sm leading-5 text-muted-foreground">
+              <p className="mt-0.5 wrap-break-word text-sm leading-5 text-muted-foreground">
                 {comorbidades.outrasComorbidadesDescricao}
               </p>
             </div>

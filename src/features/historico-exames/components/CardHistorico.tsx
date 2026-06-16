@@ -41,12 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-interface CardHistoricoProps {
-  page?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-}
+import { Badge } from '@/components/ui/badge';
+import { authClient } from '@/lib/auth-client';
+import { useExamEditingLocks } from '../hooks/useExamEditingLocks';
 
 const EXAM_ID_REGEX = /^EX-\d{4}-\d{4}$/i;
 
@@ -56,26 +53,22 @@ function isBuscaId(val: string) {
 
 type ExamStatusFilter = 'all' | 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO';
 
-export function CardHistorico({
-  page = 1,
-  pageSize = 20,
-  onPageChange,
-}: CardHistoricoProps) {
+export function CardHistorico() {
   const navigate = useNavigate();
   const [filtroStatus, setFiltroStatus] = useState<ExamStatusFilter>('all');
   const [busca, setBusca] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const { data: session } = authClient.useSession();
+  const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';
 
   const buscaDebounced = useDebouncedValue(busca, 400);
 
   const isSearchValid = useMemo(() => {
     const valor = busca.trim();
-
     if (!valor) return true;
-
-    if (isBuscaId(valor)) {
-      return EXAM_ID_REGEX.test(valor);
-    }
-
+    if (isBuscaId(valor)) return EXAM_ID_REGEX.test(valor);
     return true;
   }, [busca]);
 
@@ -99,7 +92,7 @@ export function CardHistorico({
   const limparFiltros = () => {
     setFiltroStatus('all');
     setBusca('');
-    onPageChange?.(1);
+    setPage(1);
   };
 
   const {
@@ -108,8 +101,13 @@ export function CardHistorico({
     isError,
     isFetching,
     isFetched,
-    refetch,
+    refetch: refetchExames,
   } = useGetExams(params);
+
+  const examIds = useMemo(() => exames.map((e) => e.id), [exames]);
+
+  const { data: editingLocks, refetch: refetchEditingLocks } =
+    useExamEditingLocks(examIds, isEspecialista);
 
   const { data: pagination, isFetching: isFetchingPagination } =
     useExamsPagination(params);
@@ -134,19 +132,21 @@ export function CardHistorico({
     !showBackgroundUpdating &&
     !hasData;
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    if (isEspecialista) {
+      await Promise.all([refetchExames(), refetchEditingLocks()]);
+      return;
+    }
+    await refetchExames();
   };
 
   const handlePreviousPage = () => {
-    if (page > 1) {
-      onPageChange?.(page - 1);
-    }
+    if (page > 1) setPage((p) => p - 1);
   };
 
   const handleNextPage = () => {
     if (pagination?.totalPages && page < pagination.totalPages) {
-      onPageChange?.(page + 1);
+      setPage((p) => p + 1);
     }
   };
 
@@ -179,7 +179,6 @@ export function CardHistorico({
                     />
                   </Button>
                 </TooltipTrigger>
-
                 <TooltipContent className="border bg-white text-muted-foreground">
                   Atualizar lista
                 </TooltipContent>
@@ -194,14 +193,13 @@ export function CardHistorico({
                       value={filtroStatus}
                       onValueChange={(value) => {
                         setFiltroStatus(value as ExamStatusFilter);
-                        onPageChange?.(1);
+                        setPage(1);
                       }}
                       disabled={showSkeleton}
                     >
                       <SelectTrigger className="flex h-12 w-full items-center justify-between rounded-xl border-slate-200 px-3 text-left focus:ring-1 focus:ring-blue-600">
                         <SelectValue placeholder="Filtrar por status" />
                       </SelectTrigger>
-
                       <SelectContent
                         position="popper"
                         align="start"
@@ -217,7 +215,6 @@ export function CardHistorico({
                     </Select>
                   </div>
                 </TooltipTrigger>
-
                 <TooltipContent className="border bg-white text-muted-foreground">
                   Filtre por status
                 </TooltipContent>
@@ -239,14 +236,13 @@ export function CardHistorico({
                       value={busca}
                       onChange={(e) => {
                         setBusca(e.target.value);
-                        onPageChange?.(1);
+                        setPage(1);
                       }}
                       disabled={showSkeleton}
                     />
                     <Search className="pointer-events-none absolute right-3 top-3.5 h-5 w-5 text-muted-foreground" />
                   </div>
                 </TooltipTrigger>
-
                 <TooltipContent className="border bg-white text-muted-foreground">
                   Busque por Nome ou ID
                 </TooltipContent>
@@ -309,7 +305,6 @@ export function CardHistorico({
                       <div className="rounded-full bg-red-50 p-4 text-red-500">
                         <AlertCircle className="h-8 w-8" />
                       </div>
-
                       <div className="space-y-1">
                         <p className="text-lg font-semibold text-slate-900">
                           Não foi possível carregar os exames
@@ -319,7 +314,6 @@ export function CardHistorico({
                           novamente.
                         </p>
                       </div>
-
                       <Button
                         type="button"
                         variant="outline"
@@ -337,6 +331,10 @@ export function CardHistorico({
                     exame.scoreIA !== null && exame.scoreIA !== undefined
                       ? Number(exame.scoreIA)
                       : null;
+
+                  const lockInfo = editingLocks?.[exame.id];
+                  const isBeingEdited = lockInfo?.isBeingEdited ?? false;
+                  const editorNome = lockInfo?.editor?.nome ?? null;
 
                   return (
                     <TableRow
@@ -360,7 +358,28 @@ export function CardHistorico({
                       </TableCell>
 
                       <TableCell className="py-7 text-center text-md text-muted-foreground">
-                        {exame.id}
+                        <div className="flex items-center justify-center gap-2">
+                          <span>{exame.id}</span>
+                          {isEspecialista && isBeingEdited && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Badge
+                                    variant="outline"
+                                    className="border-amber-300 bg-amber-50 text-amber-700"
+                                  >
+                                    Em edição
+                                  </Badge>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="border bg-white text-muted-foreground">
+                                {editorNome
+                                  ? `Em edição por ${editorNome}`
+                                  : 'Sendo editado por outro especialista'}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-center text-md font-medium text-muted-foreground">
@@ -401,7 +420,6 @@ export function CardHistorico({
                       <div className="rounded-full bg-slate-50 p-4 text-muted-foreground">
                         <Inbox className="h-8 w-8 opacity-70" />
                       </div>
-
                       <div className="space-y-1">
                         <p className="text-lg font-semibold text-slate-900">
                           {hasActiveFilters
@@ -414,7 +432,6 @@ export function CardHistorico({
                             : 'Assim que houver exames disponíveis, eles aparecerão aqui.'}
                         </p>
                       </div>
-
                       {hasActiveFilters && (
                         <Button
                           variant="outline"
@@ -436,10 +453,9 @@ export function CardHistorico({
         {pagination && !showError && (
           <div className="mt-6 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              {pagination.total} resultados - Página {pagination.page} de{' '}
+              {pagination.pageSize} resultados - Página {pagination.page} de{' '}
               {pagination.totalPages}
             </span>
-
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
@@ -454,7 +470,6 @@ export function CardHistorico({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-
               <Button
                 variant="outline"
                 size="sm"

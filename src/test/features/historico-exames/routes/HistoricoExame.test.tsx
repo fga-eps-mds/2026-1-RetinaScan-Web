@@ -1,6 +1,8 @@
+import { waitFor } from '@testing-library/react'; 
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // Adicionado
 import HistoricoExame from '@/features/historico-exames/routes/HistoricoExame';
 import { toast } from 'sonner';
 import type { ExameHistory } from '@/features/historico-exames/types/exam-history';
@@ -15,11 +17,21 @@ vi.mock('@/features/historico-exames/hooks/useGetTotalPages', () => ({
   useExamsPagination: vi.fn(),
 }));
 
+// Adicionado mock neutro para o hook de travas de edição concorrente
+vi.mock('@/features/historico-exames/hooks/useExamEditingLocks', () => ({
+  useExamEditingLocks: () => ({
+    data: {},
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+}));
+
+// Atualizado para injetar tipoPerfil: 'ESPECIALISTA' exigido pelo CardHistorico
 vi.mock('@/lib/auth-client', () => ({
   authClient: {
-    useSession: vi.fn(() => ({ data: { user: { id: 'test-user' } } })),
+    useSession: vi.fn(() => ({ data: { user: { id: 'test-user', tipoPerfil: 'ESPECIALISTA' } } })),
   },
-  useSession: vi.fn(() => ({ data: { user: { id: 'test-user' } } })),
+  useSession: vi.fn(() => ({ data: { user: { id: 'test-user', tipoPerfil: 'ESPECIALISTA' } } })),
 }));
 
 vi.mock('sonner', () => ({
@@ -30,9 +42,17 @@ vi.mock('sonner', () => ({
 
 describe('HistoricoExame Page', () => {
   const mockRefetch = vi.fn();
+  let queryClient: QueryClient; // Adicionado
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Instancia um QueryClient novo antes de cada teste
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
 
     vi.mocked(usePaginationHook.useExamsPagination).mockReturnValue({
       data: {
@@ -47,20 +67,28 @@ describe('HistoricoExame Page', () => {
     } as any);
   });
 
+  // Função auxiliar para injetar os Providers necessários
+  const renderComponent = () => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HistoricoExame />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+  };
+
   it('deve mostrar o estado de loading ao iniciar', () => {
     vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
       data: [],
       isLoading: true,
       isError: false,
       isFetching: false,
+      isFetched: false, // Adicionado para simular o primeiro carregamento
       refetch: mockRefetch,
     } as any);
 
-    render(
-      <MemoryRouter>
-        <HistoricoExame />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     expect(screen.getByText(/histórico de exames/i)).toBeInTheDocument();
   });
@@ -70,59 +98,53 @@ describe('HistoricoExame Page', () => {
       {
         id: 'EX-1111-2222',
         nomeCompleto: 'João Silva',
-        olho: 'AO',
+        olho: 'AO' as any,
         scoreIA: '85',
         status: 'Normal',
         dtCriacao: '2026-05-10T10:00:00.000Z',
       },
     ];
+  
 
     vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
       data: mockData,
       isLoading: false,
       isError: false,
       isFetching: false,
+      isFetched: true,
       refetch: mockRefetch,
     } as any);
 
-    render(
-      <MemoryRouter>
-        <HistoricoExame />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     expect(await screen.findByText('João Silva')).toBeInTheDocument();
     expect(screen.getByText('EX-1111-2222')).toBeInTheDocument();
   });
 
-  // it('deve lidar com erro de carregamento e disparar o toast', async () => {
-  //   vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
-  //     data: [],
-  //     isLoading: false,
-  //     isError: true,
-  //     isFetching: false,
-  //     refetch: mockRefetch,
-  //   } as any);
+  it('deve lidar com erro de carregamento e renderizar a tela de erro', async () => {
+      vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
+        data: [],
+        isLoading: false,
+        isError: true,
+        isFetching: false,
+        isFetched: true,
+        refetch: mockRefetch,
+      } as any);
 
-  //   render(
-  //     <MemoryRouter>
-  //       <HistoricoExame />
-  //     </MemoryRouter>
-  //   );
+      renderComponent();
 
-  //   expect(
-  //     await screen.findByText(/não foi possível carregar os exames/i)
-  //   ).toBeInTheDocument();
-
-  //   expect(toast.error).toHaveBeenCalled();
-  // });
-
+      // Valida que a página tratou o erro exibindo o feedback visual correto ao usuário
+      expect(
+        await screen.findByText(/não foi possível carregar os exames/i)
+      ).toBeInTheDocument();
+    });
   it('deve mostrar estado vazio quando não houver exames', async () => {
     vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
       data: [],
       isLoading: false,
       isError: false,
       isFetching: false,
+      isFetched: true,
       refetch: mockRefetch,
     } as any);
 
@@ -138,11 +160,7 @@ describe('HistoricoExame Page', () => {
       refetch: vi.fn(),
     } as any);
 
-    render(
-      <MemoryRouter>
-        <HistoricoExame />
-      </MemoryRouter>
-    );
+    renderComponent();
 
     expect(
       await screen.findByText(/ainda não existem exames registrados/i)

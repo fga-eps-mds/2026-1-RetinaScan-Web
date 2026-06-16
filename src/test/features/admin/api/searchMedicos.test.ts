@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { searchMedicos } from '@/features/admin/api/searchMedicos'
 import { api } from '@/shared/api';
 
@@ -10,6 +10,12 @@ vi.mock('@/shared/api', () => ({
 }));
 
 describe('searchMedicos API', () => {
+  
+  // Limpa os mocks antes de cada teste para evitar que chamadas de um teste vazem para o outro
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('deve efetuar a requisição GET com os parâmetros corretos e retornar os dados', async () => {
     const mockApiResponse = {
       message: 'Médicos encontrados com sucesso.',
@@ -28,6 +34,25 @@ describe('searchMedicos API', () => {
     expect(api.get).toHaveBeenCalledWith('/api/medicos/search', { params });
 
     // Assert 2: Garante que a função extraiu e retornou o .data da resposta HTTP
+    expect(resultado).toEqual(mockApiResponse);
+  });
+
+  // --- NOVO TESTE ---
+  it('deve repassar corretamente o filtro de tipoPerfil para a requisição GET', async () => {
+    const mockApiResponse = {
+      message: 'Especialistas encontrados.',
+      data: [{ id: '2', nomeCompleto: 'Dra. Ana', crm: '654321', email: 'ana@retinascan.com', tipoPerfil: 'ESPECIALISTA' }],
+    };
+
+    vi.mocked(api.get).mockResolvedValueOnce({ data: mockApiResponse });
+
+    // Testando o envio do novo parâmetro isoladamente
+    const params = { tipoPerfil: 'ESPECIALISTA' as const };
+    
+    const resultado = await searchMedicos(params);
+
+    // Verifica se a API foi chamada incluindo o tipoPerfil no payload de params
+    expect(api.get).toHaveBeenCalledWith('/api/medicos/search', { params });
     expect(resultado).toEqual(mockApiResponse);
   });
 });

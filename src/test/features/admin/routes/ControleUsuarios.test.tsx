@@ -15,6 +15,26 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// Mock do componente Select do shadcn/ui.
+// Assim como na tabela, transformamos em um select HTML simples para o userEvent funcionar de forma previsível.
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ value, onValueChange }: any) => (
+    <select
+      data-testid="perfil-select"
+      value={value}
+      onChange={(e) => onValueChange(e.target.value)}
+    >
+      <option value="TODOS">Todos os Perfis</option>
+      <option value="MEDICO">Apenas Médicos</option>
+      <option value="ESPECIALISTA">Apenas Especialistas</option>
+    </select>
+  ),
+  SelectContent: () => null,
+  SelectItem: () => null,
+  SelectTrigger: () => null,
+  SelectValue: () => null,
+}));
+
 // NÃO mockamos TabelaUsers de forma estática pura para permitir que o input real seja testado e acione o useMemo de filtros
 describe('ControleUsuarios', () => {
   let queryClient: QueryClient;
@@ -36,8 +56,8 @@ describe('ControleUsuarios', () => {
     vi.mocked(useSearchMedicos).mockReturnValue({
       data: {
         data: [
-          { id: '1', status: 'ATIVO', nomeCompleto: 'Dr. House', email: 'house@exemplo.com', crm: '123', createdAt: '2026-05-17T00:00:00' },
-          { id: '2', status: 'INATIVO', nomeCompleto: 'Dra. Cameron', email: 'cameron@exemplo.com', crm: '456', createdAt: '2026-05-17T00:00:00' },
+          { id: '1', status: 'ATIVO', nomeCompleto: 'Dr. House', email: 'house@exemplo.com', crm: '123', createdAt: '2026-05-17T00:00:00', tipoPerfil: 'MEDICO' },
+          { id: '2', status: 'INATIVO', nomeCompleto: 'Dra. Cameron', email: 'cameron@exemplo.com', crm: '456', createdAt: '2026-05-17T00:00:00', tipoPerfil: 'ESPECIALISTA' },
         ],
       },
       isLoading: false,
@@ -49,12 +69,16 @@ describe('ControleUsuarios', () => {
     } as any);
   });
 
-  it('deve renderizar a tela e buscar os usuários ao montar', async () => {
+  it('deve renderizar a tela e buscar os usuários ao montar (com tipoPerfil undefined inicialmente)', async () => {
     renderWithClient(<ControleUsuarios />);
     expect(
       screen.getByText(/gerenciamento e controle de acesso/i)
     ).toBeInTheDocument();
-    expect(useSearchMedicos).toHaveBeenCalled();
+    
+    // Na primeira renderização com a string vazia, o filtro manda apenas o perfil (que por padrão é undefined para a API)
+    expect(useSearchMedicos).toHaveBeenCalledWith(expect.objectContaining({
+      tipoPerfil: undefined
+    }));
   });
 
   it('deve abrir o modal ao clicar em Novo Usuário', async () => {
@@ -66,7 +90,7 @@ describe('ControleUsuarios', () => {
     expect(screen.getByText(/Novo Usuário/i)).toBeInTheDocument();
   });
 
-  // --- COBERTURA DAS BRANCHES DE VALIDAÇÃO (LINHAS 23-27) ---
+  // --- COBERTURA DAS BRANCHES DE VALIDAÇÃO DO USEMEMO (TEXTO LIVRE) ---
 
   it('deve chavear os filtros para BUSCA POR NOME quando for um texto simples', async () => {
     const user = userEvent.setup();
@@ -81,6 +105,7 @@ describe('ControleUsuarios', () => {
           nome: 'Iderlan',
           crm: undefined,
           email: undefined,
+          tipoPerfil: undefined,
         })
       );
     });
@@ -135,6 +160,64 @@ describe('ControleUsuarios', () => {
           nome: undefined,
           crm: undefined,
           email: 'iderlan@retinascan.com',
+        })
+      );
+    });
+  });
+
+  // --- NOVOS TESTES: COBERTURA DO FILTRO DE PERFIL ---
+
+  it('deve atualizar o filtro da requisição quando o perfil for alterado para ESPECIALISTA', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<ControleUsuarios />);
+
+    const select = screen.getByTestId('perfil-select');
+    await user.selectOptions(select, 'ESPECIALISTA');
+
+    await waitFor(() => {
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tipoPerfil: 'ESPECIALISTA',
+        })
+      );
+    });
+  });
+
+  it('deve atualizar o filtro da requisição quando o perfil for alterado para MEDICO', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<ControleUsuarios />);
+
+    const select = screen.getByTestId('perfil-select');
+    await user.selectOptions(select, 'MEDICO');
+
+    await waitFor(() => {
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tipoPerfil: 'MEDICO',
+        })
+      );
+    });
+  });
+
+  it('deve limpar o filtro de perfil ao selecionar TODOS e manter a busca de texto', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<ControleUsuarios />);
+
+    // 1. Simula uma busca e um perfil
+    const input = screen.getByPlaceholderText(/Buscar por nome, e-mail ou CRM/i);
+    await user.type(input, '123456');
+    const select = screen.getByTestId('perfil-select');
+    await user.selectOptions(select, 'MEDICO');
+
+    // 2. Volta o perfil para TODOS
+    await user.selectOptions(select, 'TODOS');
+
+    // 3. Garante que a requisição final mantém o CRM da busca, mas anula o perfil
+    await waitFor(() => {
+      expect(useSearchMedicos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          crm: '123456',
+          tipoPerfil: undefined,
         })
       );
     });

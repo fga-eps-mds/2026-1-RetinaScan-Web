@@ -3,7 +3,26 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import TabelaUsers from '@/features/admin/components/TabelaUsers';
 import type { User } from '@/features/admin/types/user';
 
-// Mock de dados para o cenário de sucesso alinhado com o tipo User oficial
+// Mock do componente Select do shadcn/ui para contornar a complexidade do Radix UI em testes.
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ value, onValueChange }: any) => (
+    <select
+      data-testid="perfil-select"
+      value={value}
+      onChange={(e) => onValueChange(e.target.value)}
+    >
+      <option value="TODOS">Todos os Perfis</option>
+      <option value="MEDICO">Apenas Médicos</option>
+      <option value="ESPECIALISTA">Apenas Especialistas</option>
+    </select>
+  ),
+  SelectContent: () => null,
+  SelectItem: () => null,
+  SelectTrigger: () => null,
+  SelectValue: () => null,
+}));
+
+// Mock de dados atualizado com os dois tipos de perfil para garantir a cobertura da renderização das badges
 const mockUsers: User[] = [
   {
     id: '1',
@@ -17,8 +36,21 @@ const mockUsers: User[] = [
     tipoPerfil: 'MEDICO',
     updatedAt: new Date(2026, 4, 17).toISOString(),
   },
+  {
+    id: '2',
+    nomeCompleto: 'Dra. Ana Especialista',
+    email: 'ana@retinascan.local',
+    crm: '654321',
+    status: 'ATIVO',
+    createdAt: new Date(2026, 4, 17).toISOString(), 
+    cpf: '111.111.111-11',
+    dtNascimento: '1985-01-01',
+    tipoPerfil: 'ESPECIALISTA',
+    updatedAt: new Date(2026, 4, 17).toISOString(),
+  },
 ];
 
+// Atualizado com as novas props obrigatórias de filtro
 const defaultProps = {
   users: [],
   isLoading: false,
@@ -29,6 +61,8 @@ const defaultProps = {
   isTyping: false,
   busca: '',
   onBuscaChange: vi.fn(),
+  filtroPerfil: 'TODOS',
+  onFiltroPerfilChange: vi.fn(),
 };
 
 describe('TabelaUsers Component', () => {
@@ -63,12 +97,11 @@ describe('TabelaUsers Component', () => {
   it('deve exibir o feedback de "Buscando" quando o usuário estiver digitando', () => {
     render(<TabelaUsers {...defaultProps} isTyping={true} />);
     
-    // Como o componente real foi renderizado, buscamos diretamente pelo texto impresso na tela
     expect(screen.getByText('Buscando...')).toBeInTheDocument();
   });
 
   it('deve renderizar a lista de usuários com as informações formatadas corretamente', () => {
-    render(<TabelaUsers {...defaultProps} users={mockUsers} />);
+    render(<TabelaUsers {...defaultProps} users={[mockUsers[0]]} />);
 
     expect(screen.getByText('Dr. Iderlan Silva')).toBeInTheDocument();
     expect(screen.getByText('iderlan@retinascan.local')).toBeInTheDocument();
@@ -77,7 +110,7 @@ describe('TabelaUsers Component', () => {
     expect(screen.getByText('17/05/2026')).toBeInTheDocument();
   });
 
-  it('deve chamar onBuscaChange sempre que o usuário interagir com o input', () => {
+  it('deve chamar onBuscaChange sempre que o usuário interagir com o input de texto', () => {
     const onBuscaChangeMock = vi.fn();
     render(<TabelaUsers {...defaultProps} onBuscaChange={onBuscaChangeMock} />);
 
@@ -85,5 +118,30 @@ describe('TabelaUsers Component', () => {
     fireEvent.change(input, { target: { value: 'medico01' } });
 
     expect(onBuscaChangeMock).toHaveBeenCalledWith('medico01');
+  });
+
+  // --- Novos Testes de Perfil ---
+
+  it('deve renderizar corretamente as Badges visuais de Médico e Especialista', () => {
+    // Passamos o array com os dois tipos de usuários
+    render(<TabelaUsers {...defaultProps} users={mockUsers} />);
+
+    expect(screen.getByText('Dr. Iderlan Silva')).toBeInTheDocument();
+    expect(screen.getByText('Dra. Ana Especialista')).toBeInTheDocument();
+    
+    // Confirma que ambas as tags foram impressas na coluna
+    expect(screen.getByText('Médico')).toBeInTheDocument();
+    expect(screen.getByText('Especialista')).toBeInTheDocument();
+  });
+
+  it('deve chamar onFiltroPerfilChange ao alterar o Select de perfil', () => {
+    const onFiltroPerfilChangeMock = vi.fn();
+    render(<TabelaUsers {...defaultProps} onFiltroPerfilChange={onFiltroPerfilChangeMock} />);
+
+    // Intercepta o select mockado
+    const select = screen.getByTestId('perfil-select');
+    fireEvent.change(select, { target: { value: 'ESPECIALISTA' } });
+
+    expect(onFiltroPerfilChangeMock).toHaveBeenCalledWith('ESPECIALISTA');
   });
 });

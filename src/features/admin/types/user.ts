@@ -5,10 +5,10 @@ export type User = {
   cpf: string;
   crm: string;
   dtNascimento: string;
-  tipoPerfil: 'MEDICO' | 'ADMIN';
+  tipoPerfil: 'MEDICO' | 'ADMIN' | 'ESPECIALISTA';
   createdAt: string;
   updatedAt: string;
-  status: 'ATIVO' | 'INAVTIVO';
+  status: 'ATIVO' | 'INATIVO';
 };
 
 export type CreateUserDTO = {
@@ -18,5 +18,5 @@ export type CreateUserDTO = {
   crm: string;
   dtNascimento: string;
   senha: string;
-  tipoPerfil: 'ADMIN' | 'MEDICO';
+  tipoPerfil: 'ADMIN' | 'MEDICO' | 'ESPECIALISTA';
 };

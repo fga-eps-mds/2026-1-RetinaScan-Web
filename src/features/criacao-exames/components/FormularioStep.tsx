@@ -34,7 +34,7 @@ interface FormularioStepProps {
     setDescricao: (val: string) => void;
   };
   
-  // Mapeamento de erros retornados pela API (global ou atrelado a campos específicos)
+  // Mapeamento de erros retornados pela API 
   errors: {
     global: string | null;
     fields: Record<string, string>;

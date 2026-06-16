@@ -4,7 +4,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    ports:
-      - '${PORT}:3001'
     env_file:
       - .env.prod
+    networks:
+      - web
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.retinascan-web-homolog.rule=Host(`homolog.retinascan.site`)"
+      - "traefik.http.routers.retinascan-web-homolog.entrypoints=websecure"
+      - "traefik.http.routers.retinascan-web-homolog.tls=true"
+      - "traefik.http.routers.retinascan-web-homolog.tls.certresolver=lets-encrypt"
+      - "traefik.http.routers.retinascan-web-homolog.service=retinascan-web-homolog-svc"
+      - "traefik.http.services.retinascan-web-homolog-svc.loadbalancer.server.port=3001"
+
+networks:
+  web:
+    external: true
+    name: web
