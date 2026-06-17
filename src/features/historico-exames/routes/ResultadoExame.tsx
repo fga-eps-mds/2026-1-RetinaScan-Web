@@ -145,7 +145,7 @@ function LockStatusBanners({
 const ResultadoExame = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [refreshHistoryNonce, setRefreshHistoryNonce] = useState(0);
 
   const listagemCompartilhados = useMemo(() => {
@@ -442,69 +442,17 @@ const ResultadoExame = () => {
                 )}
               </div>
             )}
-          {/* Insira este bloco dentro do grid ou logo antes de fechar a div principal container */}
-          <div className="lg:col-span-2 border border-border bg-card text-card-foreground rounded-xl p-5 space-y-4">
-            <div>
-              <h3 className="text-lg font-heading font-bold text-foreground">
-                Histórico de Compartilhamento Controlled (Acesso Externo)
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Médicos que receberam links diretos para visualização deste exame.
-              </p>
-            </div>
-
-            {listagemCompartilhados.length === 0 ? (
-              <p className="text-sm text-muted-foreground bg-muted/20 border border-dashed border-border rounded-lg p-4 text-center">
-                Este exame ainda não foi compartilhado com outros profissionais médicos.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {listagemCompartilhados.map((item: any) => (
-                  <div
-                    key={item.idCompartilhamento}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-border bg-muted/10 rounded-xl p-3 text-sm"
-                  >
-                    <div>
-                      <p className="font-semibold text-foreground">{item.medicoNome}</p>
-                      <p className="text-xs text-muted-foreground">
-                        CRM: {item.medicoCrm} • {item.medicoEmail}
-                      </p>
-                      <p className="text-xs mt-1 text-slate-500">
-                        Expira em: {item.expiraEm ? new Date(item.expiraEm).toLocaleString('pt-BR') : 'Acesso Permanente'}
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 self-start sm:self-center"
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(item.linkAcesso);
-                        toast.success('Link de acesso copiado novamente!');
-                      }}
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                      Rever/Copiar Link
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
-      </div>
 
+      </div>
       {id && (
         <ModalCompartilhar
           isOpen={isShareModalOpen}
           onClose={() => setIsShareModalOpen(false)}
           examId={id}
-          onShareSuccess={() => setRefreshHistoryNonce(prev => prev + 1)} // Atualiza a lista na hora!
         />
       )}
     </div>
   );
 };
-
 export default ResultadoExame;
