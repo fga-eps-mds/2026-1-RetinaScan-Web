@@ -3,14 +3,13 @@ import { mapDicomToExamForm } from '@/utils/dicom/mapDicomToForm';
 import type { ExtractedDicomData } from '@/utils/dicom/dicom.types';
 
 describe('Utilitário DICOM - mapDicomToExamForm', () => {
-  
   it('Deve formatar os dados básicos corretamente (Datas, Hora e Sexo)', () => {
     const mockData = {
       patientSex: 'M',
       patientBirthDate: '19980521',
       seriesDate: '20260511',
-      seriesTime: '143522', 
-      patientComments: null
+      seriesTime: '143522',
+      patientComments: null,
     } as ExtractedDicomData;
 
     const result = mapDicomToExamForm(mockData);
@@ -26,30 +25,46 @@ describe('Utilitário DICOM - mapDicomToExamForm', () => {
         hypertension: true,
         smoker: false,
         glaucoma: false,
-        cataract: true
-      }
+        cataract: true,
+      },
     } as ExtractedDicomData;
 
     const result = mapDicomToExamForm(mockData);
-    
-    expect(result.comorbidades).toBe('Hipertensão, Catarata');
+
+    expect(result.comorbidades).toEqual(
+      expect.objectContaining({
+        hipertensao: true,
+        catarata: true,
+        glaucoma: false,
+        outrasComorbidades: false,
+        outrasComorbidadesDescricao: undefined,
+      })
+    );
   });
 
-  it('Deve extrair as comorbidades quando vierem dentro de "anamnesis" (Exemplo da Issue)', () => {
+  it('Deve extrair as comorbidades e mapear "smoker" para "Outras" quando vierem dentro de "anamnesis"', () => {
     const mockData = {
       patientComments: {
         anamnesis: {
           hypertension: false,
           smoker: true,
           glaucoma: true,
-          cataract: false
-        }
-      }
+          cataract: false,
+        },
+      },
     } as ExtractedDicomData;
 
     const result = mapDicomToExamForm(mockData);
-    
-    expect(result.comorbidades).toBe('Fumante, Glaucoma');
+
+    expect(result.comorbidades).toEqual(
+      expect.objectContaining({
+        hipertensao: false,
+        glaucoma: true,
+        catarata: false,
+        outrasComorbidades: true,
+        outrasComorbidadesDescricao: 'Fumante',
+      })
+    );
   });
 
   it('Deve retornar comorbidades como undefined se o JSON vier vazio ou nulo', () => {
