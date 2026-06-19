@@ -38,7 +38,7 @@ describe('Utilitário DICOM - parseDicomFile', () => {
     const mockDataSet = {
       string: vi.fn((tag: string) => {
         if (tag === 'x00100020') return undefined;
-        return '{}'; // <-- Retorna um JSON válido e vazio para não quebrar o parse
+        return '{}';
       }),
     };
     (dicomParser.parseDicom as any).mockReturnValue(mockDataSet);
