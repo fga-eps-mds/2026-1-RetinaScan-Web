@@ -24,7 +24,7 @@ export const Home = () => {
   const [priority, setPriority] = useState('');
 
   return (
-    <div className="w-full flex justify-center flex-col gap-2 p-8 animate-in fade-in duration-500">
+    <div className="min-h-screen w-full p-12">
       <header className="text-center">
         <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
           Dashboard
@@ -45,9 +45,10 @@ export const Home = () => {
           priorityFilter={priority}
           onPriorityFilterChange={setPriority}
         />
-
+      <div className="px-8">
         {/* Tabela de Exames Recentes */}
         <ExamRow exams={dashboardData.recentExams} />
+      </div>
 
       </div>
 
