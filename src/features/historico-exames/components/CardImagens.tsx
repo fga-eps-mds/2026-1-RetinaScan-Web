@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { ScanEye, ImageOff } from 'lucide-react';
 import type { ExamResultImage } from '../types/exam-result';
+// 1. Importe o seu novo componente visualizador aqui
+import { VisualizadorZoomPan } from './VisualizadorZoomPan';
 
 type CardImagensProps = {
   imagens?: ExamResultImage[];
@@ -26,6 +28,7 @@ export function CardImagens({ imagens }: CardImagensProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* SEÇÃO OLHO DIREITO (OD) */}
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -35,20 +38,14 @@ export function CardImagens({ imagens }: CardImagensProps) {
           </div>
 
           {od?.url ? (
-            <div className="overflow-hidden rounded-2xl border border-border bg-muted/20">
-              <div className="aspect-4/2 w-full bg-black/5">
-                <img
-                  src={od.url}
-                  alt="Retinografia do olho direito"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            </div>
+            // 2. Trocamos o container estático antigo pelo visualizador com Cornerstone3D
+            <VisualizadorZoomPan imageUrl={od.url} />
           ) : (
             <ImagePlaceholder label="Imagem do olho direito indisponível" />
           )}
         </section>
 
+        {/* SEÇÃO OLHO ESQUERDO (OE) */}
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -58,15 +55,8 @@ export function CardImagens({ imagens }: CardImagensProps) {
           </div>
 
           {oe?.url ? (
-            <div className="overflow-hidden rounded-2xl border border-border bg-muted/20">
-              <div className="aspect-4/2 w-full bg-black/5">
-                <img
-                  src={oe.url}
-                  alt="Retinografia do olho esquerdo"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            </div>
+            // 3. Mesma substituição para o olho esquerdo
+            <VisualizadorZoomPan imageUrl={oe.url} />
           ) : (
             <ImagePlaceholder label="Imagem do olho esquerdo indisponível" />
           )}
