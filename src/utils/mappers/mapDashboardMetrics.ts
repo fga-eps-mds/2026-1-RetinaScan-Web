@@ -1,6 +1,28 @@
 import type { DashboardMetrics } from '../../features/home/types/dashboard-result';
 
-export const mapDashboardMetrics = (apiMetrics: any): DashboardMetrics => {
+// Tipagem do retorno esperado da sua API de métricas
+export interface ApiDashboardMetrics {
+  volume: {
+    total: number;
+    porStatus: {
+      CRIADO?: number;
+      EM_PROCESSAMENTO?: number;
+      ERRO_PROCESSAMENTO?: number;
+      CONCLUIDO?: number;
+    };
+  };
+  resultadosIa: {
+    totalResultados: number;
+    confiancaMedia: number;
+    porDiagnostico: Array<{
+      label: string;
+      total: number;
+    }>;
+  };
+}
+
+// Substituímos o 'any' por 'ApiDashboardMetrics | undefined | null'
+export const mapDashboardMetrics = (apiMetrics?: ApiDashboardMetrics | null): DashboardMetrics => {
   if (!apiMetrics) {
     return {
       analisesTotais: { total: 0, periodoDias: 30 },
@@ -12,8 +34,10 @@ export const mapDashboardMetrics = (apiMetrics: any): DashboardMetrics => {
     };
   }
 
+  // A inferência do TypeScript já sabe o que é o 'd' porque tipamos o 'porDiagnostico', 
+  // mas podemos tipar explicitamente para evitar qualquer erro de lint
   const getDiagnostico = (label: string) => 
-    apiMetrics.resultadosIa.porDiagnostico.find((d: any) => d.label === label)?.total || 0;
+    apiMetrics.resultadosIa.porDiagnostico.find((d: { label: string; total: number }) => d.label === label)?.total || 0;
 
   const totalIa = apiMetrics.resultadosIa.totalResultados || 1; 
   const normais = getDiagnostico('normal');

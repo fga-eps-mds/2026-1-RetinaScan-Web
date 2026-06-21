@@ -13,7 +13,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   subtext,
   variant = 'default',
 }) => {
-  // A união perfeita: Fundo pastel colorido + Sombra base + Sombra colorida no Hover
+  // Mapeamento de estilos por variante (Design Tokens).
+  // Centraliza a configuração visual, evitando condicionais complexas ou templates strings longas na renderização.
   const styles = {
     default: {
       card: 'bg-white border-gray-100 shadow-sm hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50',
@@ -42,6 +43,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   return (
+    // A classe 'group' permite coordenar animações nos elementos filhos quando o contêiner recebe hover.
+    // 'transition-all' e 'hover:-translate-y-1' aplicam aceleração via GPU para micro-interações fluidas.
     <div 
       className={`p-6 rounded-2xl border flex flex-col justify-between h-32 transition-all duration-300 hover:-translate-y-1 cursor-default group ${styles[variant].card}`}
     >

@@ -5,6 +5,8 @@ interface ChartProps {
 }
 
 export const TimeSeriesChart = ({ data }: ChartProps) => {
+  // Guard clause: renderiza um Empty State amigável caso não haja dados.
+  // Evita a renderização de um container em branco ou erros internos do Recharts.
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-gray-100 shadow-sm w-full mt-4">
@@ -21,17 +23,22 @@ export const TimeSeriesChart = ({ data }: ChartProps) => {
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm w-full">
       <h3 className="text-lg font-bold text-gray-900 mb-6">Volume de Exames por Dia</h3>
       <div className="h-75 w-full">
+        {/* ResponsiveContainer garante que o SVG escale dinamicamente com o grid da aplicação */}
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            {/* Definições de SVG para criar o efeito de gradiente sob a linha do gráfico */}
             <defs>
               <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>
                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
               </linearGradient>
             </defs>
+            
+            {/* Eixos configurados sem linhas guia fortes para um design mais limpo (clean UI) */}
             <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+            
             <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
             <Area type="monotone" dataKey="total" stroke="#3B82F6" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
           </AreaChart>

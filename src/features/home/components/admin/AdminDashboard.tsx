@@ -11,6 +11,17 @@ import { mapDashboardMetrics } from '../../../../utils/mappers/mapDashboardMetri
 import { authClient } from '@/lib/auth-client';
 import { DashboardHeader } from '../DashboardHeader';
 
+// Contrato de tipagem para desserialização segura de erros provenientes da API.
+// Substitui o uso de 'any' e garante validação em tempo de compilação.
+interface BackendErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+      fields?: Array<{ message: string }>;
+    };
+  };
+}
+
 export const AdminDashboard = () => {
   const { data: session } = authClient.useSession();
   
@@ -19,6 +30,8 @@ export const AdminDashboard = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // Memoização do payload de filtros para garantir estabilidade referencial.
+  // Previne gatilhos de re-fetch desnecessários no hook useGetMetrics (React Query).
   const filters = useMemo(() => {
     const currentFilters: { startDate?: string; endDate?: string } = {};
     if (startDate) currentFilters.startDate = startDate;
@@ -30,15 +43,20 @@ export const AdminDashboard = () => {
 
   const showLoading = isLoading || isFetching;
 
+  // Desacoplamento: isola a transformação de dados (DTO -> View Model) do ciclo de renderização.
+  // Só reprocessa a estrutura se o payload bruto da API mudar.
   const mappedMetrics = useMemo(() => mapDashboardMetrics(apiMetrics), [apiMetrics]);
 
+  // Efeito colateral imperativo para gerenciar notificações na UI.
+  // Observa mudanças no estado de erro da requisição para injetar feedback no sistema de Toasts.
   useEffect(() => {
     if (isError && error) {
-      const backendError = error as any;
+      const backendError = error as unknown as BackendErrorResponse;
       const errorData = backendError?.response?.data;
       
       let errorMessage = 'Erro ao aplicar o filtro de datas.';
 
+      // Fallback em cascata: prioriza erros específicos de campos (validação) antes de erros globais.
       if (errorData?.fields && errorData.fields.length > 0) {
         errorMessage = errorData.fields[0].message;
       } else if (errorData?.message) {
@@ -57,7 +75,6 @@ export const AdminDashboard = () => {
   return (
     <div className="min-h-screen w-full p-12">
       
-      {/* Componente Modularizado do Cabeçalho */}
       <DashboardHeader 
         userName={userName}
         badgeText="Dashboard do Administrador"
@@ -66,6 +83,7 @@ export const AdminDashboard = () => {
 
       <div className="mt-8 pt-8 border-t border-border">
         
+        {/* Renderização declarativa baseada em estados da requisição (Loading -> Error -> Success) */}
         {showLoading ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
             <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
@@ -90,6 +108,7 @@ export const AdminDashboard = () => {
         </div>
 
         <div className="px-8 pb-8">
+          {/* Gráfico só é montado no DOM se não houver erros ou loading em andamento */}
           {!isError && !showLoading && (
             <TimeSeriesChart data={apiMetrics?.volume.serieTemporal || []} />
           )}

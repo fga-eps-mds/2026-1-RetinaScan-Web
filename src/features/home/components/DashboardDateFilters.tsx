@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,6 +23,7 @@ export const DashboardDateFilters: React.FC<DashboardDateFiltersProps> = ({
   onApply,
   onClear,
 }) => {
+  // Estado local para manipulação temporária das datas antes da submissão.
   const [localStart, setLocalStart] = useState<Date | undefined>(
     startDate ? new Date(`${startDate}T00:00:00`) : undefined
   );
@@ -30,15 +31,27 @@ export const DashboardDateFilters: React.FC<DashboardDateFiltersProps> = ({
     endDate ? new Date(`${endDate}T00:00:00`) : undefined
   );
 
-  useEffect(() => {
+  // Derivação de estado no render (Render Phase State Derivation):
+  // Sincroniza props externas com o estado local sem usar useEffect.
+  // Isso previne renderizações em cascata e melhora a performance da árvore React.
+  const [prevStartDate, setPrevStartDate] = useState(startDate);
+  const [prevEndDate, setPrevEndDate] = useState(endDate);
+
+  if (startDate !== prevStartDate) {
+    setPrevStartDate(startDate);
     setLocalStart(startDate ? new Date(`${startDate}T00:00:00`) : undefined);
+  }
+
+  if (endDate !== prevEndDate) {
+    setPrevEndDate(endDate);
     setLocalEnd(endDate ? new Date(`${endDate}T00:00:00`) : undefined);
-  }, [startDate, endDate]);
+  }
 
   const handleApply = () => {
     const startStr = localStart ? formatDateInput(localStart) : '';
     const endStr = localEnd ? formatDateInput(localEnd) : '';
 
+    // Validação de integridade do intervalo (range) e formatação antes de notificar o componente pai.
     if (localStart && !startStr) {
       toast.error('Verifique a data inicial. O ano deve estar entre 1900 e 2100.');
       return;
@@ -63,11 +76,13 @@ export const DashboardDateFilters: React.FC<DashboardDateFiltersProps> = ({
     onClear();
   };
 
+  // Computação de flags para controle condicional da UI (botões de ação).
   const currentStartStr = startDate || '';
   const currentEndStr = endDate || '';
   const selectedStartStr = localStart ? formatDateInput(localStart) : '';
   const selectedEndStr = localEnd ? formatDateInput(localEnd) : '';
   
+  // Avalia se o estado local temporário difere do estado consolidado nas props.
   const hasPendingChanges = selectedStartStr !== currentStartStr || selectedEndStr !== currentEndStr;
   const hasActiveFilter = Boolean(startDate || endDate);
 
