@@ -3,18 +3,19 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { MetricsSection } from '../MetricSection';
-import { TimeSeriesChart } from '../TimeSeriesChart';
+import { TimeSeriesChart } from '../TimeSeriesChart'; 
 import { DashboardDateFilters } from '../DashboardDateFilters';
-import { useGetMetrics } from '../../hooks/useGetMetrics';
-import { mapDashboardMetrics } from '../../../../utils/mappers/mapDashboardMetrics';
-
-import { authClient } from '@/lib/auth-client';
 import { DashboardHeader } from '../DashboardHeader';
 
-export const AdminDashboard = () => {
+import { useGetMetrics } from '../../hooks/useGetMetrics';
+import { mapDashboardMetrics } from '../../../../utils/mappers/mapDashboardMetrics';
+import { authClient } from '@/lib/auth-client';
+
+export const EspecialistaDashboard = () => {
   const { data: session } = authClient.useSession();
   
-  const userName = session?.user?.name ? session.user.name.split(' ')[0] : 'Administrador';
+  // Pegamos o primeiro nome, e deixamos 'Especialista' como fallback
+  const userName = session?.user?.name ? session.user.name.split(' ')[0] : 'Especialista';
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -37,7 +38,7 @@ export const AdminDashboard = () => {
       const backendError = error as any;
       const errorData = backendError?.response?.data;
       
-      let errorMessage = 'Erro ao aplicar o filtro de datas.';
+      let errorMessage = 'Erro ao carregar as métricas.';
 
       if (errorData?.fields && errorData.fields.length > 0) {
         errorMessage = errorData.fields[0].message;
@@ -57,11 +58,11 @@ export const AdminDashboard = () => {
   return (
     <div className="min-h-screen w-full p-12">
       
-      {/* Componente Modularizado do Cabeçalho */}
+      {/* Componente Modularizado com textos exclusivos para o Especialista */}
       <DashboardHeader 
         userName={userName}
-        badgeText="Dashboard do Administrador"
-        subtitle="Visão geral da triagem de retinografia e performance do sistema."
+        badgeText="Dashboard do Especialista"
+        subtitle="Visão geral de exames que necessitam do seu laudo."
       />
 
       <div className="mt-8 pt-8 border-t border-border">
@@ -69,10 +70,10 @@ export const AdminDashboard = () => {
         {showLoading ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
             <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-            <p className="font-medium text-lg">Carregando métricas...</p>
+            <p className="font-medium text-lg">Carregando exames pendentes...</p>
           </div>
         ) : isError && !apiMetrics ? (
-          <div className="flex justify-center py-12 text-destructive font-medium">Erro crítico ao carregar os dados.</div>
+          <div className="flex justify-center py-12 text-destructive font-medium">Erro ao carregar os dados.</div>
         ) : (
           <MetricsSection metrics={mappedMetrics} />
         )}
@@ -100,4 +101,4 @@ export const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default EspecialistaDashboard;
