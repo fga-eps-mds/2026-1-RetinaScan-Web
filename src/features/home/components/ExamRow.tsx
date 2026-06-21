@@ -47,7 +47,7 @@ export const ExamRow: React.FC<ExamRowProps> = ({ exams, onViewAllClick }) => {
             </div>
 
             {/* Score, Status e Data */}
-            <div className="flex items-center gap-8 justify-between md:justify-end min-w-[300px]">
+            <div className="flex items-center gap-8 justify-between md:justify-end min-w-75">
               <div className="w-20 text-right">
                 {exam.scoreIA !== null ? (
                   <span className={`text-sm font-bold ${exam.statusTag === 'PRIORIDADE' ? 'text-[#E53E3E]' : 'text-gray-700'}`}>

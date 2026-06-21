@@ -1,5 +1,9 @@
 // Tipagem para os dados que vêm do backend
-export type ExameStatus = 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO' | 'ERRO_PROCESSAMENTO';
+export type ExameStatus =
+  | 'CRIADO'
+  | 'CONCLUIDO'
+  | 'EM_PROCESSAMENTO'
+  | 'ERRO_PROCESSAMENTO';
 
 export interface ExamVolumeMetrics {
   total: number;
@@ -24,6 +28,8 @@ export interface DashboardMetrics {
   indicacaoEspecialista: { total: number; porcentagem: number };
   resultadosNormais: { total: number; porcentagem: number };
   pendentes: { total: number };
+  errosProcessamento: { total: number };
+  confiancaIa: { media: number };
 }
 
 export type DashboardExamStatusTag = 'PRIORIDADE' | 'NORMAL' | 'PENDENTE';
@@ -35,6 +41,8 @@ export interface RecentExamItem {
   scoreIA: string | null;
   statusTag: DashboardExamStatusTag;
   dataExame: string;
+  errosProcessamento: { total: number };
+
 }
 
 export interface GetMetricsFilters {
