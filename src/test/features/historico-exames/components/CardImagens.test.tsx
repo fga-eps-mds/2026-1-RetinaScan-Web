@@ -23,15 +23,15 @@ describe('CardImagens', () => {
 
     render(<CardImagens imagens={mockImagens as any} />);
 
-    // As tags img devem estar na tela com os atributos alt corretos
-    const imgOd = screen.getByAltText('Retinografia do olho direito');
-    const imgOe = screen.getByAltText('Retinografia do olho esquerdo');
+    // O componente VisualizadorZoomPan utiliza o alt padrão "Visualização da Retina"
+    // Como são dois olhos, esperamos que o getAllByAltText retorne um array com 2 elementos
+    const imagensRenderizadas = screen.getAllByAltText('Visualização da Retina');
+    
+    expect(imagensRenderizadas).toHaveLength(2);
 
-    expect(imgOd).toBeInTheDocument();
-    expect(imgOd).toHaveAttribute('src', 'https://exemplo.com/od.jpg');
-
-    expect(imgOe).toBeInTheDocument();
-    expect(imgOe).toHaveAttribute('src', 'https://exemplo.com/oe.jpg');
+    // Verifica se os sources foram repassados corretamente na ordem (OD na esquerda [0], OE na direita [1])
+    expect(imagensRenderizadas[0]).toHaveAttribute('src', 'https://exemplo.com/od.jpg');
+    expect(imagensRenderizadas[1]).toHaveAttribute('src', 'https://exemplo.com/oe.jpg');
 
     // Os placeholders não devem estar na tela
     expect(screen.queryByText('Imagem do olho direito indisponível')).not.toBeInTheDocument();
