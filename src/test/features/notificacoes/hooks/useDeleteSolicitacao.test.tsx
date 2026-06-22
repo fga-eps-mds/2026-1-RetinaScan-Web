@@ -6,7 +6,7 @@ import { useDeleteSolicitacao } from '@/features/notificacoes/hooks/useDeleteSol
 import { deleteSolicitacao } from '@/features/notificacoes/api/deleteSolicitacaoCrm';
 import { notificacaoKeys } from '@/features/notificacoes/api/queryKeys';
 
-vi.mock('../api/deleteSolicitacaoCrm', () => ({
+vi.mock('@features/notificacoes/api/deleteSolicitacaoCrm', () => ({
   deleteSolicitacao: vi.fn(),
 }));
 
@@ -55,8 +55,7 @@ describe('useDeleteSolicitacao', () => {
       await result.current.mutateAsync('solicitacao-id-123');
     });
 
-    expect(deleteSolicitacao).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(deleteSolicitacao).mock.calls[0][0]).toBe('solicitacao-id-123');
+    expect(deleteSolicitacao).toHaveBeenCalledWith('solicitacao-id-123');
   });
 
   it('deve invalidar a query de listagem do admin em caso de sucesso', async () => {

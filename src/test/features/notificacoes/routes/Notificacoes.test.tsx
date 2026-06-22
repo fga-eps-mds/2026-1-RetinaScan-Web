@@ -538,7 +538,7 @@ describe('Notificacoes Route', () => {
 
       // Captura o select de status (o primeiro select renderizado na área do Admin)
       const selectStatus = screen.getAllByRole('combobox')[0];
-      await user.selectOptions(selectStatus, 'PENDENTE');
+      await userEvent.selectOptions(selectStatus, 'PENDENTE');
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
       const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
@@ -554,7 +554,7 @@ describe('Notificacoes Route', () => {
       // Captura o segundo select (Ordenação)
       const selectOrdem = screen.getAllByRole('combobox')[1];
       // Valor mapeado para: Nome (A-Z) -> "nomeCompleto-asc"
-      await user.selectOptions(selectOrdem, 'nomeCompleto-asc');
+      await userEvent.selectOptions(selectOrdem, 'nomeCompleto-asc');
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
       const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');

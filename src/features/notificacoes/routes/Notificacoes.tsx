@@ -31,7 +31,6 @@ export default function NotificationsPage() {
 
   const [tabFiltro, setTabFiltro] = useState<LocalFilter>('todas');
 
-  
   const apiStatusFilter: NotificationStatusFilter =
     tabFiltro === 'nao-lidas' ? 'nao-lidas' : 'todas';
 
@@ -120,15 +119,13 @@ export default function NotificationsPage() {
       .forEach((item) => markAsRead(item.id));
   };
 
-    const clearAllFilters = () => {
+  const clearAllFilters = () => {
     setBusca('');
     setOrdenacao('');
     setStatusFiltro('TODAS');
   };
 
-  const hasFilters =
-    !!busca.trim() || !!ordenacao || !!statusFiltro;
-
+  const hasFilters = !!busca.trim() || !!ordenacao || !!statusFiltro;
 
   return (
     <div className="flex h-full flex-col overflow-hidden px-6 py-8 sm:px-10 lg:px-12">
@@ -230,6 +227,20 @@ export default function NotificationsPage() {
         </TabsContent>
 
         {/* TAB: SOLICITAÇÕES */}
+        <div className="flex-1 overflow-y-auto pr-2 scrollbar-transparent">
+          {userTipoPerfil === 'ADMIN' && (
+            <SolicitacoesAdmin filters={adminFilters} />
+          )}
+
+          {userTipoPerfil === 'MEDICO' && <SolicitacoesMedico />}
+
+          {userTipoPerfil !== 'ADMIN' && userTipoPerfil !== 'MEDICO' && (
+            <div className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+              Perfil não identificado. Você não tem permissão para visualizar
+              esta aba.
+            </div>
+          )}
+        </div>
         <TabsContent
           value="solicitacoes"
           className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden"
