@@ -40,7 +40,10 @@ vi.mock('@/features/notificacoes/components/SolicitacoesMedico', () => ({
 vi.mock('@/features/notificacoes/components/SolicitacoesAdmin', () => ({
   __esModule: true,
   default: ({ filters }: { filters: any }) => (
-    <div data-testid="solicitacoes-admin" data-filters={JSON.stringify(filters)}>
+    <div
+      data-testid="solicitacoes-admin"
+      data-filters={JSON.stringify(filters)}
+    >
       Mock Admin
     </div>
   ),
@@ -53,17 +56,24 @@ vi.mock('@/features/notificacoes/components/CadastrosAdmin', () => ({
 
 // Mock simples para os seletores do Radix UI / Shadcn funcionar em ambiente de teste JSDOM
 vi.mock('@/components/ui/select', () => ({
-  Select: ({ children, value, onValueChange }: any) => (
-    <select value={value} onChange={(e) => onValueChange(e.target.value)} data-testid="mock-select">
-      {children}
-    </select>
-  ),
-  SelectTrigger: ({ children }: any) => <div>{children}</div>,
+  Select: ({ children, value, onValueChange }: any) => {
+    return (
+      <select
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
+        data-testid="mock-select"
+      >
+        {children}
+      </select>
+    );
+  },
+  SelectTrigger: ({ children }: any) => <div role="button">{children}</div>,
   SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
-  SelectContent: ({ children }: any) => <div>{children}</div>,
-  SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
+  SelectContent: ({ children }: any) => <>{children}</>,
+  SelectItem: ({ children, value }: any) => (
+    <option value={value}>{children}</option>
+  ),
 }));
-
 
 vi.mock('@/features/notificacoes/components/NotificationCardSkeleton', () => ({
   NotificationCardSkeleton: () => (
@@ -153,9 +163,7 @@ describe('Notificacoes Route', () => {
     vi.restoreAllMocks();
   });
 
-
   // CENÁRIOS DE RENDERIZAÇÃO E ESTADOS VISUAIS (UI)
- 
 
   it('deve renderizar a aba de alertas por padrão e estado vazio', () => {
     renderWithProviders();
@@ -184,7 +192,6 @@ describe('Notificacoes Route', () => {
     // Assert
     expect(screen.getAllByTestId('notification-skeleton')).toHaveLength(3);
   });
-
 
   // REGRAS DE NEGÓCIO E ORDENAÇÃO DE DADOS
 
@@ -229,9 +236,33 @@ describe('Notificacoes Route', () => {
     // Arrange
     vi.mocked(useListNotifications).mockReturnValue({
       data: [
-        { id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'N1', mensagem: 'M1', dados: null, lidaEm: null, createdAt: '2026-05-23T18:00:00.000Z' },
-        { id: '2', tipo: 'avaliacao_ia_atualizada', titulo: 'N2', mensagem: 'M2', dados: null, lidaEm: '2026-05-23T18:10:00.000Z', createdAt: '2026-05-23T17:00:00.000Z' },
-        { id: '3', tipo: 'avaliacao_ia_atualizada', titulo: 'N3', mensagem: 'M3', dados: null, lidaEm: null, createdAt: '2026-05-23T16:00:00.000Z' },
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N1',
+          mensagem: 'M1',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T18:00:00.000Z',
+        },
+        {
+          id: '2',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N2',
+          mensagem: 'M2',
+          dados: null,
+          lidaEm: '2026-05-23T18:10:00.000Z',
+          createdAt: '2026-05-23T17:00:00.000Z',
+        },
+        {
+          id: '3',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N3',
+          mensagem: 'M3',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T16:00:00.000Z',
+        },
       ],
       isLoading: false,
       isFetching: false,
@@ -275,8 +306,24 @@ describe('Notificacoes Route', () => {
     const user = userEvent.setup();
     vi.mocked(useListNotifications).mockReturnValue({
       data: [
-        { id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'Recente', mensagem: 'Dentro de 24h', dados: null, lidaEm: null, createdAt: '2026-05-23T10:00:00.000Z' },
-        { id: '2', tipo: 'avaliacao_ia_atualizada', titulo: 'Antiga', mensagem: 'Fora de 24h', dados: null, lidaEm: null, createdAt: '2026-05-21T10:00:00.000Z' },
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'Recente',
+          mensagem: 'Dentro de 24h',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T10:00:00.000Z',
+        },
+        {
+          id: '2',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'Antiga',
+          mensagem: 'Fora de 24h',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-21T10:00:00.000Z',
+        },
       ],
       isLoading: false,
       isFetching: false,
@@ -291,15 +338,23 @@ describe('Notificacoes Route', () => {
     expect(screen.queryByText('Antiga')).not.toBeInTheDocument();
   });
 
-
   // DISPAROS DE MUTAÇÕES (AÇÕES DO USUÁRIO)
-
 
   it('deve chamar markAsRead ao clicar em marcar como lida de um card', async () => {
     // Arrange
     const user = userEvent.setup();
     vi.mocked(useListNotifications).mockReturnValue({
-      data: [{ id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'Notif', mensagem: 'Mensagem', dados: null, lidaEm: null, createdAt: '2026-05-23T10:00:00.000Z' }],
+      data: [
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'Notif',
+          mensagem: 'Mensagem',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T10:00:00.000Z',
+        },
+      ],
       isLoading: false,
       isFetching: false,
     } as any);
@@ -316,7 +371,17 @@ describe('Notificacoes Route', () => {
     // Arrange
     const user = userEvent.setup();
     vi.mocked(useListNotifications).mockReturnValue({
-      data: [{ id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'Notif', mensagem: 'Mensagem', dados: null, lidaEm: null, createdAt: '2026-05-23T10:00:00.000Z' }],
+      data: [
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'Notif',
+          mensagem: 'Mensagem',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T10:00:00.000Z',
+        },
+      ],
       isLoading: false,
       isFetching: false,
     } as any);
@@ -329,18 +394,40 @@ describe('Notificacoes Route', () => {
     expect(removeNotificationMock).toHaveBeenCalledWith('1');
   });
 
- 
   // OPERAÇÕES EM LOTE (BATCH ACTIONS) & ESTADOS DE BOTÕES
- 
 
   it('deve marcar todas como lidas ao clicar no botão', async () => {
     // Arrange
     const user = userEvent.setup();
     vi.mocked(useListNotifications).mockReturnValue({
       data: [
-        { id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'N1', mensagem: 'M1', dados: null, lidaEm: null, createdAt: '2026-05-23T18:00:00.000Z' },
-        { id: '2', tipo: 'avaliacao_ia_atualizada', titulo: 'N2', mensagem: 'M2', dados: null, lidaEm: '2026-05-23T18:10:00.000Z', createdAt: '2026-05-23T17:00:00.000Z' },
-        { id: '3', tipo: 'avaliacao_ia_atualizada', titulo: 'N3', mensagem: 'M3', dados: null, lidaEm: null, createdAt: '2026-05-23T16:00:00.000Z' },
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N1',
+          mensagem: 'M1',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T18:00:00.000Z',
+        },
+        {
+          id: '2',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N2',
+          mensagem: 'M2',
+          dados: null,
+          lidaEm: '2026-05-23T18:10:00.000Z',
+          createdAt: '2026-05-23T17:00:00.000Z',
+        },
+        {
+          id: '3',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N3',
+          mensagem: 'M3',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T16:00:00.000Z',
+        },
       ],
       isLoading: false,
       isFetching: false,
@@ -348,7 +435,9 @@ describe('Notificacoes Route', () => {
     renderWithProviders();
 
     // Act
-    await user.click(screen.getByRole('button', { name: /marcar todas como lidas/i }));
+    await user.click(
+      screen.getByRole('button', { name: /marcar todas como lidas/i })
+    );
 
     // Assert (Apenas os IDs não lidos '1' e '3' devem ser enviados para a mutação)
     expect(markAsReadMock).toHaveBeenCalledTimes(2);
@@ -359,7 +448,17 @@ describe('Notificacoes Route', () => {
   it('deve desabilitar o botão de marcar todas quando não houver não lidas', () => {
     // Arrange
     vi.mocked(useListNotifications).mockReturnValue({
-      data: [{ id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'Lida', mensagem: 'Mensagem', dados: null, lidaEm: '2026-05-23T18:10:00.000Z', createdAt: '2026-05-23T17:00:00.000Z' }],
+      data: [
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'Lida',
+          mensagem: 'Mensagem',
+          dados: null,
+          lidaEm: '2026-05-23T18:10:00.000Z',
+          createdAt: '2026-05-23T17:00:00.000Z',
+        },
+      ],
       isLoading: false,
       isFetching: false,
     } as any);
@@ -368,7 +467,9 @@ describe('Notificacoes Route', () => {
     renderWithProviders();
 
     // Assert
-    expect(screen.getByRole('button', { name: /marcar todas como lidas/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /marcar todas como lidas/i })
+    ).toBeDisabled();
   });
 
   it('deve desabilitar o botão de marcar todas quando estiver marcando', () => {
@@ -378,7 +479,17 @@ describe('Notificacoes Route', () => {
       isPending: true,
     } as any);
     vi.mocked(useListNotifications).mockReturnValue({
-      data: [{ id: '1', tipo: 'avaliacao_ia_atualizada', titulo: 'N1', mensagem: 'M1', dados: null, lidaEm: null, createdAt: '2026-05-23T18:00:00.000Z' }],
+      data: [
+        {
+          id: '1',
+          tipo: 'avaliacao_ia_atualizada',
+          titulo: 'N1',
+          mensagem: 'M1',
+          dados: null,
+          lidaEm: null,
+          createdAt: '2026-05-23T18:00:00.000Z',
+        },
+      ],
       isLoading: false,
       isFetching: false,
     } as any);
@@ -387,11 +498,12 @@ describe('Notificacoes Route', () => {
     renderWithProviders();
 
     // Assert
-    expect(screen.getByRole('button', { name: /marcar todas como lidas/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /marcar todas como lidas/i })
+    ).toBeDisabled();
   });
 
   // INDICADORES DE BACKGROUND RE-FETCHING E FEEDBACKS
-
 
   it('deve exibir mensagem de atualização quando estiver fetching', () => {
     // Arrange
@@ -423,7 +535,7 @@ describe('Notificacoes Route', () => {
   });
 
   // CONTROLE DE VISIBILIDADE POR CONTROLE DE ACESSO (RBAC)
-  
+
   it('deve exibir solicitações do médico ao trocar de aba', async () => {
     // Arrange
     const user = userEvent.setup();
@@ -490,7 +602,9 @@ describe('Notificacoes Route', () => {
       await user.click(screen.getByRole('tab', { name: /solicitações/i }));
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
-      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+      const passedFilters = JSON.parse(
+        adminComponent.getAttribute('data-filters') || '{}'
+      );
 
       // Por padrão, ordenação inicial deve ser mapeada corretamente da string "createdAt-desc"
       expect(passedFilters).toEqual({
@@ -504,11 +618,15 @@ describe('Notificacoes Route', () => {
       renderWithProviders();
       await user.click(screen.getByRole('tab', { name: /solicitações/i }));
 
-      const inputBusca = screen.getByPlaceholderText(/buscar por nome ou e-mail/i);
+      const inputBusca = screen.getByPlaceholderText(
+        /buscar por nome ou e-mail/i
+      );
       await user.type(inputBusca, 'Gustavo Quaresma');
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
-      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+      const passedFilters = JSON.parse(
+        adminComponent.getAttribute('data-filters') || '{}'
+      );
 
       // O texto simples deve cair na propriedade 'nome'
       expect(passedFilters.nome).toBe('Gustavo Quaresma');
@@ -520,11 +638,15 @@ describe('Notificacoes Route', () => {
       renderWithProviders();
       await user.click(screen.getByRole('tab', { name: /solicitações/i }));
 
-      const inputBusca = screen.getByPlaceholderText(/buscar por nome ou e-mail/i);
+      const inputBusca = screen.getByPlaceholderText(
+        /buscar por nome ou e-mail/i
+      );
       await user.type(inputBusca, 'cecilia@gmail.com');
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
-      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+      const passedFilters = JSON.parse(
+        adminComponent.getAttribute('data-filters') || '{}'
+      );
 
       // O caractere @ dispara o mapeamento para a propriedade 'email'
       expect(passedFilters.email).toBe('cecilia@gmail.com');
@@ -541,27 +663,29 @@ describe('Notificacoes Route', () => {
       await userEvent.selectOptions(selectStatus, 'PENDENTE');
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
-      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+      const passedFilters = JSON.parse(
+        adminComponent.getAttribute('data-filters') || '{}'
+      );
 
       expect(passedFilters.status).toBe('PENDENTE');
     });
 
-    it('deve quebrar a string de ordenação e passar sortBy e sortOrder separados', async () => {
+it('deve quebrar a string de ordenação e passar sortBy e sortOrder separados', async () => {
       const user = userEvent.setup();
       renderWithProviders();
       await user.click(screen.getByRole('tab', { name: /solicitações/i }));
 
-      // Captura o segundo select (Ordenação)
-      const selectOrdem = screen.getAllByRole('combobox')[1];
-      // Valor mapeado para: Nome (A-Z) -> "nomeCompleto-asc"
-      await userEvent.selectOptions(selectOrdem, 'nomeCompleto-asc');
+      const selects = screen.getAllByTestId('mock-select');
+      
+      await user.selectOptions(selects[1], 'nomeCompleto-asc');
 
       const adminComponent = screen.getByTestId('solicitacoes-admin');
-      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+      const passedFilters = JSON.parse(
+        adminComponent.getAttribute('data-filters') || '{}'
+      );
 
       expect(passedFilters.sortBy).toBe('nomeCompleto');
       expect(passedFilters.sortOrder).toBe('asc');
     });
   });
-  
 });

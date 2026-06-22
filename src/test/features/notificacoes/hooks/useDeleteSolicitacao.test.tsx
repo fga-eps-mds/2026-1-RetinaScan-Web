@@ -6,7 +6,7 @@ import { useDeleteSolicitacao } from '@/features/notificacoes/hooks/useDeleteSol
 import { deleteSolicitacao } from '@/features/notificacoes/api/deleteSolicitacaoCrm';
 import { notificacaoKeys } from '@/features/notificacoes/api/queryKeys';
 
-vi.mock('@features/notificacoes/api/deleteSolicitacaoCrm', () => ({
+vi.mock('@/features/notificacoes/api/deleteSolicitacaoCrm', () => ({
   deleteSolicitacao: vi.fn(),
 }));
 

@@ -137,6 +137,7 @@ export default function NotificationsPage() {
           {userTipoPerfil === 'ADMIN' && (
             <TabsTrigger value="cadastros">Inscrições</TabsTrigger>
           )}
+
         </TabsList>
 
         {/* TAB: NOTIFICACOES */}
@@ -226,21 +227,6 @@ export default function NotificationsPage() {
           </div>
         </TabsContent>
 
-        {/* TAB: SOLICITAÇÕES */}
-        <div className="flex-1 overflow-y-auto pr-2 scrollbar-transparent">
-          {userTipoPerfil === 'ADMIN' && (
-            <SolicitacoesAdmin filters={adminFilters} />
-          )}
-
-          {userTipoPerfil === 'MEDICO' && <SolicitacoesMedico />}
-
-          {userTipoPerfil !== 'ADMIN' && userTipoPerfil !== 'MEDICO' && (
-            <div className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
-              Perfil não identificado. Você não tem permissão para visualizar
-              esta aba.
-            </div>
-          )}
-        </div>
         <TabsContent
           value="solicitacoes"
           className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden"
@@ -319,10 +305,10 @@ export default function NotificationsPage() {
             )}
 
             <div className="flex-1 overflow-y-auto pr-2 scrollbar-transparent">
-              {userTipoPerfil === 'ADMIN' ? (
-                // Passamos o objeto montado dinamicamente para o componente Admin
+              {userTipoPerfil === 'ADMIN' && (
                 <SolicitacoesAdmin filters={adminFilters} />
-              ) : (
+              )}
+              {userTipoPerfil === 'MEDICO' && (
                 <SolicitacoesMedico />
               )}
             </div>
