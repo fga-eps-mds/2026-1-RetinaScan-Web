@@ -25,7 +25,9 @@ describe('getSolicitacoesCpfCrm', () => {
 
     const result = await getSolicitacoesCpfCrm();
 
-    expect(api.get).toHaveBeenCalledWith('/api/usuarios/solicitacoes-cpf-crm');
+    expect(api.get).toHaveBeenCalledWith('/api/usuarios/solicitacoes-cpf-crm', {
+      params: {}
+    });
     expect(result).toEqual(mockSolicitacoes);
     expect(result).toHaveLength(2);
   });

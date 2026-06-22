@@ -1,9 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { getSolicitacoesCpfCrm } from '../api/getSolicitacoesCpfCrm';
+import { notificacaoKeys } from '../api/queryKeys';
 
-export function useGetSolicitacoes() {
+export type GetSolicitacoesParams = {
+  status?: 'PENDENTE' | 'ACEITO' | 'REJEITADO'; 
+  idUsuario?: string;
+  nome?: string;
+  email?: string;
+  sortBy?: 'createdAt' | 'updatedAt' | 'status' | 'nomeCompleto';
+  sortOrder?: 'asc' | 'desc';
+};
+
+export function useGetSolicitacoes(filters: GetSolicitacoesParams = {}) {
   return useQuery({
-    queryKey: ['solicitacoes-cpf-crm'],
-    queryFn: getSolicitacoesCpfCrm,
+  queryKey: [...notificacaoKeys.solicitacoesCpfCrmList, filters],    
+  queryFn: () => getSolicitacoesCpfCrm(filters),
   });
 }
