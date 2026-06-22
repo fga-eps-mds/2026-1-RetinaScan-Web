@@ -31,6 +31,7 @@ vi.mock('@/features/notificacoes/hooks/useDeleteNotification', () => ({
 // ==========================================
 // SUBCOMPONENTES INTEGRANTES DO DASHBOARD (STUBS)
 // ==========================================
+
 vi.mock('@/features/notificacoes/components/SolicitacoesMedico', () => ({
   __esModule: true,
   default: () => <div data-testid="solicitacoes-medico">Mock Medico</div>,
@@ -38,8 +39,31 @@ vi.mock('@/features/notificacoes/components/SolicitacoesMedico', () => ({
 
 vi.mock('@/features/notificacoes/components/SolicitacoesAdmin', () => ({
   __esModule: true,
-  default: () => <div data-testid="solicitacoes-admin">Mock Admin</div>,
+  default: ({ filters }: { filters: any }) => (
+    <div data-testid="solicitacoes-admin" data-filters={JSON.stringify(filters)}>
+      Mock Admin
+    </div>
+  ),
 }));
+
+vi.mock('@/features/notificacoes/components/CadastrosAdmin', () => ({
+  __esModule: true,
+  default: () => <div data-testid="cadastros-admin">Mock Cadastros Admin</div>,
+}));
+
+// Mock simples para os seletores do Radix UI / Shadcn funcionar em ambiente de teste JSDOM
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ children, value, onValueChange }: any) => (
+    <select value={value} onChange={(e) => onValueChange(e.target.value)} data-testid="mock-select">
+      {children}
+    </select>
+  ),
+  SelectTrigger: ({ children }: any) => <div>{children}</div>,
+  SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
+  SelectContent: ({ children }: any) => <div>{children}</div>,
+  SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
+}));
+
 
 vi.mock('@/features/notificacoes/components/NotificationCardSkeleton', () => ({
   NotificationCardSkeleton: () => (
@@ -445,4 +469,99 @@ describe('Notificacoes Route', () => {
     expect(screen.queryByTestId('solicitacoes-medico')).not.toBeInTheDocument();
     expect(screen.queryByTestId('solicitacoes-admin')).not.toBeInTheDocument();
   });
+
+  // ==========================================
+  // CENÁRIOS DOS NOVOS FILTROS DO PAINEL ADMIN
+  // ==========================================
+
+  describe('Filtros e Ordenação do Painel Admin', () => {
+    beforeEach(() => {
+      // Força a sessão como ADMIN para expor a barra de busca e selects
+      vi.mocked(useSession).mockReturnValue({
+        data: { user: { tipoPerfil: 'ADMIN' } },
+      } as any);
+    });
+
+    it('deve repassar filtros vazios por padrão ao carregar a aba de solicitações', async () => {
+      const user = userEvent.setup();
+      renderWithProviders();
+
+      // Ativa a aba de solicitações
+      await user.click(screen.getByRole('tab', { name: /solicitações/i }));
+
+      const adminComponent = screen.getByTestId('solicitacoes-admin');
+      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+
+      // Por padrão, ordenação inicial deve ser mapeada corretamente da string "createdAt-desc"
+      expect(passedFilters).toEqual({
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+    });
+
+    it('deve aplicar filtro de nome quando um texto simples for digitado na busca livre', async () => {
+      const user = userEvent.setup();
+      renderWithProviders();
+      await user.click(screen.getByRole('tab', { name: /solicitações/i }));
+
+      const inputBusca = screen.getByPlaceholderText(/buscar por nome ou e-mail/i);
+      await user.type(inputBusca, 'Gustavo Quaresma');
+
+      const adminComponent = screen.getByTestId('solicitacoes-admin');
+      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+
+      // O texto simples deve cair na propriedade 'nome'
+      expect(passedFilters.nome).toBe('Gustavo Quaresma');
+      expect(passedFilters.email).toBeUndefined();
+    });
+
+    it('deve aplicar filtro de email de forma inteligente quando um padrão de email for digitado', async () => {
+      const user = userEvent.setup();
+      renderWithProviders();
+      await user.click(screen.getByRole('tab', { name: /solicitações/i }));
+
+      const inputBusca = screen.getByPlaceholderText(/buscar por nome ou e-mail/i);
+      await user.type(inputBusca, 'cecilia@gmail.com');
+
+      const adminComponent = screen.getByTestId('solicitacoes-admin');
+      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+
+      // O caractere @ dispara o mapeamento para a propriedade 'email'
+      expect(passedFilters.email).toBe('cecilia@gmail.com');
+      expect(passedFilters.nome).toBeUndefined();
+    });
+
+    it('deve repassar a propriedade de status correta ao mudar o select de status', async () => {
+      const user = userEvent.setup();
+      renderWithProviders();
+      await user.click(screen.getByRole('tab', { name: /solicitações/i }));
+
+      // Captura o select de status (o primeiro select renderizado na área do Admin)
+      const selectStatus = screen.getAllByRole('combobox')[0];
+      await user.selectOptions(selectStatus, 'PENDENTE');
+
+      const adminComponent = screen.getByTestId('solicitacoes-admin');
+      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+
+      expect(passedFilters.status).toBe('PENDENTE');
+    });
+
+    it('deve quebrar a string de ordenação e passar sortBy e sortOrder separados', async () => {
+      const user = userEvent.setup();
+      renderWithProviders();
+      await user.click(screen.getByRole('tab', { name: /solicitações/i }));
+
+      // Captura o segundo select (Ordenação)
+      const selectOrdem = screen.getAllByRole('combobox')[1];
+      // Valor mapeado para: Nome (A-Z) -> "nomeCompleto-asc"
+      await user.selectOptions(selectOrdem, 'nomeCompleto-asc');
+
+      const adminComponent = screen.getByTestId('solicitacoes-admin');
+      const passedFilters = JSON.parse(adminComponent.getAttribute('data-filters') || '{}');
+
+      expect(passedFilters.sortBy).toBe('nomeCompleto');
+      expect(passedFilters.sortOrder).toBe('asc');
+    });
+  });
+  
 });
