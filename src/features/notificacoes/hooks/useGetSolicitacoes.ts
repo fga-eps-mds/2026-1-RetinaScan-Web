@@ -3,7 +3,7 @@ import { getSolicitacoesCpfCrm } from '../api/getSolicitacoesCpfCrm';
 import { notificacaoKeys } from '../api/queryKeys';
 
 export type GetSolicitacoesParams = {
-  status?: 'PENDENTE' | 'ACEITO' | 'REJEITADO'; 
+  status?: 'PENDENTE' | 'APROVADA' | 'REJEITADA';
   idUsuario?: string;
   nome?: string;
   email?: string;
@@ -13,7 +13,7 @@ export type GetSolicitacoesParams = {
 
 export function useGetSolicitacoes(filters: GetSolicitacoesParams = {}) {
   return useQuery({
-  queryKey: [...notificacaoKeys.solicitacoesCpfCrmList, filters],    
-  queryFn: () => getSolicitacoesCpfCrm(filters),
+    queryKey: [...notificacaoKeys.solicitacoesCpfCrmList, filters],
+    queryFn: () => getSolicitacoesCpfCrm(filters),
   });
 }

@@ -137,7 +137,6 @@ export default function NotificationsPage() {
           {userTipoPerfil === 'ADMIN' && (
             <TabsTrigger value="cadastros">Inscrições</TabsTrigger>
           )}
-
         </TabsList>
 
         {/* TAB: NOTIFICACOES */}
@@ -264,8 +263,8 @@ export default function NotificationsPage() {
                     <SelectContent>
                       <SelectItem value="TODAS">Todos os Status</SelectItem>
                       <SelectItem value="PENDENTE">Pendentes</SelectItem>
-                      <SelectItem value="ACEITO">Aceitas</SelectItem>
-                      <SelectItem value="REJEITADO">Recusadas</SelectItem>
+                      <SelectItem value="APROVADA">Aprovadas</SelectItem>
+                      <SelectItem value="REJEITADA">Rejeitadas</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -308,9 +307,7 @@ export default function NotificationsPage() {
               {userTipoPerfil === 'ADMIN' && (
                 <SolicitacoesAdmin filters={adminFilters} />
               )}
-              {userTipoPerfil === 'MEDICO' && (
-                <SolicitacoesMedico />
-              )}
+              {userTipoPerfil === 'MEDICO' && <SolicitacoesMedico />}
             </div>
           </div>
         </TabsContent>
