@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { mapDashboardMetrics, type ApiDashboardMetrics } from '@/utils/mappers/mapDashboardMetrics';
+import { mapDashboardMetrics } from '@/utils/mappers/mapDashboardMetrics';
+import type { BackendMetricsResponseDTO } from '@/features/home/types/dashboard-result'; // Ajuste o caminho de importação se necessário
 
 describe('mapDashboardMetrics', () => {
   it('deve retornar valores zerados (estado inicial) se a API retornar null ou undefined', () => {
@@ -23,7 +24,7 @@ describe('mapDashboardMetrics', () => {
 
   it('deve calcular corretamente os totais e as porcentagens com dados completos', () => {
     // Arrange: Simula uma resposta perfeita e completa da API
-    const mockData: ApiDashboardMetrics = {
+    const mockData: BackendMetricsResponseDTO = {
       volume: {
         total: 100,
         porStatus: {
@@ -32,6 +33,7 @@ describe('mapDashboardMetrics', () => {
           ERRO_PROCESSAMENTO: 2,
           CONCLUIDO: 83,
         },
+        serieTemporal: [], // Necessário para a nova tipagem
       },
       resultadosIa: {
         totalResultados: 80, // Total processado pela IA
@@ -66,13 +68,14 @@ describe('mapDashboardMetrics', () => {
 
   it('deve lidar corretamente com chaves de status e diagnósticos vazios/ausentes', () => {
     // Arrange: Simula uma resposta válida, mas vazia em algumas categorias
-    const mockDataPartial: ApiDashboardMetrics = {
+    const mockDataPartial: BackendMetricsResponseDTO = {
       volume: {
         total: 10,
         porStatus: {
           // Ausência de CRIADO, EM_PROCESSAMENTO e ERRO_PROCESSAMENTO
           CONCLUIDO: 10,
-        },
+        } as any, // Força a simulação de chaves faltando para o teste de resiliência
+        serieTemporal: [],
       },
       resultadosIa: {
         totalResultados: 0, 
@@ -92,5 +95,48 @@ describe('mapDashboardMetrics', () => {
     
     // Garante que não retorne NaN na porcentagem caso totalResultados seja 0
     expect(result.indicacaoEspecialista.porcentagem).toBe(0);
+  });
+
+  it('deve ser case-insensitive ao buscar os diagnósticos (tratar maiúsculas e minúsculas)', () => {
+    // Arrange: Simula o backend retornando os labels com formatações inconsistentes
+    const mockComLetrasMaiusculas: BackendMetricsResponseDTO = {
+      volume: { 
+        total: 10, 
+        porStatus: { CRIADO: 10, CONCLUIDO: 0, EM_PROCESSAMENTO: 0, ERRO_PROCESSAMENTO: 0 }, 
+        serieTemporal: [] 
+      },
+      resultadosIa: {
+        totalResultados: 10,
+        confiancaMedia: 0.9,
+        porDiagnostico: [
+          { label: 'NORMAL', total: 7 },    // Backend mandou em CAIXA ALTA
+          { label: 'AbNormal', total: 3 },  // Backend mandou Misturado
+        ],
+      },
+    };
+
+    // Act
+    const result = mapDashboardMetrics(mockComLetrasMaiusculas);
+    
+    // Assert
+    expect(result.resultadosNormais.total).toBe(7);
+    expect(result.indicacaoEspecialista.total).toBe(3);
+  });
+
+  it('não deve quebrar a aplicação caso a API envie um payload parcial (sem porStatus ou porDiagnostico)', () => {
+    // Arrange: Simulando um payload incompleto ou mal formatado da API
+    const mockIncompleto = {
+      volume: { total: 5 }, // Cadê o porStatus e a serieTemporal?
+      resultadosIa: { totalResultados: 5, confiancaMedia: 0.8 }, // Cadê o porDiagnostico?
+    } as unknown as BackendMetricsResponseDTO;
+
+    // Act
+    const result = mapDashboardMetrics(mockIncompleto);
+
+    // Assert: A aplicação deve sobreviver e jogar os valores ausentes para zero graciosamente
+    expect(result.pendentes.total).toBe(0);
+    expect(result.errosProcessamento.total).toBe(0);
+    expect(result.resultadosNormais.total).toBe(0);
+    expect(result.indicacaoEspecialista.total).toBe(0);
   });
 });

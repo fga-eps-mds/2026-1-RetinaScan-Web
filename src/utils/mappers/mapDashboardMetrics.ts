@@ -1,28 +1,7 @@
-import type { DashboardMetrics } from '../../features/home/types/dashboard-result';
+import type { DashboardMetrics, BackendMetricsResponseDTO } from '../../features/home/types/dashboard-result';
 
-// Tipagem do retorno esperado da sua API de métricas
-export interface ApiDashboardMetrics {
-  volume: {
-    total: number;
-    porStatus: {
-      CRIADO?: number;
-      EM_PROCESSAMENTO?: number;
-      ERRO_PROCESSAMENTO?: number;
-      CONCLUIDO?: number;
-    };
-  };
-  resultadosIa: {
-    totalResultados: number;
-    confiancaMedia: number;
-    porDiagnostico: Array<{
-      label: string;
-      total: number;
-    }>;
-  };
-}
-
-// Substituímos o 'any' por 'ApiDashboardMetrics | undefined | null'
-export const mapDashboardMetrics = (apiMetrics?: ApiDashboardMetrics | null): DashboardMetrics => {
+export const mapDashboardMetrics = (apiMetrics?: BackendMetricsResponseDTO | null): DashboardMetrics => {
+  // Guard clause: Estado vazio/zerado se não houver payload
   if (!apiMetrics) {
     return {
       analisesTotais: { total: 0, periodoDias: 30 },
@@ -34,25 +13,42 @@ export const mapDashboardMetrics = (apiMetrics?: ApiDashboardMetrics | null): Da
     };
   }
 
-  // A inferência do TypeScript já sabe o que é o 'd' porque tipamos o 'porDiagnostico', 
-  // mas podemos tipar explicitamente para evitar qualquer erro de lint
-  const getDiagnostico = (label: string) => 
-    apiMetrics.resultadosIa.porDiagnostico.find((d: { label: string; total: number }) => d.label === label)?.total || 0;
+  // Desestruturação com fallbacks para evitar erros caso a API envie um payload parcial
+  const porDiagnostico = apiMetrics.resultadosIa?.porDiagnostico || [];
+  const porStatus = apiMetrics.volume?.porStatus || {};
 
-  const totalIa = apiMetrics.resultadosIa.totalResultados || 1; 
+  // Busca o diagnóstico com toLowerCase() para blindar contra diferenças de formatação do backend
+  const getDiagnostico = (targetLabel: string) => 
+    porDiagnostico.find((d) => d.label?.toLowerCase() === targetLabel.toLowerCase())?.total || 0;
+
+  // Evita divisão por zero retornando 1 caso o total seja 0 (o resultado final da % ainda será 0)
+  const totalIa = apiMetrics.resultadosIa?.totalResultados || 1; 
   const normais = getDiagnostico('normal');
   const anormais = getDiagnostico('abnormal');
 
-  const totalPendentes = 
-    (apiMetrics.volume.porStatus.CRIADO || 0) + 
-    (apiMetrics.volume.porStatus.EM_PROCESSAMENTO || 0);
+  const totalPendentes = (porStatus.CRIADO || 0) + (porStatus.EM_PROCESSAMENTO || 0);
 
   return {
-    analisesTotais: { total: apiMetrics.volume.total, periodoDias: 30 },
-    indicacaoEspecialista: { total: anormais, porcentagem: Math.round((anormais / totalIa) * 100) },
-    resultadosNormais: { total: normais, porcentagem: Math.round((normais / totalIa) * 100) },
-    pendentes: { total: totalPendentes },
-    errosProcessamento: { total: apiMetrics.volume.porStatus.ERRO_PROCESSAMENTO || 0 },
-    confiancaIa: { media: Math.round((apiMetrics.resultadosIa.confiancaMedia || 0) * 100) }
+    analisesTotais: { 
+      total: apiMetrics.volume?.total || 0, 
+      periodoDias: 30 
+    },
+    indicacaoEspecialista: { 
+      total: anormais, 
+      porcentagem: Math.round((anormais / totalIa) * 100) 
+    },
+    resultadosNormais: { 
+      total: normais, 
+      porcentagem: Math.round((normais / totalIa) * 100) 
+    },
+    pendentes: { 
+      total: totalPendentes 
+    },
+    errosProcessamento: { 
+      total: porStatus.ERRO_PROCESSAMENTO || 0 
+    },
+    confiancaIa: { 
+      media: Math.round((apiMetrics.resultadosIa?.confiancaMedia || 0) * 100) 
+    }
   };
 };

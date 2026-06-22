@@ -10,7 +10,7 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({ metrics }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full p-8">
       <MetricCard
-        title="Análises Totais"
+        title="Totais de Exames"
         value={metrics.analisesTotais.total}
         subtext={`Últimos ${metrics.analisesTotais.periodoDias} dias`}
         variant="default"
@@ -18,10 +18,11 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({ metrics }) => {
       
       {/* Casos anormais que requerem atenção médica */}
       <MetricCard
-        title="A Especialista"
+        title="Análise da IA"
         value={metrics.indicacaoEspecialista.total}
         subtext={`${metrics.indicacaoEspecialista.porcentagem}% do total`}
-        variant="danger"
+        variant="warning"
+        tooltipInfo="Contabiliza as retinas individuais processadas. Um exame com imagens de ambos os olhos equivale a 2 análises da IA."
       />
       
       {/* Casos saudáveis/normais */}

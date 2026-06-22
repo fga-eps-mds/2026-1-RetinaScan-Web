@@ -12,7 +12,6 @@ import { authClient } from '@/lib/auth-client';
 import { DashboardHeader } from '../DashboardHeader';
 
 // Contrato de tipagem para desserialização segura de erros provenientes da API.
-// Substitui o uso de 'any' e garante validação em tempo de compilação.
 interface BackendErrorResponse {
   response?: {
     data?: {

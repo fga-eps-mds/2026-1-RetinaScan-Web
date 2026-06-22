@@ -1,28 +1,33 @@
-// Tipagem para os dados que vêm do backend
-export type ExameStatus =
+
+// 1. DTOs (Data Transfer Objects) - O reflexo exato do payload do Backend
+
+export type ExamStatus =
   | 'CRIADO'
   | 'CONCLUIDO'
   | 'EM_PROCESSAMENTO'
   | 'ERRO_PROCESSAMENTO';
 
-export interface ExamVolumeMetrics {
+export interface VolumeMetricsDTO {
   total: number;
-  porStatus: Record<ExameStatus, number>;
+  porStatus: Record<ExamStatus, number>;
   serieTemporal: { data: string; total: number }[];
 }
 
-export interface DiagnosisMetrics {
+export interface IaResultsMetricsDTO {
   totalResultados: number;
   porDiagnostico: { label: string; total: number }[];
   confiancaMedia: number;
 }
 
-export interface BackendMetricsResponse {
-  volume: ExamVolumeMetrics;
-  resultadosIa: DiagnosisMetrics;
+export interface BackendMetricsResponseDTO {
+  volume: VolumeMetricsDTO;
+  resultadosIa: IaResultsMetricsDTO;
 }
 
-// Tipagem que a sua UI (MetricsSection) espera
+
+// 2. View Models - O formato que a Interface (UI) consome
+
+
 export interface DashboardMetrics {
   analisesTotais: { total: number; periodoDias: number };
   indicacaoEspecialista: { total: number; porcentagem: number };
@@ -34,17 +39,22 @@ export interface DashboardMetrics {
 
 export type DashboardExamStatusTag = 'PRIORIDADE' | 'NORMAL' | 'PENDENTE';
 
+
+// 3. Tipagem de Listagens (Tabelas/Listas de Exames)
+
+
 export interface RecentExamItem {
   id: string;
-  pacienteID: string;
+  pacienteId: string;
   olho: string;
-  scoreIA: string | null;
+  scoreIa: string | null;
   statusTag: DashboardExamStatusTag;
   dataExame: string;
-  errosProcessamento: { total: number };
-
+  status: ExamStatus; // Permite que a UI saiba exatamente em qual etapa o exame parou (incluindo ERRO_PROCESSAMENTO)
 }
 
+
+// 4. Filtros de Requisição
 export interface GetMetricsFilters {
   startDate?: string;
   endDate?: string;

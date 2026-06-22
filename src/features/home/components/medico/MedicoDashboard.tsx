@@ -12,7 +12,7 @@ import { mapDashboardMetrics } from '../../../../utils/mappers/mapDashboardMetri
 import { authClient } from '@/lib/auth-client';
 
 // Contrato de tipagem para desserialização segura de erros provenientes da API.
-// Substitui o uso de 'any' e garante validação em tempo de compilação.
+
 interface BackendErrorResponse {
   response?: {
     data?: {
