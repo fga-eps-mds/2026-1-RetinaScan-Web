@@ -9,7 +9,8 @@ export function useLogStickerColor() {
       token.includes('REMOVE') ||
       token.includes('REJECT') ||
       token.includes('DENY') ||
-      token.includes('DECLINE')
+      token.includes('DECLINE') ||
+      token.includes('REVOKE')
     ) {
       return '#E7000B';
     }
@@ -18,7 +19,8 @@ export function useLogStickerColor() {
       token.includes('APPROVE') ||
       token.includes('APPROVED') ||
       token.includes('CREATE') ||
-      token.includes('SUCCESS')
+      token.includes('SUCCESS') ||
+      token.includes('SHARE')
     ) {
       return '#00A63E';
     }

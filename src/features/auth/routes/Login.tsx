@@ -3,10 +3,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { signIn } from '@/lib/auth-client';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+// 1. Adicionamos os imports do React Router
+import { useLocation, useNavigate } from 'react-router'; 
 import EsqueciMinhaSenhaModal from '../components/EsqueciMinhaSenhaModal';
 
 const Login = () => {
@@ -16,6 +17,14 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [mostrarSenha, setMostrarSenha] = useState<boolean>(false);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Monta o caminho  (pathname + possíveis parâmetros de busca como ?id=1)
+  const fromPath = location.state?.from?.pathname 
+    ? location.state.from.pathname + (location.state.from.search || '')
+    : '/';
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,7 +36,7 @@ const Login = () => {
         email,
         password,
         rememberMe,
-        callbackURL: '/',
+        callbackURL: fromPath, 
       });
 
       if (error) {
@@ -35,6 +44,10 @@ const Login = () => {
         toast.error(error.message || 'Falha ao entrar');
         return;
       }
+
+      // Redireciona o usuario sem recarregar a page
+      navigate(fromPath, { replace: true });
+      
     } catch {
       setError('Erro inesperado ao fazer login');
     } finally {
@@ -44,6 +57,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex bg-[#EFF6FF]">
+      {/* Lado Esquerdo (Banner) */}
       <div className="hidden lg:flex lg:w-1/2 gradient-clinical relative overflow-hidden items-center justify-center p-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
