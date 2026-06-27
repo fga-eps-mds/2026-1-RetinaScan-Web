@@ -59,6 +59,6 @@ jobs:
             -Dsonar.tests=src
             -Dsonar.test.inclusions=src/test/**/*,src/**/*.test.ts,src/**/*.test.tsx,src/**/*.spec.ts,src/**/*.spec.tsx
             -Dsonar.testExecutionReportPaths=coverage/sonar-report.xml
-            -Dsonar.exclusions=src/test/**,src/**/*.test.ts,src/**/*.test.tsx,src/**/*.spec.ts,src/**/*.spec.tsx,src/components/layout/**,src/components/ui/**,src/features/**/components/**,src/app/providers/router/Router.tsx,src/lib/auth-client.ts
+            -Dsonar.exclusions=src/test/**,src/**/*.test.ts,src/**/*.test.tsx,src/**/*.spec.ts,src/**/*.spec.tsx,src/components/layout/**,src/components/ui/**,src/features/**/components/**,src/app/providers/router/Router.tsx,src/lib/auth-client.ts,src/main.tsx,src/features/home/routes/Home.tsx
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info

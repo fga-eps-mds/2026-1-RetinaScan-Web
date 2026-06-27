@@ -8,6 +8,7 @@ import {
   Loader2,
   Mail,
   UserRound,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +38,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+import { useDeleteSolicitacao } from '../hooks/useDeleteSolicitacao';
 import { useAceitarSolicitacaoCrm } from '../hooks/useAceitarSolicitacaoCrm';
 import { useRejeitarSolicitacaoCrm } from '../hooks/useRejeitarSolicitacaoCrm';
 
@@ -51,6 +53,7 @@ const SolicitacaoCardAdmin = ({
 }: SolicitacaoCardAdminProps) => {
   const aceitarMutation = useAceitarSolicitacaoCrm();
   const rejeitarMutation = useRejeitarSolicitacaoCrm();
+  const deleteMutation = useDeleteSolicitacao();
 
   const [motivoRejeicao, setMotivoRejeicao] = useState('');
 
@@ -63,6 +66,10 @@ const SolicitacaoCardAdmin = ({
   const isRejecting =
     rejeitarMutation.isPending &&
     String(rejeitarMutation.variables?.id) === String(solicitacao.id);
+
+  const isDeleting =
+    deleteMutation.isPending &&
+    String(deleteMutation.variables) == String(solicitacao.id);
 
   const canReject = motivoRejeicao.trim().length > 0;
 
@@ -107,6 +114,19 @@ const SolicitacaoCardAdmin = ({
     }
   };
 
+  const handleDelete = () => {
+    deleteMutation.mutate(String(solicitacao.id), {
+      onSuccess: () => {
+        toast.success('Solicitação excluída com sucesso!');
+        // O cache será invalidado automaticamente pelo hook, mas chamamos o refetch por garantia
+        refetch();
+      },
+      onError: (err: any) => {
+        toast.error(err?.message || 'Erro ao excluir solicitação.');
+      },
+    });
+  };
+
   return (
     <Card className="border-border/60 shadow-sm transition-colors hover:bg-muted/20">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -116,12 +136,57 @@ const SolicitacaoCardAdmin = ({
             Solicitação de alteração cadastral
           </CardTitle>
 
-          <CardDescription className="break-all">
-            ID da solicitação: {solicitacao.id}
-          </CardDescription>
+          <CardDescription>{solicitacao.id}</CardDescription>
         </div>
 
-        <div>{getStatusBadge(solicitacao.status)}</div>
+        <div className="flex items-center gap-3">
+          {getStatusBadge(solicitacao.status)}
+
+          {/* AlertDialog para Confirmação de Exclusão */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                disabled={isDeleting || isAccepting || isRejecting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-destructive flex items-center gap-2">
+                  Excluir solicitação permanentemente?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita. A solicitação do usuário
+                  correspondente ao ID{' '}
+                  <span className="font-mono font-bold text-foreground">
+                    {solicitacao.id}
+                  </span>{' '}
+                  será completamente removida do banco de dados e as auditorias
+                  serão registradas.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
+                  Confirmar exclusão
+                </AlertDialogAction>
+              </AlertFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -147,9 +212,9 @@ const SolicitacaoCardAdmin = ({
                 <Hash className="h-3.5 w-3.5" />
                 ID do usuário
               </p>
-              <p className="break-all text-sm font-medium text-foreground">
-                {solicitacao.idUsuario}
-              </p>
+              <span className="font-medium text-foreground">
+                {solicitacao.idUsuario || 'ID não carregado'}
+              </span>
             </div>
 
             <div className="rounded-lg border bg-background/80 p-3">
@@ -157,9 +222,9 @@ const SolicitacaoCardAdmin = ({
                 <UserRound className="h-3.5 w-3.5" />
                 Nome
               </p>
-              <p className="wrap-break-word text-sm font-medium text-foreground">
-                {solicitacao.nomeCompleto}
-              </p>
+              <span className="font-medium text-foreground">
+                {solicitacao.nomeCompleto || 'Nome não carregado'}
+              </span>
             </div>
 
             <div className="rounded-lg border bg-background/80 p-3">
@@ -167,9 +232,7 @@ const SolicitacaoCardAdmin = ({
                 <Mail className="h-3.5 w-3.5" />
                 Email
               </p>
-              <p className="break-all text-sm font-medium text-foreground">
-                {solicitacao.email}
-              </p>
+                <span>{solicitacao.email || 'E-mail não carregado'}</span>
             </div>
           </div>
         </div>
