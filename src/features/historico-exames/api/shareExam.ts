@@ -23,7 +23,6 @@ export interface ShareResponse {
   };
 }
 
-// Adaptado de acordo com o que a sua rota GET costuma retornar
 export interface CompartilhamentoItem {
   id: string; // ID do compartilhamento (usado para deletar)
   medicoDestino: {
@@ -38,10 +37,14 @@ export interface CompartilhamentoItem {
 // Busca por profissionais médicos
 export async function searchMedicosApi(searchTerm: string): Promise<MedicoBusca[]> {
   if (!searchTerm) return [];
-  const response = await api.get<MedicoBusca[]>('/api/medicos/disponiveis', {
+  
+  const response = await api.get('/api/medicos/disponiveis', {
     params: { busca: searchTerm }
   });
-  return response.data;
+  
+  // Extrai o array de dentro do "embrulho" do backend
+  const medicos = response.data?.data || response.data;
+  return Array.isArray(medicos) ? medicos : [];
 }
 
 // Cria o compartilhamento

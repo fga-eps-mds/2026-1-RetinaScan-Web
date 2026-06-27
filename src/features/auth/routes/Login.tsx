@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-// 1. Adicionamos os imports do React Router
 import { useLocation, useNavigate } from 'react-router'; 
 import EsqueciMinhaSenhaModal from '../components/EsqueciMinhaSenhaModal';
 
