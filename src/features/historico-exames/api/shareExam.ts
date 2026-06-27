@@ -50,12 +50,16 @@ export async function generateShareLinkApi(examId: string | undefined, payload: 
   try {
     const response = await api.post<ShareResponse>(`/api/exams/${examId}/share`, payload);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 409) {
+  } catch (error) {
+    // Aqui nós "explicamos" para o TypeScript o formato que esperamos que esse erro tenha
+    const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+    
+    if (err.response?.status === 409) {
       throw new Error('Este profissional já possui acesso a este exame. Use a lista abaixo para copiar o link.');
     }
-    const errorData = error.response?.data;
-    throw new Error(errorData?.message || 'Erro ao processar o compartilhamento');
+    
+    const errorData = err.response?.data;
+    throw new Error(errorData?.message || err.message || 'Erro ao processar o compartilhamento');
   }
 }
 

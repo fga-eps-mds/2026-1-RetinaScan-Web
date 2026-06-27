@@ -3,7 +3,7 @@ import { CardDetalhes } from '../components/CardDetalhes';
 import { CardResultado } from '../components/CardResultado';
 import { CardImagens } from '../components/CardImagens';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Copy, DownloadIcon, LoaderCircle, Share2 } from 'lucide-react';
+import { ArrowLeft, DownloadIcon, LoaderCircle, Share2 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router';
 import { useGetResultadoExame } from '../hooks/useGetResultadoExame';
 import { CardComorbidades } from '../components/CardComorbidades';
@@ -158,13 +158,7 @@ const ResultadoExame = () => {
   // Hooks de roteamento
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const [refreshHistoryNonce, setRefreshHistoryNonce] = useState(0);
-
-  const listagemCompartilhados = useMemo(() => {
-    if (!id) return [];
-    return JSON.parse(localStorage.getItem(`shares-${id}`) || '[]');
-  }, [id, refreshHistoryNonce]);
+  
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   // Hooks de funcionalidades

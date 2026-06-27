@@ -73,8 +73,9 @@ export function ModalCompartilhar({ isOpen, onClose, examId }: ModalCompartilhar
       setGeneratedLink(linkAcessoGerado);
 
       toast.success('Exame compartilhado com sucesso!');
-    } catch (error: any) {
-      toast.error(error.message || 'Não foi possível compartilhar o exame.');
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'Não foi possível compartilhar o exame.');
     }
   };
 
@@ -89,7 +90,7 @@ export function ModalCompartilhar({ isOpen, onClose, examId }: ModalCompartilhar
       // fluxo de exclusao
       await revokeShare(shareId);
       toast.success('Acesso revogado com sucesso!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao revogar acesso.');
     }
   };
