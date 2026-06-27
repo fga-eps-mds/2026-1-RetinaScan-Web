@@ -1,17 +1,21 @@
 import { Inbox
   , Loader2 } from 'lucide-react';
-import { useGetSolicitacoes } from '../hooks/useGetSolicitacoes';
 import SolicitacaoCardAdmin from './SolicitacaoCardAdmin';
 import { Card, CardContent } from '@/components/ui/card';
+import { useGetSolicitacoes, type GetSolicitacoesParams } from '../hooks/useGetSolicitacoes';
 
-const SolicitacoesAdmin = () => {
+type SolicitacoesAdminProps = {
+  filters: GetSolicitacoesParams;
+};
+
+export default function SolicitacoesAdmin ({ filters} : SolicitacoesAdminProps) {
   const {
     data: solicitacoes = [],
     isPending,
     isError,
     error,
     refetch,
-  } = useGetSolicitacoes();
+  } = useGetSolicitacoes(filters);
 
   if (isPending) {
     return (
@@ -70,4 +74,3 @@ const SolicitacoesAdmin = () => {
   );
 };
 
-export default SolicitacoesAdmin;

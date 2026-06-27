@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import TabelaUsers from '../components/TabelaUsers';
 import ModalNovoUser from '../components/ModalNovoUser';
+import ModalConvidarMedico from '../components/ModalConvidarMedico'; // <-- IMPORT ADICIONADO
 import { useState, useEffect, useMemo } from 'react';
 import InfoCards from '../components/InfoCards';
 import { useSearchMedicos } from '../hooks/useSearchMedicos';
@@ -104,13 +105,18 @@ const ControleUsuarios = () => {
             totalActiveUsers={totalActiveUsers}
           />
 
-          <Button
-            type="button"
-            onClick={() => setOpenModalNovoUser(true)}
-            className="w-50 cursor-pointer border-0 font-semibold text-primary-foreground hover:opacity-90"
-          >
-            Novo Usuário
-          </Button>
+          {/* NOVA DIV AGRUPANDO OS BOTÕES */}
+          <div className="flex items-center gap-2">
+            <ModalConvidarMedico />
+            
+            <Button
+              type="button"
+              onClick={() => setOpenModalNovoUser(true)}
+              className="w-50 cursor-pointer border-0 font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Novo Usuário
+            </Button>
+          </div>
         </div>
 
         {/* Repassa os dados da API, status de requisição e os controles de estado para a tabela */}

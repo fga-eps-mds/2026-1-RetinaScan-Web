@@ -9,26 +9,23 @@ import type { ExameHistory } from '@/features/historico-exames/types/exam-histor
 
 const navigateMock = vi.fn();
 
-// 1. Mock do React Router
 vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+  const actual =
+    await vi.importActual<typeof import('react-router')>('react-router');
   return {
     ...actual,
     useNavigate: () => navigateMock,
   };
 });
 
-// 2. Mock do hook de busca principal dos exames
 vi.mock('@/features/historico-exames/hooks/useGetExams', () => ({
   useGetExams: vi.fn(),
 }));
 
-// 3. Mock do hook de paginação
 vi.mock('@/features/historico-exames/hooks/useGetTotalPages', () => ({
   useExamsPagination: vi.fn(),
 }));
 
-// 4. Mock do hook de travas de edição ativas (Retorno neutro inicial)
 vi.mock('@/features/historico-exames/hooks/useExamEditingLocks', () => ({
   useExamEditingLocks: () => ({
     data: {},
@@ -37,7 +34,6 @@ vi.mock('@/features/historico-exames/hooks/useExamEditingLocks', () => ({
   }),
 }));
 
-// 5. Mock do cliente de autenticação para retornar um especialista padrão
 vi.mock('@/lib/auth-client', () => ({
   authClient: {
     useSession: () => ({
@@ -74,7 +70,6 @@ describe('CardHistorico', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Instancia um QueryClient limpo para cada cenário de teste
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -95,6 +90,7 @@ describe('CardHistorico', () => {
         total: 2,
         page: 1,
         totalPages: 2,
+        pageSize: 20,
       },
       isLoading: false,
       isError: false,
@@ -103,11 +99,12 @@ describe('CardHistorico', () => {
     } as any);
   });
 
-  const renderComponent = (props = {}) => {
+  // Sem props — componente é autossuficiente
+  const renderComponent = () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <CardHistorico page={1} pageSize={20} onPageChange={vi.fn()} {...props} />
+          <CardHistorico />
         </MemoryRouter>
       </QueryClientProvider>
     );
@@ -182,11 +179,7 @@ describe('CardHistorico', () => {
     } as any);
 
     vi.mocked(usePaginationHook.useExamsPagination).mockReturnValue({
-      data: {
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      },
+      data: { total: 0, page: 1, totalPages: 1, pageSize: 20 },
       isLoading: false,
       isError: false,
       isFetching: false,
@@ -213,8 +206,6 @@ describe('CardHistorico', () => {
     renderComponent();
 
     const inputBusca = screen.getByPlaceholderText(/buscar exame/i);
-    
-    // CORREÇÃO: Passar um prefixo 'EX-' incompleto ativa o isBuscaId e falha o regex da máscara
     fireEvent.change(inputBusca, { target: { value: 'EX-123' } });
 
     expect(
@@ -236,17 +227,14 @@ describe('CardHistorico', () => {
 
     renderComponent();
 
-    const refreshButton = screen.getByRole('button', {
-      name: /atualizar lista de exames/i,
-    });
+    fireEvent.click(
+      screen.getByRole('button', { name: /atualizar lista de exames/i })
+    );
 
-    fireEvent.click(refreshButton);
     expect(mockRefetch).toHaveBeenCalled();
   });
 
-  it('deve chamar onPageChange ao clicar na próxima página', async () => {
-    const onPageChange = vi.fn();
-
+  it('deve avançar para a próxima página ao clicar no botão de próxima página', async () => {
     vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
       data: mockDados,
       isLoading: false,
@@ -257,24 +245,27 @@ describe('CardHistorico', () => {
     } as any);
 
     vi.mocked(usePaginationHook.useExamsPagination).mockReturnValue({
-      data: {
-        total: 40,
-        page: 1,
-        totalPages: 2,
-      },
+      data: { total: 40, page: 1, totalPages: 2, pageSize: 20 },
       isLoading: false,
       isError: false,
       isFetching: false,
       refetch: vi.fn(),
     } as any);
 
-    renderComponent({ onPageChange });
+    renderComponent();
 
     const buttons = screen.getAllByRole('button');
     const nextButton = buttons[buttons.length - 1];
 
     fireEvent.click(nextButton);
-    expect(onPageChange).toHaveBeenCalledWith(2);
+
+    // Após clicar, o componente atualiza page internamente — verifica que
+    // o hook foi chamado novamente com page: 2
+    await waitFor(() => {
+      expect(useGetExamsHook.useGetExams).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 2 })
+      );
+    });
   });
 
   it('deve navegar para a página do exame ao clicar na linha', async () => {
@@ -315,9 +306,7 @@ describe('CardHistorico', () => {
     ).toBeInTheDocument();
   });
 
-  it('deve chamar onPageChange(1) ao digitar na busca', async () => {
-    const onPageChange = vi.fn();
-
+  it('deve resetar para página 1 ao digitar na busca', async () => {
     vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
       data: mockDados,
       isLoading: false,
@@ -327,12 +316,28 @@ describe('CardHistorico', () => {
       refetch: mockRefetch,
     } as any);
 
-    renderComponent({ page: 2, onPageChange });
+    // Avança para página 2 primeiro
+    vi.mocked(usePaginationHook.useExamsPagination).mockReturnValue({
+      data: { total: 40, page: 1, totalPages: 2, pageSize: 20 },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    } as any);
+
+    renderComponent();
+
+    const buttons = screen.getAllByRole('button');
+    fireEvent.click(buttons[buttons.length - 1]); // avança para página 2
 
     const inputBusca = screen.getByPlaceholderText(/buscar exame/i);
     fireEvent.change(inputBusca, { target: { value: 'Bruno' } });
 
-    expect(onPageChange).toHaveBeenCalledWith(1);
+    await waitFor(() => {
+      expect(useGetExamsHook.useGetExams).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1 })
+      );
+    });
   });
 
   it('deve limpar os filtros ao clicar em limpar filtros', async () => {
@@ -346,18 +351,14 @@ describe('CardHistorico', () => {
     } as any);
 
     vi.mocked(usePaginationHook.useExamsPagination).mockReturnValue({
-      data: {
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      },
+      data: { total: 0, page: 1, totalPages: 1, pageSize: 20 },
       isLoading: false,
       isError: false,
       isFetching: false,
       refetch: vi.fn(),
     } as any);
 
-    renderComponent({ page: 2 });
+    renderComponent();
 
     const inputBusca = screen.getByPlaceholderText(/buscar exame/i);
     fireEvent.change(inputBusca, { target: { value: 'Paciente Inexistente' } });
@@ -366,8 +367,7 @@ describe('CardHistorico', () => {
       await screen.findByText(/nenhum resultado encontrado/i)
     ).toBeInTheDocument();
 
-    const btnLimpar = screen.getByRole('button', { name: /limpar filtros/i });
-    fireEvent.click(btnLimpar);
+    fireEvent.click(screen.getByRole('button', { name: /limpar filtros/i }));
 
     await waitFor(() => {
       expect(inputBusca).toHaveValue('');
