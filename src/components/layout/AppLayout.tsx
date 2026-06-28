@@ -37,7 +37,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <SideBar />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background">{children}</main>
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-background">{children}</main>
 
       <Dialog
         open={isEditProfileOpen}

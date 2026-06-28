@@ -14,7 +14,7 @@ const ControleUsuarios = () => {
   const [busca, setBusca] = useState('');
   const [filtroPerfil, setFiltroPerfil] = useState<string>('TODOS'); 
   const [page, setPage] = useState(1);
-  const pageSize = 6; 
+  const pageSize = 6;
 
   const buscaDebounced = useDebouncedValue(busca, 400);
 
@@ -23,23 +23,19 @@ const ControleUsuarios = () => {
     const perfilValue = filtroPerfil === 'TODOS' ? undefined : (filtroPerfil as 'MEDICO' | 'ESPECIALISTA');
 
     if (!valorLimpado) {
-      return { 
-        page, 
-        pageSize, 
-        tipoPerfil: perfilValue 
-      };
+      return { page, pageSize, tipoPerfil: perfilValue };
     }
 
     const isNumeric = /^\d+$/.test(valorLimpado);
     const isCompleteEmail = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,8}$/.test(valorLimpado);
     
     return {
-      page, 
-      pageSize, 
+      page,
+      pageSize,
       nome: !isNumeric && !isCompleteEmail ? valorLimpado : undefined,
       crm: isNumeric ? valorLimpado : undefined,
       email: isCompleteEmail ? valorLimpado : undefined,
-      tipoPerfil: perfilValue, 
+      tipoPerfil: perfilValue,
     };
   }, [buscaDebounced, filtroPerfil, page]);
 
@@ -53,29 +49,26 @@ const ControleUsuarios = () => {
     isFetched,
   } = useSearchMedicos(filters);
 
-  // --- TRAVA DE SEGURANÇA (PAGINAÇÃO NO FRONTEND) ---
   const allUsers = apiResponse?.data || [];
-  const startIndex = (page - 1) * pageSize;
-  const displayedUsers = allUsers.slice(startIndex, startIndex + pageSize);
+  const displayedUsers = allUsers;
 
-  const totalPages = apiResponse?.meta?.totalPages || Math.ceil(allUsers.length / pageSize) || 1;
-  const totalUsers = apiResponse?.meta?.totalElements || allUsers.length;
+  const totalPages = apiResponse?.pagination?.totalPages ?? 1;
+  const totalUsers = apiResponse?.pagination?.total ?? allUsers.length;
   const totalActiveUsers = allUsers.filter((user: User) => user.status === 'ATIVO').length;
-  // ---------------------------------------------------
 
   const isTyping = busca !== buscaDebounced;
 
   useEffect(() => {
     if (isError) {
       toast.error('Erro ao carregar usuários.', {
-        description:
-          error instanceof Error ? error.message : 'Erro na requisição da API.',
+        description: error instanceof Error ? error.message : 'Erro na requisição da API.',
       });
     }
   }, [isError, error]);
 
   return (
     <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
+      {/* ✅ max-w-6xl mantido para limitar largura, mas agora o AppLayout tem overflow-y-auto */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="text-center">
           <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
@@ -87,14 +80,9 @@ const ControleUsuarios = () => {
         </header>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <InfoCards
-            totalUsers={totalUsers}
-            totalActiveUsers={totalActiveUsers}
-          />
-
+          <InfoCards totalUsers={totalUsers} totalActiveUsers={totalActiveUsers} />
           <div className="flex items-center gap-2">
             <ModalConvidarMedico />
-            
             <Button
               type="button"
               onClick={() => setOpenModalNovoUser(true)}
@@ -106,7 +94,7 @@ const ControleUsuarios = () => {
         </div>
 
         <TabelaUsers
-          users={displayedUsers} // Passando os dados fatiados!
+          users={displayedUsers}
           isLoading={isLoading}
           isError={isError}
           error={error}
@@ -114,15 +102,9 @@ const ControleUsuarios = () => {
           isFetched={isFetched}
           isTyping={isTyping}
           busca={busca}
-          onBuscaChange={(value: string) => {
-            setBusca(value);
-            setPage(1); 
-          }}
+          onBuscaChange={(value: string) => { setBusca(value); setPage(1); }}
           filtroPerfil={filtroPerfil}
-          onFiltroPerfilChange={(value: string) => {
-            setFiltroPerfil(value);
-            setPage(1); 
-          }} 
+          onFiltroPerfilChange={(value: string) => { setFiltroPerfil(value); setPage(1); }}
           page={page}
           totalPages={totalPages}
           pageSize={pageSize}
@@ -133,10 +115,7 @@ const ControleUsuarios = () => {
         <ModalNovoUser
           isOpen={openModalNovoUser}
           onClose={() => setOpenModalNovoUser(false)}
-          onUserCreated={() => {
-            void refetch();
-            setOpenModalNovoUser(false);
-          }}
+          onUserCreated={() => { void refetch(); setOpenModalNovoUser(false); }}
         />
       </div>
     </div>

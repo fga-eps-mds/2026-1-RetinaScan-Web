@@ -266,31 +266,32 @@ export function CardHistorico() {
           </div>
         )}
 
-        <div className="relative">
+        {/* ✅ overflow-x-auto: scroll horizontal se a tela for muito pequena */}
+        <div className="relative w-full overflow-x-auto">
           <Table
             className={cn(
-              'transition-opacity',
+              'w-full transition-opacity',
               showTypingHint && hasData && 'opacity-80'
             )}
           >
             <TableHeader className="border-b text-md">
               <TableRow className="h-12 border-none hover:bg-transparent">
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   ID
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Paciente
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Olho
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Score IA
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Status
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Data
                 </TableHead>
               </TableRow>
@@ -354,9 +355,7 @@ export function CardHistorico() {
                         }
                       }}
                     >
-                 
-                    
-                      <TableCell className="py-3 text-center text-sm text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm text-muted-foreground whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <span>{exame.id}</span>
                           {isEspecialista && isBeingEdited && (
@@ -381,17 +380,17 @@ export function CardHistorico() {
                         </div>
                       </TableCell>
 
-                      <TableCell className="py-3 text-center text-sm font-medium text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
                         {exame.nomeCompleto}
                       </TableCell>
 
-                      <TableCell className="py-3 text-center text-sm text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm text-muted-foreground whitespace-nowrap">
                         {exame.olho}
                       </TableCell>
 
                       <TableCell
                         className={cn(
-                          'py-3 text-sm text-center font-bold',
+                          'py-3 text-sm text-center font-bold whitespace-nowrap',
                           score !== null
                             ? score > 80
                               ? 'text-red-500'
@@ -402,11 +401,11 @@ export function CardHistorico() {
                         {score ?? '--'}
                       </TableCell>
 
-                      <TableCell className="py-3 text-center">
+                      <TableCell className="py-3 text-center whitespace-nowrap">
                         <StatusBadge status={exame.status} />
                       </TableCell>
 
-                      <TableCell className="py-3 text-center text-sm text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm text-muted-foreground whitespace-nowrap">
                         {formatDate(exame.dtCriacao)}
                       </TableCell>
                     </TableRow>
@@ -414,7 +413,6 @@ export function CardHistorico() {
                 })
               ) : showEmpty ? (
                 <TableRow className="hover:bg-transparent">
-                  {/* Ajustado colSpan para 6 */}
                   <TableCell colSpan={6} className="py-12">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
                       <div className="rounded-full bg-slate-50 p-4 text-muted-foreground">
