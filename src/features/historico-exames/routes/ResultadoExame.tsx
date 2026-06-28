@@ -18,7 +18,6 @@ import { useUpdateSpecialistReport } from '../hooks/useUpdateSpecialistReport';
 import { ModalCompartilhar } from '../components/ModalCompartilhar';
 import { useDownloadLaudo } from '../hooks/useDownloadLaudo';
 
-
 // Define a janela de tempo (em dias) que um laudo pode ser editado após a criação.
 const REPORT_EDIT_WINDOW_DAYS = Number(
   import.meta.env.VITE_SPECIALIST_REPORT_EDIT_WINDOW_DAYS ?? 0
@@ -158,18 +157,18 @@ const ResultadoExame = () => {
   // Hooks de roteamento
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  
+
   // Hooks de funcionalidades
   const { handleDownload, isDownloading } = useDownloadLaudo();
-  
+
   // Queries de dados da API e Sessão
-  const { data, isLoading, isError, error, isFetching, refetch } = 
+  const { data, isLoading, isError, error, isFetching, refetch } =
     useGetResultadoExame(id);
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
-  
+
   // --------------------------------------------------------------------------
   // DERIVAÇÃO DE ESTADOS E PERMISSÕES
   // --------------------------------------------------------------------------
@@ -188,9 +187,9 @@ const ResultadoExame = () => {
 
     return createdAtDate
       ? new Date(
-        createdAtDate.getTime() +
-        REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000
-      )
+          createdAtDate.getTime() +
+            REPORT_EDIT_WINDOW_DAYS * 24 * 60 * 60 * 1000
+        )
       : null;
   }, [specialistReport]);
 
@@ -271,7 +270,7 @@ const ResultadoExame = () => {
   // --------------------------------------------------------------------------
   // GERENCIAMENTO DE CONCORRÊNCIA (LOCKS) E MUTAÇÕES
   // --------------------------------------------------------------------------
-  
+
   // Hook responsável por impedir que dois especialistas editem o mesmo exame simultaneamente
   const { lockState } = useExamLock({
     examId: id,
@@ -285,8 +284,10 @@ const ResultadoExame = () => {
     lockState.status === 'blocked' ? lockState.editorNome : null;
 
   // Mutations da API
-  const { mutateAsync: createReport, isPending: isCreatingReport } = useCreateSpecialistReport();
-  const { mutateAsync: updateReport, isPending: isUpdatingReport } = useUpdateSpecialistReport();
+  const { mutateAsync: createReport, isPending: isCreatingReport } =
+    useCreateSpecialistReport();
+  const { mutateAsync: updateReport, isPending: isUpdatingReport } =
+    useUpdateSpecialistReport();
 
   // Variáveis derivadas para controle de UI
   const isSavingReport = isCreatingReport || isUpdatingReport;
@@ -347,26 +348,36 @@ const ResultadoExame = () => {
   if (isError || !data) {
     // Verifica se a API retornou erro de acesso negado (403 ou 401)
     const err = error as { response?: { status?: number } } | null;
-    const isAcessoNegado = err?.response?.status === 403 || err?.response?.status === 401;
+    const isAcessoNegado =
+      err?.response?.status === 403 || err?.response?.status === 401;
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center p-8 text-center">
         <div className="max-w-md space-y-4 rounded-xl border border-border bg-muted/30 p-8 shadow-sm">
           {isAcessoNegado ? (
             <>
-              <h2 className="text-xl font-bold text-destructive">Acesso Indisponível</h2>
+              <h2 className="text-xl font-bold text-destructive">
+                Acesso Indisponível
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Você não possui permissão para visualizar este exame. O link pode ter expirado ou o acesso foi revogado pelo médico.
+                Você não possui permissão para visualizar este exame. O link
+                pode ter expirado ou o acesso foi revogado pelo médico.
               </p>
             </>
           ) : (
             <>
-              <h2 className="text-xl font-bold text-destructive">Erro ao carregar</h2>
+              <h2 className="text-xl font-bold text-destructive">
+                Erro ao carregar
+              </h2>
               <p className="text-sm text-muted-foreground">
                 Não foi possível carregar o resultado do exame no momento.
               </p>
             </>
           )}
-          <Button type="button" className="mt-4" onClick={() => navigate('/exames')}>
+          <Button
+            type="button"
+            className="mt-4"
+            onClick={() => navigate('/exames')}
+          >
             Voltar para meus exames
           </Button>
         </div>
@@ -428,15 +439,18 @@ const ResultadoExame = () => {
               </>
             )}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2 p-4 font-semibold"
-            onClick={() => setIsShareModalOpen(true)}
-          >
-            <Share2 className="h-4 w-4" />
-            Compartilhar
-          </Button>
+
+          {session?.user.id === data.exam.medico.id && (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 p-4 font-semibold"
+              onClick={() => setIsShareModalOpen(true)}
+            >
+              <Share2 className="h-4 w-4" />
+              Compartilhar
+            </Button>
+          )}
         </div>
       </header>
 
@@ -516,7 +530,6 @@ const ResultadoExame = () => {
               </div>
             )}
         </div>
-
       </div>
       {id && (
         <ModalCompartilhar
