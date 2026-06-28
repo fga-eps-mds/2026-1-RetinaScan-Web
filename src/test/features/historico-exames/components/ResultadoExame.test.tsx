@@ -126,8 +126,7 @@ describe('ResultadoExame - Cobertura Estrutural', () => {
   });
 
   it('deve cobrir o fluxo quando o laudo já existe e a tela está bloqueada/concorrente por outro médico', async () => {
-    // ESTRATÉGIA INDESTRUTÍVEL: Forçamos a criação do laudo para acontecer no FUTURO (ex: ano 2035).
-    // Matematicamente: dataCriacao > Date.now(), logo o laudo NUNCA constará como expirado,
+    // Forçamos a criação do laudo para acontecer no FUTURO (ex: ano 2035).
     // mesmo se a variável de ambiente injetada falhar e assumir 0 dias de prazo.
     const dataCriacaoValida = '2035-01-01T12:00:00.000Z';
 

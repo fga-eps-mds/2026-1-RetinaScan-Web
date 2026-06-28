@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import Login from '@/features/auth/routes/Login';
 
 const mocks = vi.hoisted(() => ({
@@ -66,7 +67,11 @@ function renderWithQueryClient(ui: React.ReactNode) {
   const queryClient = createTestQueryClient();
 
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        {ui}
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
