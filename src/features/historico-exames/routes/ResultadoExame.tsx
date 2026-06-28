@@ -440,7 +440,7 @@ const ResultadoExame = () => {
             )}
           </Button>
 
-          {session?.user.id === data.exam.medico.id && (
+          {session?.user.id === data.exam.medico?.id && (
             <Button
               type="button"
               variant="outline"

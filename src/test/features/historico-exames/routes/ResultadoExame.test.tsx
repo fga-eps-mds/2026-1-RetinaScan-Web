@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import ResultadoExame from '@/features/historico-exames/routes/ResultadoExame';
 
@@ -63,12 +63,26 @@ vi.mock('@/features/historico-exames/hooks/useDownloadLaudo', () => ({
 }));
 
 // 4. Mocks dos Subcomponentes Visuais (Shallow Rendering)
-vi.mock('@/features/historico-exames/components/CardImagens', () => ({ CardImagens: () => <div data-testid="card-imagens-mock" /> }));
-vi.mock('@/features/historico-exames/components/CardResultado', () => ({ CardResultado: () => <div data-testid="card-resultado-mock" /> }));
-vi.mock('@/features/historico-exames/components/CardDetalhes', () => ({ CardDetalhes: () => <div data-testid="card-detalhes-mock" /> }));
-vi.mock('@/features/historico-exames/components/CardComorbidades', () => ({ CardComorbidades: () => <div data-testid="card-comorbidades-mock" /> }));
-vi.mock('@/features/historico-exames/components/CardLaudo', () => ({ CardLaudo: () => <div data-testid="card-laudo-mock" /> }));
-vi.mock('@/features/historico-exames/components/CardLaudoVisualizacao', () => ({ CardLaudoVisualizacao: () => <div data-testid="card-laudo-visualizacao-mock" /> }));
+vi.mock('@/features/historico-exames/components/CardImagens', () => ({
+  CardImagens: () => <div data-testid="card-imagens-mock" />,
+}));
+vi.mock('@/features/historico-exames/components/CardResultado', () => ({
+  CardResultado: () => <div data-testid="card-resultado-mock" />,
+}));
+vi.mock('@/features/historico-exames/components/CardDetalhes', () => ({
+  CardDetalhes: () => <div data-testid="card-detalhes-mock" />,
+}));
+vi.mock('@/features/historico-exames/components/CardComorbidades', () => ({
+  CardComorbidades: () => <div data-testid="card-comorbidades-mock" />,
+}));
+vi.mock('@/features/historico-exames/components/CardLaudo', () => ({
+  CardLaudo: () => <div data-testid="card-laudo-mock" />,
+}));
+vi.mock('@/features/historico-exames/components/CardLaudoVisualizacao', () => ({
+  CardLaudoVisualizacao: () => (
+    <div data-testid="card-laudo-visualizacao-mock" />
+  ),
+}));
 
 // ============================================================================
 // CONFIGURAÇÃO DOS TESTES
@@ -94,7 +108,6 @@ const renderResultadoExame = () => {
 };
 
 describe('ResultadoExame', () => {
-  
   // Antes de cada bloco 'it', definimos a reposta padrão da API como "Sucesso".
   beforeEach(() => {
     vi.mocked(useGetResultadoExame).mockReturnValue({
@@ -111,6 +124,9 @@ describe('ResultadoExame', () => {
           olho: 'OD',
           comorbidades: [],
           laudoEspecialista: null,
+          medico: {
+            id: 'USR-123',
+          },
         },
         imagens: [],
         resultadosIa: [],
@@ -126,10 +142,18 @@ describe('ResultadoExame', () => {
   it('renderiza o cabeçalho, as ações principais e os cards da tela corretamente', () => {
     renderResultadoExame();
 
-    expect(screen.getByRole('heading', { name: /ex-2026-0036/i })).toBeInTheDocument();
-    expect(screen.getByText('Detalhes e resultado do exame')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /baixar relatório/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /compartilhar/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /ex-2026-0036/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Detalhes e resultado do exame')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /baixar relatório/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /compartilhar/i })
+    ).toBeInTheDocument();
     expect(screen.getByText('Editando agora')).toBeInTheDocument();
 
     expect(screen.getByTestId('card-imagens-mock')).toBeInTheDocument();
@@ -143,16 +167,24 @@ describe('ResultadoExame', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-      error: new Error('Erro de conexão'), 
+      error: new Error('Erro de conexão'),
       isFetching: false,
       refetch: vi.fn(),
     } as any);
 
     renderResultadoExame();
 
-    expect(screen.getByRole('heading', { name: /erro ao carregar/i })).toBeInTheDocument();
-    expect(screen.getByText('Não foi possível carregar o resultado do exame no momento.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /voltar para meus exames/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /erro ao carregar/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Não foi possível carregar o resultado do exame no momento.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /voltar para meus exames/i })
+    ).toBeInTheDocument();
   });
 
   it('exibe tela de "Acesso Indisponível" quando a API retorna erro 403', () => {
@@ -161,14 +193,18 @@ describe('ResultadoExame', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-      error: { response: { status: 403 } }, 
+      error: { response: { status: 403 } },
       isFetching: false,
       refetch: vi.fn(),
     } as any);
 
     renderResultadoExame();
 
-    expect(screen.getByRole('heading', { name: /acesso indisponível/i })).toBeInTheDocument();
-    expect(screen.getByText(/você não possui permissão para visualizar este exame/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /acesso indisponível/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/você não possui permissão para visualizar este exame/i)
+    ).toBeInTheDocument();
   });
 });
