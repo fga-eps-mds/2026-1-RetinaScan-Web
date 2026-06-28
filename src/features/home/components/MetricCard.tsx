@@ -58,7 +58,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
   return (
     // A classe 'group' permite coordenar animações nos elementos filhos quando o contêiner recebe hover.
-    // 'transition-all' e 'hover:-translate-y-1' aplicam aceleração via GPU para micro-interações fluidas.
+    // 'transition-all' e 'hover:-translate-y-1'
     <div
       className={`p-6 rounded-2xl border flex flex-col justify-between h-32 transition-all duration-300 hover:-translate-y-1 cursor-default group ${styles[variant].card}`}
     >
