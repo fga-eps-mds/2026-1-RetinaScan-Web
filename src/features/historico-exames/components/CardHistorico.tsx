@@ -46,9 +46,20 @@ import { authClient } from '@/lib/auth-client';
 import { useExamEditingLocks } from '../hooks/useExamEditingLocks';
 
 const EXAM_ID_REGEX = /^EX-\d{4}-\d{4}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function isBuscaId(val: string) {
-  return /^ex-/i.test(val) || /^\d/.test(val);
+function isExactExamId(val: string) {
+  return EXAM_ID_REGEX.test(val.trim());
+}
+
+function isExactUuid(val: string) {
+  return UUID_REGEX.test(val.trim());
+}
+
+function isExactIdSearch(val: string) {
+  const normalized = val.trim();
+  return isExactExamId(normalized) || isExactUuid(normalized);
 }
 
 type ExamStatusFilter = 'all' | 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO';
@@ -65,35 +76,18 @@ export function CardHistorico() {
 
   const buscaDebounced = useDebouncedValue(busca, 400);
 
-  const isSearchValid = useMemo(() => {
-    const valor = busca.trim();
-    if (!valor) return true;
-    if (isBuscaId(valor)) return EXAM_ID_REGEX.test(valor);
-    return true;
-  }, [busca]);
+  const params = useMemo(() => {
+    const valor = buscaDebounced.trim();
+    const isId = isExactIdSearch(valor);
 
-  const params = useMemo(
-    () => ({
+    return {
       page,
       pageSize,
-      nomeCompleto:
-        buscaDebounced.trim() && !EXAM_ID_REGEX.test(buscaDebounced.trim())
-          ? buscaDebounced.trim()
-          : '',
-      id:
-        buscaDebounced.trim() && EXAM_ID_REGEX.test(buscaDebounced.trim())
-          ? buscaDebounced.trim()
-          : '',
+      nomeCompleto: valor && !isId ? valor : '',
+      id: valor && isId ? valor : '',
       status: filtroStatus === 'all' ? '' : filtroStatus,
-    }),
-    [page, pageSize, buscaDebounced, filtroStatus]
-  );
-
-  const limparFiltros = () => {
-    setFiltroStatus('all');
-    setBusca('');
-    setPage(1);
-  };
+    };
+  }, [page, pageSize, buscaDebounced, filtroStatus]);
 
   const {
     data: exames = [],
@@ -131,6 +125,12 @@ export function CardHistorico() {
     !showTypingHint &&
     !showBackgroundUpdating &&
     !hasData;
+
+  const limparFiltros = () => {
+    setFiltroStatus('all');
+    setBusca('');
+    setPage(1);
+  };
 
   const handleRefresh = async () => {
     if (isEspecialista) {
@@ -228,10 +228,7 @@ export function CardHistorico() {
                     <Input
                       placeholder="Buscar exame..."
                       className={cn(
-                        'h-12 rounded-xl border-slate-200 pr-10 transition-all focus-visible:ring-blue-600',
-                        !isSearchValid &&
-                          busca.length > 0 &&
-                          'border-red-500 ring-1 ring-red-500 focus-visible:ring-red-500'
+                        'h-12 rounded-xl border-slate-200 pr-10 transition-all focus-visible:ring-blue-600'
                       )}
                       value={busca}
                       onChange={(e) => {
@@ -244,15 +241,9 @@ export function CardHistorico() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="border bg-white text-muted-foreground">
-                  Busque por Nome ou ID
+                  Busque por Nome, ID ou UUID
                 </TooltipContent>
               </Tooltip>
-
-              {!isSearchValid && busca.length > 0 && (
-                <span className="animate-in fade-in slide-in-from-top-1 absolute -bottom-6 left-1 text-[10px] font-medium text-red-500">
-                  Formato de ID inválido
-                </span>
-              )}
             </div>
           </div>
         </div>
