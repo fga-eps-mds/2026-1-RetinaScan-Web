@@ -72,29 +72,33 @@ export const EspecialistaDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen w-full p-12">
+    <div className="flex flex-col min-h-full w-full p-6 sm:p-8 lg:p-12">
       
-      <DashboardHeader 
-        userName={userName}
-        badgeText="Dashboard do Especialista"
-        subtitle="Visão geral de exames que necessitam do seu laudo."
-      />
+      <div className="shrink-0">
+        <DashboardHeader 
+          userName={userName}
+          badgeText="Dashboard do Especialista"
+          subtitle="Visão geral de exames que necessitam do seu laudo."
+        />
+      </div>
 
-      <div className="mt-8 pt-8 border-t border-border">
+      <div className="mt-8 pt-8 border-t border-border flex flex-col flex-1">
         
-        {/* Renderização declarativa baseada em estados da requisição (Loading -> Error -> Success) */}
-        {showLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-            <p className="font-medium text-lg">Carregando exames pendentes...</p>
-          </div>
-        ) : isError && !apiMetrics ? (
-          <div className="flex justify-center py-12 text-destructive font-medium">Erro ao carregar os dados.</div>
-        ) : (
-          <MetricsSection metrics={mappedMetrics} />
-        )}
+        <div className="shrink-0">
+          {/* Renderização declarativa baseada em estados da requisição (Loading -> Error -> Success) */}
+          {showLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <p className="font-medium text-lg">Carregando exames pendentes...</p>
+            </div>
+          ) : isError && !apiMetrics ? (
+            <div className="flex justify-center py-12 text-destructive font-medium">Erro ao carregar os dados.</div>
+          ) : (
+            <MetricsSection metrics={mappedMetrics} />
+          )}
+        </div>
 
-        <div className="px-8 mt-8 mb-4 flex justify-end">
+        <div className="px-4 sm:px-8 mt-6 mb-4 flex justify-end shrink-0">
           <DashboardDateFilters 
             startDate={startDate}
             endDate={endDate}
@@ -106,7 +110,7 @@ export const EspecialistaDashboard = () => {
           />
         </div>
 
-        <div className="px-8 pb-8">
+        <div className="px-4 sm:px-8 pb-4 flex-1 min-h-100">
           {/* Gráfico só é montado no DOM se não houver erros ou loading em andamento */}
           {!isError && !showLoading && (
             <TimeSeriesChart data={apiMetrics?.volume.serieTemporal || []} />
