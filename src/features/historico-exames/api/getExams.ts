@@ -1,6 +1,7 @@
 import { api } from '@/shared/api';
 
 export type ExamsParams = {
+  id?: string;
   cpf?: string;
   nomeCompleto?: string;
   status?: string;
@@ -11,6 +12,7 @@ export type ExamsParams = {
 export async function getExams(params: ExamsParams) {
   const searchParams = new URLSearchParams();
 
+  if (params.id) searchParams.set('id', params.id);
   if (params.cpf) searchParams.set('cpf', params.cpf);
   if (params.nomeCompleto) {
     searchParams.set('nomeCompleto', params.nomeCompleto);

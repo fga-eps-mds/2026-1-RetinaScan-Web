@@ -1,4 +1,5 @@
 import type {
+  ComorbidadesDTO,
   CreateExamDTO,
   SexoExame,
 } from '@/features/criacao-exames/types/exam';
@@ -6,7 +7,7 @@ import type { ExtractedDicomData, PatientComments } from './dicom.types';
 
 const mapDicomSex = (dicomSex: string): SexoExame => {
   if (!dicomSex) return 'OUTRO';
-  
+
   const upperSex = dicomSex.toUpperCase();
   if (upperSex == 'M') return 'MASCULINO';
   if (upperSex == 'F') return 'FEMININO';
@@ -34,19 +35,34 @@ const formatDicomTime = (timeStr: string): string => {
 
 const formatarComorbidades = (
   comments: PatientComments | null
-): string | undefined => {
+): ComorbidadesDTO | undefined => {
   if (!comments) return undefined;
 
   const dataToRead = comments.anamnesis ? comments.anamnesis : comments;
 
-  const comorbidades: string[] = [];
+  const hasData =
+    dataToRead.hypertension ||
+    dataToRead.smoker ||
+    dataToRead.glaucoma ||
+    dataToRead.cataract;
 
-  if (dataToRead.hypertension) comorbidades.push('Hipertensão');
-  if (dataToRead.smoker) comorbidades.push('Fumante');
-  if (dataToRead.glaucoma) comorbidades.push('Glaucoma');
-  if (dataToRead.cataract) comorbidades.push('Catarata');
+  if (!hasData) return undefined;
 
-  return comorbidades.length > 0 ? comorbidades.join(', ') : undefined;
+  return {
+    diabetes: false,
+    diabetesUsoInsulina: false,
+    diabetesControlado: false,
+    hipertensao: !!dataToRead.hypertension,
+    hipertensaoControlada: false,
+    altaMiopia: false,
+    glaucoma: !!dataToRead.glaucoma,
+    usoHidroxicloroquina: false,
+    uveite: false,
+    catarata: !!dataToRead.cataract,
+    outrasComorbidades: !!dataToRead.smoker,
+    outrasComorbidadesDescricao: dataToRead.smoker ? 'Fumante' : undefined,
+    qualidadeTecnicaDificuldade: false,
+  };
 };
 
 export const mapDicomToExamForm = (

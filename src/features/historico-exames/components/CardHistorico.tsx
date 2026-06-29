@@ -8,7 +8,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './StatusTag';
 import { cn } from '@/lib/utils';
@@ -46,9 +45,20 @@ import { authClient } from '@/lib/auth-client';
 import { useExamEditingLocks } from '../hooks/useExamEditingLocks';
 
 const EXAM_ID_REGEX = /^EX-\d{4}-\d{4}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function isBuscaId(val: string) {
-  return /^ex-/i.test(val) || /^\d/.test(val);
+function isExactExamId(val: string) {
+  return EXAM_ID_REGEX.test(val.trim());
+}
+
+function isExactUuid(val: string) {
+  return UUID_REGEX.test(val.trim());
+}
+
+function isExactIdSearch(val: string) {
+  const normalized = val.trim();
+  return isExactExamId(normalized) || isExactUuid(normalized);
 }
 
 type ExamStatusFilter = 'all' | 'CRIADO' | 'CONCLUIDO' | 'EM_PROCESSAMENTO';
@@ -58,42 +68,26 @@ export function CardHistorico() {
   const [filtroStatus, setFiltroStatus] = useState<ExamStatusFilter>('all');
   const [busca, setBusca] = useState('');
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+
+  const pageSize = 6;
 
   const { data: session } = authClient.useSession();
   const isEspecialista = session?.user?.tipoPerfil === 'ESPECIALISTA';
 
   const buscaDebounced = useDebouncedValue(busca, 400);
 
-  const isSearchValid = useMemo(() => {
-    const valor = busca.trim();
-    if (!valor) return true;
-    if (isBuscaId(valor)) return EXAM_ID_REGEX.test(valor);
-    return true;
-  }, [busca]);
+  const params = useMemo(() => {
+    const valor = buscaDebounced.trim();
+    const isId = isExactIdSearch(valor);
 
-  const params = useMemo(
-    () => ({
+    return {
       page,
       pageSize,
-      nomeCompleto:
-        buscaDebounced.trim() && !EXAM_ID_REGEX.test(buscaDebounced.trim())
-          ? buscaDebounced.trim()
-          : '',
-      id:
-        buscaDebounced.trim() && EXAM_ID_REGEX.test(buscaDebounced.trim())
-          ? buscaDebounced.trim()
-          : '',
+      nomeCompleto: valor && !isId ? valor : '',
+      id: valor && isId ? valor : '',
       status: filtroStatus === 'all' ? '' : filtroStatus,
-    }),
-    [page, pageSize, buscaDebounced, filtroStatus]
-  );
-
-  const limparFiltros = () => {
-    setFiltroStatus('all');
-    setBusca('');
-    setPage(1);
-  };
+    };
+  }, [page, pageSize, buscaDebounced, filtroStatus]);
 
   const {
     data: exames = [],
@@ -132,6 +126,12 @@ export function CardHistorico() {
     !showBackgroundUpdating &&
     !hasData;
 
+  const limparFiltros = () => {
+    setFiltroStatus('all');
+    setBusca('');
+    setPage(1);
+  };
+
   const handleRefresh = async () => {
     if (isEspecialista) {
       await Promise.all([refetchExames(), refetchEditingLocks()]);
@@ -152,8 +152,8 @@ export function CardHistorico() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Card className="mx-auto w-full max-w-6xl rounded-3xl border-none bg-white p-10 px-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <Card className="mx-auto w-full max-w-6xl rounded-xl border-none bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
           <h2 className="w-full text-xl font-bold text-black md:w-auto">
             Histórico de Exames
           </h2>
@@ -167,6 +167,7 @@ export function CardHistorico() {
                     onClick={handleRefresh}
                     variant="outline"
                     size="icon"
+                    className="h-10 w-10"
                     disabled={isFetching || isFetchingPagination || isTyping}
                     aria-label="Atualizar lista de exames"
                   >
@@ -185,7 +186,7 @@ export function CardHistorico() {
               </Tooltip>
             </div>
 
-            <div className="w-full md:w-60">
+            <div className="w-full md:w-52">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="mx-auto w-full">
@@ -197,7 +198,7 @@ export function CardHistorico() {
                       }}
                       disabled={showSkeleton}
                     >
-                      <SelectTrigger className="flex h-12 w-full items-center justify-between rounded-xl border-slate-200 px-3 text-left focus:ring-1 focus:ring-blue-600">
+                      <SelectTrigger className="flex h-10 w-full items-center justify-between rounded-xl border-slate-200 px-3 text-left focus:ring-1 focus:ring-blue-600">
                         <SelectValue placeholder="Filtrar por status" />
                       </SelectTrigger>
                       <SelectContent
@@ -228,10 +229,7 @@ export function CardHistorico() {
                     <Input
                       placeholder="Buscar exame..."
                       className={cn(
-                        'h-12 rounded-xl border-slate-200 pr-10 transition-all focus-visible:ring-blue-600',
-                        !isSearchValid &&
-                          busca.length > 0 &&
-                          'border-red-500 ring-1 ring-red-500 focus-visible:ring-red-500'
+                        'h-12 rounded-xl border-slate-200 pr-10 transition-all focus-visible:ring-blue-600'
                       )}
                       value={busca}
                       onChange={(e) => {
@@ -240,56 +238,50 @@ export function CardHistorico() {
                       }}
                       disabled={showSkeleton}
                     />
-                    <Search className="pointer-events-none absolute right-3 top-3.5 h-5 w-5 text-muted-foreground" />
+                    <Search className="pointer-events-none absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="border bg-white text-muted-foreground">
-                  Busque por Nome ou ID
+                  Busque por Nome, ID ou UUID
                 </TooltipContent>
               </Tooltip>
-
-              {!isSearchValid && busca.length > 0 && (
-                <span className="animate-in fade-in slide-in-from-top-1 absolute -bottom-6 left-1 text-[10px] font-medium text-red-500">
-                  Formato de ID inválido
-                </span>
-              )}
             </div>
           </div>
         </div>
 
         {(showTypingHint || showBackgroundUpdating) && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2">
             <RefreshCcw className="h-4 w-4 animate-spin" />
             {showTypingHint ? 'Buscando...' : 'Atualizando resultados...'}
           </div>
         )}
 
-        <div className="relative">
+        {/* ✅ overflow-x-auto: scroll horizontal se a tela for muito pequena */}
+        <div className="relative w-full overflow-x-auto">
           <Table
             className={cn(
-              'mt-6 transition-opacity',
+              'w-full transition-opacity',
               showTypingHint && hasData && 'opacity-80'
             )}
           >
-            <TableHeader className="border-b text-lg">
-              <TableRow className="h-16 border-none hover:bg-transparent">
-                <TableHead className="w-12.5" />
-                <TableHead className="text-center font-bold text-black">
+            <TableHeader className="border-b text-md">
+              <TableRow className="h-12 border-none hover:bg-transparent">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   ID
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Paciente
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Olho
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Score IA
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Status
                 </TableHead>
-                <TableHead className="text-center font-bold text-black">
+                <TableHead className="text-center font-bold text-black whitespace-nowrap">
                   Data
                 </TableHead>
               </TableRow>
@@ -300,7 +292,7 @@ export function CardHistorico() {
                 <HistoricoSkeleton />
               ) : showError ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={7} className="py-28">
+                  <TableCell colSpan={6} className="py-12">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
                       <div className="rounded-full bg-red-50 p-4 text-red-500">
                         <AlertCircle className="h-8 w-8" />
@@ -353,11 +345,7 @@ export function CardHistorico() {
                         }
                       }}
                     >
-                      <TableCell>
-                        <Checkbox className="border-2 transition-colors" />
-                      </TableCell>
-
-                      <TableCell className="py-7 text-center text-md text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm text-muted-foreground whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <span>{exame.id}</span>
                           {isEspecialista && isBeingEdited && (
@@ -366,7 +354,7 @@ export function CardHistorico() {
                                 <span>
                                   <Badge
                                     variant="outline"
-                                    className="border-amber-300 bg-amber-50 text-amber-700"
+                                    className="border-amber-300 bg-amber-50 text-amber-700 text-xs px-2 py-0.5"
                                   >
                                     Em edição
                                   </Badge>
@@ -382,17 +370,17 @@ export function CardHistorico() {
                         </div>
                       </TableCell>
 
-                      <TableCell className="text-center text-md font-medium text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
                         {exame.nomeCompleto}
                       </TableCell>
 
-                      <TableCell className="text-center text-md text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm text-muted-foreground whitespace-nowrap">
                         {exame.olho}
                       </TableCell>
 
                       <TableCell
                         className={cn(
-                          'text-md text-center font-bold',
+                          'py-3 text-sm text-center font-bold whitespace-nowrap',
                           score !== null
                             ? score > 80
                               ? 'text-red-500'
@@ -403,11 +391,11 @@ export function CardHistorico() {
                         {score ?? '--'}
                       </TableCell>
 
-                      <TableCell className="text-center">
+                      <TableCell className="py-3 text-center whitespace-nowrap">
                         <StatusBadge status={exame.status} />
                       </TableCell>
 
-                      <TableCell className="text-center text-md text-muted-foreground">
+                      <TableCell className="py-3 text-center text-sm text-muted-foreground whitespace-nowrap">
                         {formatDate(exame.dtCriacao)}
                       </TableCell>
                     </TableRow>
@@ -415,7 +403,7 @@ export function CardHistorico() {
                 })
               ) : showEmpty ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={7} className="py-28">
+                  <TableCell colSpan={6} className="py-12">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
                       <div className="rounded-full bg-slate-50 p-4 text-muted-foreground">
                         <Inbox className="h-8 w-8 opacity-70" />
@@ -451,7 +439,7 @@ export function CardHistorico() {
         </div>
 
         {pagination && !showError && (
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-between border-t pt-4">
             <span className="text-sm text-muted-foreground">
               {pagination.pageSize} resultados - Página {pagination.page} de{' '}
               {pagination.totalPages}

@@ -34,11 +34,11 @@ describe('Utilitário DICOM - parseDicomFile', () => {
     expect(result.patientSex).toBe('M');
   });
 
-  it('Deve lançar erro se o PatientID não for encontrado', async () => {
+ it('Deve lançar erro se o PatientID não for encontrado', async () => {
     const mockDataSet = {
       string: vi.fn((tag: string) => {
         if (tag === 'x00100020') return undefined;
-        return 'dados_genericos';
+        return '{}';
       }),
     };
     (dicomParser.parseDicom as any).mockReturnValue(mockDataSet);

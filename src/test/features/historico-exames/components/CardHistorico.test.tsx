@@ -34,6 +34,10 @@ vi.mock('@/features/historico-exames/hooks/useExamEditingLocks', () => ({
   }),
 }));
 
+vi.mock('@/features/historico-exames/hooks/useDebounce', () => ({
+  useDebouncedValue: (value: string) => value,
+}));
+
 vi.mock('@/lib/auth-client', () => ({
   authClient: {
     useSession: () => ({
@@ -99,7 +103,6 @@ describe('CardHistorico', () => {
     } as any);
   });
 
-  // Sem props — componente é autossuficiente
   const renderComponent = () => {
     return render(
       <QueryClientProvider client={queryClient}>
@@ -193,7 +196,7 @@ describe('CardHistorico', () => {
     ).toBeInTheDocument();
   });
 
-  it('deve mostrar erro de validação quando o ID digitado for inválido', async () => {
+  it('deve tratar ID inválido como busca por nome, e não como id exato', async () => {
     vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
       data: mockDados,
       isLoading: false,
@@ -208,11 +211,45 @@ describe('CardHistorico', () => {
     const inputBusca = screen.getByPlaceholderText(/buscar exame/i);
     fireEvent.change(inputBusca, { target: { value: 'EX-123' } });
 
-    expect(
-      await screen.findByText(/formato de id inválido/i)
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(useGetExamsHook.useGetExams).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          page: 1,
+          pageSize: 6,
+          nomeCompleto: 'EX-123',
+          id: '',
+        })
+      );
+    });
 
-    expect(inputBusca).toHaveClass('border-red-500');
+    expect(inputBusca).toHaveValue('EX-123');
+  });
+
+  it('deve tratar ID válido como busca por id exato', async () => {
+    vi.mocked(useGetExamsHook.useGetExams).mockReturnValue({
+      data: mockDados,
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      isFetched: true,
+      refetch: mockRefetch,
+    } as any);
+
+    renderComponent();
+
+    const inputBusca = screen.getByPlaceholderText(/buscar exame/i);
+    fireEvent.change(inputBusca, { target: { value: 'EX-1234-5678' } });
+
+    await waitFor(() => {
+      expect(useGetExamsHook.useGetExams).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          page: 1,
+          pageSize: 6,
+          nomeCompleto: '',
+          id: 'EX-1234-5678',
+        })
+      );
+    });
   });
 
   it('deve chamar refetch ao clicar no botão de atualizar lista', async () => {
@@ -259,8 +296,6 @@ describe('CardHistorico', () => {
 
     fireEvent.click(nextButton);
 
-    // Após clicar, o componente atualiza page internamente — verifica que
-    // o hook foi chamado novamente com page: 2
     await waitFor(() => {
       expect(useGetExamsHook.useGetExams).toHaveBeenCalledWith(
         expect.objectContaining({ page: 2 })
@@ -316,7 +351,6 @@ describe('CardHistorico', () => {
       refetch: mockRefetch,
     } as any);
 
-    // Avança para página 2 primeiro
     vi.mocked(usePaginationHook.useExamsPagination).mockReturnValue({
       data: { total: 40, page: 1, totalPages: 2, pageSize: 20 },
       isLoading: false,
@@ -328,7 +362,7 @@ describe('CardHistorico', () => {
     renderComponent();
 
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[buttons.length - 1]); // avança para página 2
+    fireEvent.click(buttons[buttons.length - 1]);
 
     const inputBusca = screen.getByPlaceholderText(/buscar exame/i);
     fireEvent.change(inputBusca, { target: { value: 'Bruno' } });
