@@ -215,7 +215,7 @@ describe('CardHistorico', () => {
       expect(useGetExamsHook.useGetExams).toHaveBeenLastCalledWith(
         expect.objectContaining({
           page: 1,
-          pageSize: 10,
+          pageSize: 6,
           nomeCompleto: 'EX-123',
           id: '',
         })
@@ -244,7 +244,7 @@ describe('CardHistorico', () => {
       expect(useGetExamsHook.useGetExams).toHaveBeenLastCalledWith(
         expect.objectContaining({
           page: 1,
-          pageSize: 10,
+          pageSize: 6,
           nomeCompleto: '',
           id: 'EX-1234-5678',
         })
