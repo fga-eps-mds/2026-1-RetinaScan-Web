@@ -30,7 +30,6 @@ export const AdminDashboard = () => {
   const [endDate, setEndDate] = useState('');
 
   // Memoização do payload de filtros para garantir estabilidade referencial.
-  // Previne gatilhos de re-fetch desnecessários no hook useGetMetrics (React Query).
   const filters = useMemo(() => {
     const currentFilters: { startDate?: string; endDate?: string } = {};
     if (startDate) currentFilters.startDate = startDate;
@@ -42,12 +41,10 @@ export const AdminDashboard = () => {
 
   const showLoading = isLoading || isFetching;
 
-  // Desacoplamento: isola a transformação de dados (DTO -> View Model) do ciclo de renderização.
-  // Só reprocessa a estrutura se o payload bruto da API mudar.
+  // Desacoplamento: isola a transformação de dados
   const mappedMetrics = useMemo(() => mapDashboardMetrics(apiMetrics), [apiMetrics]);
 
   // Efeito colateral imperativo para gerenciar notificações na UI.
-  // Observa mudanças no estado de erro da requisição para injetar feedback no sistema de Toasts.
   useEffect(() => {
     if (isError && error) {
       const backendError = error as unknown as BackendErrorResponse;
@@ -55,7 +52,6 @@ export const AdminDashboard = () => {
       
       let errorMessage = 'Erro ao aplicar o filtro de datas.';
 
-      // Fallback em cascata: prioriza erros específicos de campos (validação) antes de erros globais.
       if (errorData?.fields && errorData.fields.length > 0) {
         errorMessage = errorData.fields[0].message;
       } else if (errorData?.message) {
@@ -72,29 +68,33 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen w-full p-12">
+    // 1. Alterado de h-full para min-h-full e removido o overflow-hidden
+    <div className="flex flex-col min-h-full w-full p-6 sm:p-8 lg:p-12">
       
-      <DashboardHeader 
-        userName={userName}
-        badgeText="Dashboard do Administrador"
-        subtitle="Visão geral da triagem de retinografia e performance do sistema."
-      />
+      <div className="shrink-0">
+        <DashboardHeader 
+          userName={userName}
+          badgeText="Dashboard do Administrador"
+          subtitle="Visão geral da triagem de retinografia e performance do sistema."
+        />
+      </div>
 
-      <div className="mt-8 pt-8 border-t border-border">
+      <div className="mt-8 pt-8 border-t border-border flex flex-col flex-1">
         
-        {/* Renderização declarativa baseada em estados da requisição (Loading -> Error -> Success) */}
-        {showLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-            <p className="font-medium text-lg">Carregando métricas...</p>
-          </div>
-        ) : isError && !apiMetrics ? (
-          <div className="flex justify-center py-12 text-destructive font-medium">Erro crítico ao carregar os dados.</div>
-        ) : (
-          <MetricsSection metrics={mappedMetrics} />
-        )}
+        <div className="shrink-0">
+          {showLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <p className="font-medium text-lg">Carregando métricas...</p>
+            </div>
+          ) : isError && !apiMetrics ? (
+            <div className="flex justify-center py-12 text-destructive font-medium">Erro crítico ao carregar os dados.</div>
+          ) : (
+            <MetricsSection metrics={mappedMetrics} />
+          )}
+        </div>
 
-        <div className="px-8 mt-8 mb-4 flex justify-end">
+        <div className="px-4 sm:px-8 mt-6 mb-4 flex justify-end shrink-0">
           <DashboardDateFilters 
             startDate={startDate}
             endDate={endDate}
@@ -106,8 +106,8 @@ export const AdminDashboard = () => {
           />
         </div>
 
-        <div className="px-8 pb-8">
-          {/* Gráfico só é montado no DOM se não houver erros ou loading em andamento */}
+        {/* 2. O GRANDE TRUQUE: min-h-[400px]. Se a tela for pequena, o gráfico exige 400px e aciona o scroll do AppLayout. Se for grande, o flex-1 faz ele crescer. */}
+        <div className="px-4 sm:px-8 pb-4 flex-1 min-h-100">
           {!isError && !showLoading && (
             <TimeSeriesChart data={apiMetrics?.volume.serieTemporal || []} />
           )}

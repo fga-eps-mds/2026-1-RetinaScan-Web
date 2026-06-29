@@ -8,7 +8,7 @@ interface MetricsSectionProps {
 
 export const MetricsSection: React.FC<MetricsSectionProps> = ({ metrics }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full p-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 w-full p-8">
       <MetricCard
         title="Totais de Exames"
         value={metrics.analisesTotais.total}
@@ -18,7 +18,7 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({ metrics }) => {
       
       {/* Casos anormais que requerem atenção médica */}
       <MetricCard
-        title="Análise da IA"
+        title="Com alteração na retina"
         value={metrics.indicacaoEspecialista.total}
         subtext={`${metrics.indicacaoEspecialista.porcentagem}% do total`}
         variant="warning"
@@ -27,10 +27,11 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({ metrics }) => {
       
       {/* Casos saudáveis/normais */}
       <MetricCard
-        title="Normais"
+        title="Sem alteração na retina"
         value={metrics.resultadosNormais.total}
         subtext={`${metrics.resultadosNormais.porcentagem}% do total`}
         variant="success"
+        tooltipInfo="Contabiliza as retinas individuais processadas. Um exame com imagens de ambos os olhos equivale a 2 análises da IA."
       />
       
       {/* Exames aguardando processamento da IA */}

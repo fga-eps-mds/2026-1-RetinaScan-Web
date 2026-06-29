@@ -16,9 +16,10 @@ describe('MetricsSection', () => {
   it('deve renderizar todos os 6 cards de métricas com os títulos corretos', () => {
     render(<MetricsSection metrics={mockMetrics} />);
 
+    // Atualizado com os títulos exatos definidos no componente MetricsSection
     expect(screen.getByText('Totais de Exames')).toBeInTheDocument();
-    expect(screen.getByText('Análise da IA')).toBeInTheDocument();
-    expect(screen.getByText('Normais')).toBeInTheDocument();
+    expect(screen.getByText('Com alteração na retina')).toBeInTheDocument();
+    expect(screen.getByText('Sem alteração na retina')).toBeInTheDocument();
     expect(screen.getByText('Pendentes')).toBeInTheDocument();
     expect(screen.getByText('Falhas na IA')).toBeInTheDocument();
     expect(screen.getByText('Confiança IA')).toBeInTheDocument();
