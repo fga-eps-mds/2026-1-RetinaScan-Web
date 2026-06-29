@@ -68,7 +68,6 @@ const ControleUsuarios = () => {
 
   return (
     <div className="min-h-screen px-6 py-8 sm:px-10 lg:px-12">
-      {/* ✅ max-w-6xl mantido para limitar largura, mas agora o AppLayout tem overflow-y-auto */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="text-center">
           <h2 className="text-4xl font-heading font-bold text-foreground sm:text-2xl">
@@ -115,7 +114,10 @@ const ControleUsuarios = () => {
         <ModalNovoUser
           isOpen={openModalNovoUser}
           onClose={() => setOpenModalNovoUser(false)}
-          onUserCreated={() => { void refetch(); setOpenModalNovoUser(false); }}
+          onUserCreated={async () => {
+            await refetch();
+            setOpenModalNovoUser(false);
+          }}
         />
       </div>
     </div>
