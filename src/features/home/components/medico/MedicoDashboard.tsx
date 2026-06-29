@@ -73,50 +73,53 @@ export const MedicoDashboard = () => {
   };
 
   return (
-    <div className="flex h-full flex-col px-6 py-8 sm:px-10 lg:px-12">
-      <div className="mx-auto flex h-full w-full max-w-6xl flex-col">
+    // Alterado de min-h-screen para min-h-full e adicionado padding responsivo
+    <div className="flex flex-col min-h-full w-full p-6 sm:p-8 lg:p-12">
+      
+      <div className="shrink-0">
         <DashboardHeader 
           userName={userName}
           badgeText="Meu Dashboard"
           subtitle="Acompanhe o volume e o status de processamento dos seus exames solicitados."
         />
+      </div>
 
-        <div className="mt-8 pt-8 border-t border-border flex flex-1 flex-col min-h-0">
-          
+      <div className="mt-8 pt-8 border-t border-border flex flex-col flex-1">
+        
+        <div className="shrink-0">
           {/* Renderização declarativa baseada em estados da requisição (Loading -> Error -> Success) */}
           {showLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300 shrink-0">
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
               <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
               <p className="font-medium text-lg">Carregando seus exames...</p>
             </div>
           ) : isError && !apiMetrics ? (
-            <div className="flex justify-center py-12 text-destructive font-medium shrink-0">Erro ao carregar os dados.</div>
+            <div className="flex justify-center py-12 text-destructive font-medium">Erro ao carregar os dados.</div>
           ) : (
-            <div className="shrink-0">
-              <MetricsSection metrics={mappedMetrics} />
-            </div>
+            <MetricsSection metrics={mappedMetrics} />
           )}
-
-          <div className="px-8 mt-8 mb-4 flex justify-end shrink-0">
-            <DashboardDateFilters 
-              startDate={startDate}
-              endDate={endDate}
-              onApply={(start, end) => {
-                setStartDate(start);
-                setEndDate(end);
-              }}
-              onClear={handleClearFilters}
-            />
-          </div>
-
-          <div className="px-8 pb-8 flex-1 min-h-0">
-            {/* Gráfico só é montado no DOM se não houver erros ou loading em andamento */}
-            {!isError && !showLoading && (
-              <TimeSeriesChart data={apiMetrics?.volume.serieTemporal || []} />
-            )}
-          </div>
-
         </div>
+
+        <div className="px-4 sm:px-8 mt-6 mb-4 flex justify-end shrink-0">
+          <DashboardDateFilters 
+            startDate={startDate}
+            endDate={endDate}
+            onApply={(start, end) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            onClear={handleClearFilters}
+          />
+        </div>
+
+        {/* Adicionado flex-1 e min-h-[400px] para garantir que o gráfico sempre tenha espaço mínimo em telas menores */}
+        <div className="px-4 sm:px-8 pb-4 flex-1 min-h-100">
+          {/* Gráfico só é montado no DOM se não houver erros ou loading em andamento */}
+          {!isError && !showLoading && (
+            <TimeSeriesChart data={apiMetrics?.volume.serieTemporal || []} />
+          )}
+        </div>
+
       </div>
     </div>
   );

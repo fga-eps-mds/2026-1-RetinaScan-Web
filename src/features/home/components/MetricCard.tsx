@@ -22,8 +22,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   variant = 'default',
   tooltipInfo,
 }) => {
-  // Mapeamento de estilos por variante (Design Tokens).
-  // Centraliza a configuração visual, evitando condicionais complexas ou templates strings longas na renderização.
   const styles = {
     default: {
       card: 'bg-white border-gray-100 shadow-sm hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50',
@@ -56,15 +54,16 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       subtext: 'text-amber-800 group-hover:text-amber-900',
     },
   };
+
   return (
-    // A classe 'group' permite coordenar animações nos elementos filhos quando o contêiner recebe hover.
-    // 'transition-all' e 'hover:-translate-y-1'
+    // Removido "h-32". Adicionado "h-full min-h-[8rem]" para o card se adaptar se o texto quebrar.
     <div
-      className={`p-6 rounded-2xl border flex flex-col justify-between h-32 transition-all duration-300 hover:-translate-y-1 cursor-default group ${styles[variant].card}`}
+      className={`p-6 rounded-2xl border flex flex-col justify-between h-full min-h-[8rem] transition-all duration-300 hover:-translate-y-1 cursor-default group ${styles[variant].card}`}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-2">
+        {/* Adicionado "leading-tight" para melhorar o espaçamento quando quebra linha */}
         <span
-          className={`text-sm font-medium transition-colors duration-300 ${styles[variant].title}`}
+          className={`text-sm font-medium leading-tight transition-colors duration-300 ${styles[variant].title}`}
         >
           {title}
         </span>
@@ -73,10 +72,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <TooltipProvider>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                {/* O button garante que o ícone seja acessível via navegação por teclado (Tab) */}
                 <button
                   type="button"
-                  className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 transition-shadow"
+                  className="rounded-full shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 transition-shadow"
                   aria-label={`Informação sobre ${title}`}
                 >
                   <AlertCircle
@@ -84,7 +82,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                   />
                 </button>
               </TooltipTrigger>
-              {/* side="bottom" e sideOffset evitam que o tooltip cubra o header ou fique espremido */}
               <TooltipContent
                 side="bottom"
                 sideOffset={8}
@@ -97,7 +94,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         )}
       </div>
 
-      <div className="mt-2">
+      <div className="mt-3">
         <span
           className={`text-3xl font-bold transition-colors duration-300 ${styles[variant].value}`}
         >
