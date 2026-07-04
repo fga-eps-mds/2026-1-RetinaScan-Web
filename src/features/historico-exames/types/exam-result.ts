@@ -61,6 +61,7 @@ export type ExamResultExam = {
     nomeCompleto: string;
   };
   laudoEspecialista: LaudoEspecialista | null;
+  gradCam: ExamGradCam[] | null;
 };
 
 export type LaudoEspecialista = {
@@ -77,6 +78,11 @@ export type LaudoEspecialista = {
   resultadoIaValido: boolean;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type ExamGradCam = {
+  lateralidadeOlho: LateralidadeOlho;
+  url: string;
 };
 
 export type ExamResultPayload = {
