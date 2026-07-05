@@ -24,7 +24,10 @@ export default defineConfig([
       '**/dist/**',
       '**/components/ui/**',
       '**/test/**',
+      '**/e2e/**',
       '**/coverage/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
     ],
   },
 ]);
