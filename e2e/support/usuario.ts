@@ -13,8 +13,11 @@ export function uniqueEmail() {
     return `usuario-${crypto.randomUUID()}@retinascan.local`;
 }
 
-// --- Nova Função Auxiliar Adicionada ---
-export async function criarUsuarioLimpoE2E(browser: Browser) {
+// Assinatura atualizada para receber o 'perfil' (com MEDICO como fallback padrão)
+export async function criarUsuarioLimpoE2E(
+  browser: Browser,
+  perfil: 'MEDICO' | 'ESPECIALISTA' = 'MEDICO'
+) {
   // Abre uma aba anônima e invisível só para o Admin
   const context = await browser.newContext();
   const adminPage = await context.newPage();
@@ -46,6 +49,12 @@ export async function criarUsuarioLimpoE2E(browser: Browser) {
   
   await adminPage.getByPlaceholder('Digite sua senha').fill(senhaUsuario);
   await adminPage.getByPlaceholder('Confirme sua senha').fill(senhaUsuario);
+
+  // --- NOVA LÓGICA DE SELEÇÃO DE PERFIL ---
+  if (perfil === 'ESPECIALISTA') {
+    await adminPage.getByRole('combobox').click();
+    await adminPage.getByRole('option', { name: 'Médico Especialista' }).click();
+  }
 
   await adminPage.getByRole('button', { name: 'Cadastrar' }).click();
   await expect(adminPage.getByText(/usuário cadastrado com sucesso/i)).toBeVisible();
