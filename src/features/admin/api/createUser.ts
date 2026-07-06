@@ -3,7 +3,9 @@ import type { CreateUserDTO } from '../types/user';
 
 
 // Função para criar um novo usuário no sistema
-export const createUser = async (data: any): Promise<CreateUserDTO> => {
-  const response = await api.post<CreateUserDTO>('/api/usuarios', data);
+
+export async function createUser(data: CreateUserDTO) {
+  const response = await api.post('/api/usuarios', data);
+
   return response.data;
 };
