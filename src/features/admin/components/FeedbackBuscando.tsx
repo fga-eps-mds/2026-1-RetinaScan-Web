@@ -4,6 +4,7 @@ interface FeedbackBuscandoProps {
   isTyping: boolean;
 }
 
+// Componente de feedback visual para indicar que a busca está em andamento
 export const FeedbackBuscando = ({ isTyping }: FeedbackBuscandoProps) => (
   <div className="px-6 pb-4 flex items-center gap-2 text-sm text-muted-foreground animate-in fade-in">
     <RefreshCcw className="h-4 w-4 animate-spin" />

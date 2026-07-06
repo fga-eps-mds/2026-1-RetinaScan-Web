@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 
+// Tipos e funções auxiliares para lidar com convites de médicos e especialistas
 type TipoPerfil = 'MEDICO' | 'ESPECIALISTA';
 
 export type ConvitePayload = {

@@ -5,6 +5,7 @@ interface ListaVaziaProps {
   temFiltroAtivo: boolean;
 }
 
+// Componente para exibir uma mensagem quando não há resultados na lista
 export const ListaVazia = ({ temFiltroAtivo }: ListaVaziaProps) => (
   <TableRow className="hover:bg-transparent">
     <TableCell colSpan={7} className="py-16">

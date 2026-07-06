@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { searchMedicos, type SearchMedicosParams } from '../api/searchMedicos';
 
+// Hook personalizado para pesquisar médicos com base nos filtros fornecidos
 export function useSearchMedicos(filters: SearchMedicosParams) {
   return useQuery({
     queryKey: ['admin', 'medicos', 'search', filters],

@@ -1,3 +1,5 @@
+// Tipos e funções auxiliares para lidar com usuários do sistema
+
 export type User = {
   id: string;
   nomeCompleto: string;

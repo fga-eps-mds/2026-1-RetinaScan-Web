@@ -22,6 +22,7 @@ export default function ModalConvidarMedico() {
 
   const { mutateAsync, isPending } = useEnviarConvite();
 
+  // Função para limpar o arquivo selecionado e resetar o input
   const limparArquivo = () => {
     setFile(null);
 
@@ -30,6 +31,7 @@ export default function ModalConvidarMedico() {
     }
   };
 
+  // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -67,6 +69,7 @@ export default function ModalConvidarMedico() {
         }
       }}
     >
+      {/* Trigger para abrir o modal */}
       <DialogTrigger asChild>
         <Button variant="secondary" className="gap-2 font-medium shadow-sm">
           <FileSpreadsheet className="h-4 w-4" />
@@ -74,6 +77,7 @@ export default function ModalConvidarMedico() {
         </Button>
       </DialogTrigger>
 
+      {/* Conteúdo do modal */}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Enviar convites</DialogTitle>
