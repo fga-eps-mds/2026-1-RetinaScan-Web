@@ -464,7 +464,7 @@ const ResultadoExame = () => {
 
       {/* Grid de Conteúdo Principal */}
       <div className="space-y-3 pb-6">
-        <CardImagens imagens={data.imagens} />
+        <CardImagens imagens={data.imagens} gradCam={data?.exam.gradCam} />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
           <div className="lg:col-span-2">
