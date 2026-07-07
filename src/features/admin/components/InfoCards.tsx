@@ -1,6 +1,7 @@
 import { BadgeCheck, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
+// Componente de cartões de informações para exibir estatísticas de usuários
 const InfoCards = ({
   totalUsers,
   totalActiveUsers,

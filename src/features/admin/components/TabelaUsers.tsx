@@ -9,6 +9,7 @@ import { ListaVazia } from './ListaVazia';
 import { FeedbackBuscando } from './FeedbackBuscando';
 import type { User } from '../types/user';
 
+// Interface de propriedades para o componente TabelaUsers
 interface TabelaUsersProps {
   users: User[];
   isLoading: boolean;
@@ -30,6 +31,7 @@ interface TabelaUsersProps {
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR');
 
+// Componente TabelaUsers para exibir uma tabela de usuários cadastrados
 const TabelaUsers = ({
   users = [],
   isLoading,
@@ -48,6 +50,7 @@ const TabelaUsers = ({
   onPreviousPage,
 }: TabelaUsersProps) => {
 
+
   const isFirstLoad = !isFetched && isLoading;
   const temFiltroAtivo = Boolean(busca.trim()) || filtroPerfil !== 'TODOS';
   const mostrarLoadingGeral = isTyping || (!isFirstLoad && isFetching);
@@ -58,10 +61,10 @@ const TabelaUsers = ({
 
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <h1 className="text-xl font-heading font-bold text-gray-900 shrink-0">Usuários Cadastrados</h1>
-
+      {/* Filtros */}
         <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <Select value={filtroPerfil} onValueChange={onFiltroPerfilChange}>
-            <SelectTrigger className="h-10 w-auto min-w-[140px] border-slate-200">
+            <SelectTrigger className="h-10 w-auto min-w-35 border-slate-200">
               <SelectValue placeholder="Filtrar Perfil" />
             </SelectTrigger>
             <SelectContent position="popper" sideOffset={4}>
@@ -71,7 +74,7 @@ const TabelaUsers = ({
             </SelectContent>
           </Select>
 
-          <div className="relative flex-1 min-w-[160px] max-w-sm">
+          <div className="relative flex-1 min-w-40 max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
@@ -100,6 +103,7 @@ const TabelaUsers = ({
             </TableRow>
           </TableHeader>
 
+      {/* Lista de usuários, estado de loading ou erro */}
           <TableBody>
             {isFirstLoad && (
               <TableRow>
@@ -124,7 +128,7 @@ const TabelaUsers = ({
                 </TableCell>
               </TableRow>
             )}
-
+            {/* Lista de usuários */}
             {!isFirstLoad && !isError && users.map((user: User) => (
               <TableRow key={user.id} className="border-slate-50 hover:bg-slate-50/50">
                 <TableCell className="text-sm text-muted-foreground font-medium py-3 max-w-0">
@@ -164,6 +168,7 @@ const TabelaUsers = ({
         </Table>
       </div>
 
+      {/* Paginação */}
       {!isError && totalPages > 0 && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-4">
           <span className="text-sm text-muted-foreground whitespace-nowrap">

@@ -7,6 +7,7 @@ import {
 } from '../api/enviarConvite';
 import { toast } from 'sonner';
 
+// Hook personalizado para enviar convites para novos usuários do sistema
 export const useEnviarConvite = (onSuccessCallback?: () => void) => {
   return useMutation<EnviarConviteResponse, any, EnviarConvitePayload>({
     mutationFn: (data) => enviarConvite(data),
@@ -33,6 +34,7 @@ export const useEnviarConvite = (onSuccessCallback?: () => void) => {
         return;
       }
 
+      // Se houver convites enviados com sucesso, exibe uma mensagem de sucesso
       if (enviados > 0) {
         toast.success(
           enviados === 1
@@ -47,6 +49,7 @@ export const useEnviarConvite = (onSuccessCallback?: () => void) => {
       toast.message('Nenhum convite foi enviado.');
     },
 
+    // Se ocorrer um erro ao enviar convites, exibe uma mensagem de erro
     onError: (error: any) => {
       toast.error('Erro ao enviar convite.', {
         description:

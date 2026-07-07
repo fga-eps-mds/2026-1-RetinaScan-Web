@@ -40,6 +40,12 @@ type GetResultadoExameResponse = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resultadoIa: any;
   }[];
+  gradCam: [
+    {
+      lateralidadeOlho: 'OD' | 'OE';
+      url: string;
+    },
+  ];
   laudoEspecialista: {
     id: string;
     examId: string;
@@ -101,6 +107,7 @@ export async function getResultadoExame(
       id: data.medico.id,
       nomeCompleto: data.medico.nomeCompleto,
     },
+    gradCam: data.gradCam,
     laudoEspecialista: data.laudoEspecialista
       ? {
           id: data.laudoEspecialista.id,
